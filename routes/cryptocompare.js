@@ -27,16 +27,17 @@ router.post('/', async (req, res) => {
 
     const value_of = String(req.body.value_of).toUpperCase();
     const value_in = String(req.body.value_in).toUpperCase();
+    const payload_data = (req.body.data) ? req.body.data : {};
     const compareURL = 'https://min-api.cryptocompare.com/data/price?fsym='+value_of+'&tsyms='+value_in;
 
     const data = {
         get: compareURL,
         path: value_in,
-        payload: {}
+        payload: payload_data
     };
 
     try {
-        const response = await executeChainlinkRequest('a396ce62ada24a049d2123315a4a2b52', data);
+        const response = await executeChainlinkRequest(process.env.TEST_JOB_ID, data);
         res.status(200).send(response);
     } catch (err) {
         res.send(err);
@@ -73,7 +74,32 @@ router.post('/callback', function(req, res, next) {
         value: price,
         data: req.body.data
     });
+    serveCallbackToStacksNode(req.body.data);
 });
 
+
+/*** makes a post request to chainlink node at jobid ***/
+async function serveCallbackToStacksNode(data) {
+    const stacks_node_url = process.env.STACKS_ROUTE;
+    const options = {
+        url: stacks_node_url,
+        method: 'POST',
+        // headers: '',
+        json: {
+            result: data.result*100,
+            data: data.payload
+        }
+    }
+    return new Promise((resolve, reject) => {
+        request(options, function (error, response, body) {
+            if (error) {
+                reject(error);
+                console.log('callback not served');
+            }
+            resolve(response);
+            console.log('callback served');
+        });
+    })
+}
 
 module.exports = router;

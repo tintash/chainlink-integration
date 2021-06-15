@@ -1,12 +1,18 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "esModuleInterop": true,
-        "target": "es6",
+        "target": "es2020",
         "noImplicitAny": true,
         "moduleResolution": "node",
+        "declaration": false,
+        "strict": true,
         "sourceMap": true,
-        "outDir": "dist",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "outDir": "lib",
+        "noEmit": true,
         "baseUrl": ".",
         "paths": {
             "*": [

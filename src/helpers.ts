@@ -25,7 +25,7 @@ export interface PriceFeedRequest {
 }
 
 export async function serveCallbackToStacksNode(data: PriceFeedRequestFulfillment) {
-    const stacks_node_url = process.env.STACKS_ROUTE;
+    const stacks_node_url = String(process.env.STACKS_ROUTE);
     const options = {
         url: stacks_node_url,
         method: 'POST',
@@ -48,7 +48,7 @@ export async function serveCallbackToStacksNode(data: PriceFeedRequestFulfillmen
 }
 
 export async function executeChainlinkRequest(jobId: string, data: PriceFeedRequest) {
-    const chainlinkNodeURL = process.env.EI_CHAINLINKURL + process.env.EI_LINK_JOB_PATH + jobId + '/runs';
+    const chainlinkNodeURL = String(process.env.EI_CHAINLINKURL) + String(process.env.EI_LINK_JOB_PATH) + jobId + '/runs';
     const options = {
         url: chainlinkNodeURL,
         method: 'POST',

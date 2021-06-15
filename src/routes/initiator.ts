@@ -30,7 +30,7 @@ export function createInitiatorRouter() {
         };
 
         try {
-            const response = await executeChainlinkRequest(process.env.TEST_JOB_ID, data);
+            const response = await executeChainlinkRequest(String(process.env.TEST_JOB_ID), data);
             res.status(200).send(response);
         } catch (err) {
             res.send(err);

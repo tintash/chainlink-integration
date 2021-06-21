@@ -9,11 +9,11 @@ export function createObserverRouter() {
     const router = express.Router();
     router.use(express.json());
 
-    // router.post('/new_block', async (req, res) => {
-    //     const core_message: CoreNodeBlockMessage = req.body;
-    //     const _ = processNewBlock(ChainID.Testnet, core_message)
-    //     res.sendStatus(200).end();
-    // });
+    router.post('/new_block', async (req, res) => {
+        const core_message: CoreNodeBlockMessage = req.body;
+        const _ = processNewBlock(ChainID.Testnet, core_message)
+        res.sendStatus(200).end();
+    });
 
     router.post('/new_burn_block', async (req, res) => {
         // console.log(req.body);
@@ -30,37 +30,8 @@ export function createObserverRouter() {
         res.sendStatus(200);
     });
 
-    router.use((req,res, next) => {
-        const ei_ci_acckey = req.headers["x-chainlink-ea-accesskey"];
-        const ei_ci_secret = req.headers["x-chainlink-ea-secret"];
-        if(typeof ei_ci_acckey !== 'undefined' && typeof ei_ci_secret !== 'undefined') {
-            if(ei_ci_acckey === process.env.EI_CI_ACCESSKEY && ei_ci_secret === process.env.I_CI_SECRET) {
-                res.status(200).json({
-                    status: 200,
-                    message: 'Success'
-                });
-                return
-            }
-        }
-
-        /* temporary block of code below - to be removed later */
-        if(req.originalUrl === '/new_block') {
-            const core_message: CoreNodeBlockMessage = req.body;
-            const _ = processNewBlock(ChainID.Testnet, core_message)
-            res.sendStatus(404).end();
-            return;
-        }
-        /* temporary block of code above - to be removed later */
-
-        res.status(404).json({
-            status: 404,
-            message: 'Not Found'
-        });
-    });
-
-
     // For testing purposes only, to be removed
-    router.get('/consumer-get-eth-price', async (req, res) => {
+    router.get('/consumer-test', async (req, res) => {
         const network = new StacksMocknet();
         const consumer_address = getOracleContract(ChainID.Testnet).address;
         const txOptions = {
@@ -86,6 +57,34 @@ export function createObserverRouter() {
         } catch (err) {
             res.status(400).json({ msg: err.message });
         }
+    });
+
+    router.use((req,res, next) => {
+        const ei_ci_acckey = req.headers["x-chainlink-ea-accesskey"];
+        const ei_ci_secret = req.headers["x-chainlink-ea-secret"];
+        if(typeof ei_ci_acckey !== 'undefined' && typeof ei_ci_secret !== 'undefined') {
+            if(ei_ci_acckey === process.env.EI_CI_ACCESSKEY && ei_ci_secret === process.env.I_CI_SECRET) {
+                res.status(200).json({
+                    status: 200,
+                    message: 'Success'
+                });
+                return
+            }
+        }
+
+        /* {Sajjad} temporary block of code below - to be removed later */
+        // if(req.originalUrl === '/new_block') {
+        //     const core_message: CoreNodeBlockMessage = req.body;
+        //     const _ = processNewBlock(ChainID.Testnet, core_message)
+        //     res.sendStatus(404).end();
+        //     return;
+        // }
+        /* temporary block of code above - to be removed later {Sajjad}  */
+
+        res.status(404).json({
+            status: 404,
+            message: 'Not Found'
+        });
     });
 
     return router;

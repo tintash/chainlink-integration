@@ -14,6 +14,7 @@ import {
     uintCV,
     SignedContractCallOptions,
 } from '@stacks/transactions';
+import { getOracleContract } from './event-helpers';
 import { hexToBuffer } from './helpers';
 
 export interface OracleFulfillment {
@@ -31,34 +32,6 @@ export interface OracleFulfillment {
 export interface ChainlinkFulfillmentResponse {
     result: string;
     fulfillment: OracleFulfillment;
-}
-
-export function getOracleContract(chainId: ChainID) {
-    const contractId =
-        chainId === ChainID.Mainnet
-        ? process.env.MAINNET_CHAINLINK_ORACLE_CONTRACT_ID
-        : process.env.TESTNET_CHAINLINK_ORACLE_CONTRACT_ID;
-    const name =
-        chainId === ChainID.Mainnet
-        ? process.env.MAINNET_CHAINLINK_ORACLE_CONTRACT_NAME
-        : process.env.TESTNET_CHAINLINK_ORACLE_CONTRACT_NAME;
-    const result: OracleContractIdentifier = {
-        address: String(contractId),
-        name: String(name),
-    };
-    return result;
-}
-
-export function getOracleContractPrincipal(chainId: ChainID): string {
-    const oracle = getOracleContract(chainId);
-    return oracle.address + '.' + oracle.name;
-}
-
-export function isOracleContract(principal: string): boolean {
-    return (
-        principal === getOracleContractPrincipal(ChainID.Testnet) ||
-        principal === getOracleContractPrincipal(ChainID.Mainnet)
-    );
 }
 
 export function parseOracleRequestValue(encoded_data: string) {

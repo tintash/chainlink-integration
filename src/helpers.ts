@@ -76,3 +76,17 @@ export function createChainlinkRequestHeaders() {
         'X-Chainlink-EA-Secret': process.env.EI_IC_SECRET
     }
 }
+
+/**
+ * Decodes a `0x` prefixed hex string to a buffer.
+ * @param hex - A hex string with a `0x` prefix.
+ */
+export function hexToBuffer(hex: string): Buffer {
+    if (!hex.startsWith('0x')) {
+        throw new Error(`Hex string is missing the "0x" prefix: "${hex}"`);
+    }
+    if (hex.length % 2 !== 0) {
+        throw new Error(`Hex string is an odd number of digits: ${hex}`);
+    }
+    return Buffer.from(hex.substring(2), 'hex');
+}

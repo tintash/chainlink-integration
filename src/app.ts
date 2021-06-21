@@ -18,7 +18,7 @@ app.use(logger);
 const adapterRouter = createAdapterRouter();
 const observerRouter = createObserverRouter();
 
-app.use('/cryptocompare/callback', adapterRouter);
+app.use('/adapter', adapterRouter);
 app.use('/', observerRouter);
 
 const port = normalizePort(process.env.PORT || '3000');

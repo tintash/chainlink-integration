@@ -24,29 +24,6 @@ export interface PriceFeedRequest {
     payload: string;
 }
 
-export async function serveCallbackToStacksNode(data: PriceFeedRequestFulfillment) {
-    const stacks_node_url = String(process.env.STACKS_ROUTE);
-    const options = {
-        url: stacks_node_url,
-        method: 'POST',
-        // headers: '',
-        json: {
-            result: data.result*100,
-            data: data.payload
-        }
-    }
-    return new Promise((resolve, reject) => {
-        request(options, (error, response) => {
-            if (error) {
-                reject(error);
-                console.log('callback not served');
-            }
-            resolve(response);
-            console.log('callback served');
-        });
-    })
-}
-
 export async function executeChainlinkRequest(jobId: string, data: PriceFeedRequest) {
     const chainlinkNodeURL = String(process.env.EI_CHAINLINKURL) + String(process.env.EI_LINK_JOB_PATH) + jobId + '/runs';
     const options = {
@@ -90,3 +67,31 @@ export function hexToBuffer(hex: string): Buffer {
     }
     return Buffer.from(hex.substring(2), 'hex');
 }
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+const enumMaps = new Map<object, Map<unknown, unknown>>();
+
+export function getEnumDescription<T extends string, TEnumValue extends number>(
+    enumVariable: { [key in T]: TEnumValue },
+    value: number
+): string {
+    const enumMap = enumMaps.get(enumVariable);
+    if (enumMap !== undefined) {
+        const enumKey = enumMap.get(value);
+        if (enumKey !== undefined) {
+            return `${value} '${enumKey}'`;
+        } else {
+            return `${value}`;
+        }
+    }
+
+    // Create a map of `[enumValue: number]: enumNameString`
+    const enumValues = Object.entries(enumVariable)
+        .filter(([, v]) => typeof v === 'number')
+        .map<[number, string]>(([k, v]) => [v as number, k]);
+    const newEnumMap = new Map(enumValues);
+    enumMaps.set(enumVariable, newEnumMap);
+    return getEnumDescription(enumVariable, value);
+}
+
+export const printTopic = 'print';

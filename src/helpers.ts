@@ -32,6 +32,7 @@ export async function executeChainlinkRequest(jobId: string, data: PriceFeedRequ
         headers: createChainlinkRequestHeaders(),
         json: data
     }
+
     return new Promise((resolve, reject) => {
         request(options, (error: any, response: unknown, body: any) => {
             if (error) {

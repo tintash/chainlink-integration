@@ -9,9 +9,9 @@ export function createAdapterRouter() {
     router.post('/', async (req, res) => {
         try {
             console.log('Sajjad-> chainlink route');
-            console.log('Sajjad-> ', req.body.data.encoded_data);
+            console.log('Sajjad-> ', req.body);
             const price = parseFloat(req.body.data.result);
-            const fulfillment = parseOracleRequestValue(req.body.data.encoded_data);
+            const fulfillment = parseOracleRequestValue(req.body.data.payload);
             const linkFulfillment: ChainlinkFulfillmentResponse = {
                 result: req.body.result,
                 fulfillment: fulfillment,

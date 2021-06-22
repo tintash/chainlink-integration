@@ -64,7 +64,7 @@ export function createObserverRouter() {
 
         const ei_ci_acckey = req.headers["x-chainlink-ea-accesskey"];
         const ei_ci_secret = req.headers["x-chainlink-ea-secret"];
-       
+        
         if(typeof ei_ci_acckey !== 'undefined' && typeof ei_ci_secret !== 'undefined') {
             if(ei_ci_acckey === process.env.EI_CI_ACCESSKEY && ei_ci_secret === process.env.EI_CI_SECRET) {
                 res.status(200).json({

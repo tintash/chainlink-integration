@@ -10,14 +10,15 @@ export function createAdapterRouter() {
         try {
             console.log('Sajjad-> chainlink route');
             console.log('Sajjad-> ', req.body);
-            const price = parseFloat(req.body.data.result);
+            const price = String(Math.round(parseFloat(req.body.data.result)*100));
             const fulfillment = parseOracleRequestValue(req.body.data.payload);
             const linkFulfillment: ChainlinkFulfillmentResponse = {
-                result: req.body.result,
+                result: price,
                 fulfillment: fulfillment,
             };
             const response = await createOracleFulfillmentTx(linkFulfillment, ChainID.Testnet);
             const txid = response.txid();
+            console.log(txid);
             res.status(200).json({ 
                 symbol: "ETH-USD",
                 value: price,

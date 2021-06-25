@@ -1,18 +1,5 @@
 import request from 'request';
 
-export function normalizePort(val: any) {
-    const port = parseInt(val, 10);
-    if (isNaN(port)) {
-        // named pipe
-        return val;
-    }
-    if (port >= 0) {
-        // port number
-        return port;
-    }
-    return false;
-}
-
 export interface PriceFeedRequestFulfillment {
     result: number;
     payload: any
@@ -36,6 +23,7 @@ export async function executeChainlinkRequest(jobId: string, data: PriceFeedRequ
     return new Promise((resolve, reject) => {
         request(options, (error: any, response: unknown, body: any) => {
             if (error) {
+                console.log('Initiator error', error);
                 reject(error);
             }
             resolve(response);

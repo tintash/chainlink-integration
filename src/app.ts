@@ -4,7 +4,6 @@ import http from 'http';
 import { addAsync } from '@awaitjs/express';
 import {createAdapterRouter} from './routes/adapter';
 import {createObserverRouter} from './routes/observer';
-import {normalizePort} from './helpers';
 import morgan from 'morgan';
 import * as bodyParser from 'body-parser';
 
@@ -21,7 +20,7 @@ const observerRouter = createObserverRouter();
 app.use('/adapter', adapterRouter);
 app.use('/', observerRouter);
 
-const port = normalizePort(process.env.PORT || '3000');
+const port = parseInt(String(process.env.PORT)) || 3000;
 app.set('port', port);
 const server = http.createServer(app);
 server.listen(port, '0.0.0.0');

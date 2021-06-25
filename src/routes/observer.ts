@@ -16,17 +16,14 @@ export function createObserverRouter() {
     });
 
     router.post('/new_burn_block', async (req, res) => {
-        // console.log(req.body);
         res.sendStatus(200);
     });
 
     router.post('/new_mempool_tx', async (req, res) => {
-        // console.log(req.body);
         res.sendStatus(200);
     });
 
     router.post('/drop_mempool_tx', async (req, res) => {
-        // console.log(req.body);
         res.sendStatus(200);
     });
 
@@ -60,13 +57,10 @@ export function createObserverRouter() {
     });
 
     router.use((req,res, next) => {
-        console.log('Here', req);
-
         const ei_ci_acckey = req.headers["x-chainlink-ea-accesskey"];
         const ei_ci_secret = req.headers["x-chainlink-ea-secret"];
-        
         if(typeof ei_ci_acckey !== 'undefined' && typeof ei_ci_secret !== 'undefined') {
-            if(ei_ci_acckey === process.env.EI_CI_ACCESSKEY && ei_ci_secret === process.env.EI_CI_SECRET) {
+            if(ei_ci_acckey === String(process.env.EI_CI_ACCESSKEY) && ei_ci_secret === String(process.env.EI_CI_SECRET)) {
                 res.status(200).json({
                     status: 200,
                     message: 'Success'
@@ -74,16 +68,6 @@ export function createObserverRouter() {
                 return
             }
         }
-
-        /* {Sajjad} temporary block of code below - to be removed later */
-        // if(req.originalUrl === '/new_block') {
-        //     const core_message: CoreNodeBlockMessage = req.body;
-        //     const _ = processNewBlock(ChainID.Testnet, core_message)
-        //     res.sendStatus(404).end();
-        //     return;
-        // }
-        /* temporary block of code above - to be removed later {Sajjad}  */
-
         res.status(404).json({
             status: 404,
             message: 'Not Found'

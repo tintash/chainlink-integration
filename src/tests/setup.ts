@@ -5,4 +5,6 @@ export default async (): Promise<void> => {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'test';
   }
+  const dotenv = require('dotenv');
+  dotenv.config({ path: '../.env' });
 };

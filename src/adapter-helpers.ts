@@ -69,14 +69,14 @@ export async function createOracleFulfillmentTx(
     chainId: ChainID
 ): Promise<StacksTransaction> {
     const oracle = getOracleContract(chainId);
-    const oracleFulfillmenatFunction = 'fullfill-oracle-request';
+    const oracleFulfillmentFunction = 'fullfill-oracle-request';
     const oraclePaymentKey = String(process.env.ORACLE_PAYMENT_KEY);
     const network = new StacksMocknet();
     const fulfillment = linkFulfillment.fulfillment;
     const txOptions: SignedContractCallOptions = {
         contractAddress: oracle.address,
         contractName: oracle.name,
-        functionName: oracleFulfillmenatFunction,
+        functionName: oracleFulfillmentFunction,
         functionArgs: [
             fulfillment.request_id,
             fulfillment.payment,

@@ -7,7 +7,7 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node -r dotenv/config .",
-    "test": "jest --config ./jest.config.js --coverage --runInBand",
+    "test": "jest --setupFiles dotenv/config --config ./jest.config.js --coverage --runInBand",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:eslint": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe",
     "lint:prettier": "prettier --check src/**/*.{ts,json}",

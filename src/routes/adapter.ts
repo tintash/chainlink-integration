@@ -29,12 +29,6 @@ export function createAdapterRouter() {
             res.status(500).json({ msg: err.message });
         }
     });
-
-    router.get('/abc', async (req, res) => {
-       
-            res.status(500).json({ msg: 'msg' });
-        
-    });
-
+    
     return router;
 };

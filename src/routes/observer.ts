@@ -39,7 +39,7 @@ export function createObserverRouter() {
                 bufferCVFromString('0xde5b9eb9e7c5592930eb2e30a01369'),
                 contractPrincipalCV('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', 'consumer'),
             ],
-            senderKey: String(process.env.ORACLE_PAYMENT_KEY),
+            senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),
             validateWithAbi: true,
             network,
             postConditions: [],

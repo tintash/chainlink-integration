@@ -36,6 +36,7 @@ export interface ChainlinkFulfillmentResponse {
 
 export function parseOracleRequestValue(encoded_data: string) {
     const cl_val: ClarityValue = deserializeCV(hexToBuffer(encoded_data));
+    console.log('mytest->  ',cl_val);
     if (cl_val.type == ClarityType.Tuple) {
         const cl_val_data = cl_val.data;
         const request_id = cl_val_data['request-id'] as UIntCV;
@@ -48,15 +49,15 @@ export function parseOracleRequestValue(encoded_data: string) {
         const data_version = cl_val_data['data-version'] as UIntCV;
         const data: BufferCV = cl_val_data['data'] as BufferCV;
         const result: OracleFulfillment = {
-        request_id: request_id,
-        expiration: expiration,
-        sender: sender,
-        payment: payment,
-        spec_id: spec_id,
-        callback: callback,
-        nonce: nonce,
-        data_version: data_version,
-        data: data,
+            request_id: request_id,
+            expiration: expiration,
+            sender: sender,
+            payment: payment,
+            spec_id: spec_id,
+            callback: callback,
+            nonce: nonce,
+            data_version: data_version,
+            data: data,
         };
         console.log('Sajjad->', data);
         return result;
@@ -70,7 +71,7 @@ export async function createOracleFulfillmentTx(
 ): Promise<StacksTransaction> {
     const oracle = getOracleContract(chainId);
     const oracleFulfillmentFunction = 'fullfill-oracle-request';
-    const oraclePaymentKey = String(process.env.ORACLE_PAYMENT_KEY);
+    const oraclePaymentKey = String(process.env.STX_ADDR_PRIVATE_KEY);
     const network = new StacksMocknet();
     const fulfillment = linkFulfillment.fulfillment;
     const txOptions: SignedContractCallOptions = {

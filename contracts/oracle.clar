@@ -22,27 +22,22 @@
                                (data-version uint)
                                (data (buff 32)))
     (begin
-        (asserts!
-            (is-eq
-                (stx-transfer? payment sender 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G)
+        (let ((result (unwrap! (stx-transfer? payment sender 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G) (err u1))))
+            (let ((request-id u1)         ;; todo(ludo): must be unique - EVM version is building request-id by hashing payment+callback+expiration
+                (expiration u999999))     ;; todo(ludo): set
+                (print {
+                    request-id: request-id,
+                    expiration: expiration,
+                    sender: sender,
+                    payment: payment,
+                    spec-id: spec-id,
+                    callback: callback,
+                    nonce: nonce,
+                    data-version: data-version,
+                    data: data 
+                })
                 (ok true)
-            ) 
-            (err u100)
-        )
-        (let ((request-id u1)           ;; todo(ludo): must be unique - EVM version is building request-id by hashing payment+callback+expiration
-            (expiration u999999))     ;; todo(ludo): set
-            (print {
-                request-id: request-id,
-                expiration: expiration,
-                sender: sender,
-                payment: payment,
-                spec-id: spec-id,
-                callback: callback,
-                nonce: nonce,
-                data-version: data-version,
-                data: data 
-            })
-            (ok true)
+            )
         )
     )
 )

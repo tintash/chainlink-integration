@@ -30,5 +30,11 @@ export function createAdapterRouter() {
         }
     });
 
+    router.get('/abc', async (req, res) => {
+       
+            res.status(500).json({ msg: 'msg' });
+        
+    });
+
     return router;
 };

@@ -39,7 +39,7 @@ export function createObserverRouter() {
             contractName: 'consumer',
             functionName: 'get-eth-price',
             functionArgs: [
-                bufferCVFromString('0xde5b9eb9e7c5592930eb2e30a01369'),
+                bufferCVFromString('0x3334346664393436386561363437623838633530336461633830383263306134'),
                 contractPrincipalCV('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', 'consumer'),
             ],
             senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),
@@ -82,6 +82,20 @@ export function createObserverRouter() {
         try {
             const result = await hexToDirectRequestParams(buf_string);
             res.status(200).json(result);
+        } catch (err) {
+            res.status(400).json(err.message);
+        }
+    });
+
+    router.post('/key-to-buff', async (req, res) => {
+        const key = req.body.key;
+        if( key === 'undefined' ||  typeof key != 'string') res.status(400).json({ msg: 'bad request body'});
+        try {
+            const result = await bufferToHexPrefixString(Buffer.from(key));
+            res.status(200).json({
+                key: key,
+                buffer: result
+            });
         } catch (err) {
             res.status(400).json(err.message);
         }

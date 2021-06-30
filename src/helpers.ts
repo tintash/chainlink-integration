@@ -1,3 +1,4 @@
+import { BufferCV } from '@stacks/transactions';
 import request from 'request';
 
 export interface PriceFeedRequestFulfillment {
@@ -11,7 +12,7 @@ export interface PriceFeedRequest {
     payload: string;
 }
 
-export async function executeChainlinkRequest(jobId: string, data: PriceFeedRequest) {
+export async function executeChainlinkRequest(jobId: string, data: DirectRequestParams) {
     const chainlinkNodeURL = String(process.env.EI_CHAINLINKURL) + String(process.env.EI_LINK_JOB_PATH) + jobId + '/runs';
     const options = {
         url: chainlinkNodeURL,
@@ -20,6 +21,8 @@ export async function executeChainlinkRequest(jobId: string, data: PriceFeedRequ
         json: data
     }
 
+    console.log('CHAINLINK -> OPTIONS -> ', options);
+    
     return new Promise((resolve, reject) => {
         request(options, (error: any, response: unknown, body: any) => {
             if (error) {
@@ -104,6 +107,25 @@ export async function hexToDirectRequestParams(hex: string): Promise<DirectReque
     if(typeof elements === 'undefined') throw new Error("Invalid hex buffer provided.")
     if(Object.keys(elements).length===0) throw new Error("Hex decoded to empty object.")
     return elements;
+}
+
+export function hexToASCII(param: string) {
+    var hex = param;
+    if (hex.startsWith('0x')) {
+        hex = hex.substring(2);
+    }
+    var ascii = "";
+    for (var i = 0; i < hex.length; i += 2) {
+        var part = hex.substring(i, i + 2);
+        var ch = String.fromCharCode(parseInt(part, 16));
+        ascii = ascii + ch;
+    }
+    return ascii;
+}
+
+export function bufferCVToASCIIString(buff: BufferCV): string {
+    const ascii = hexToASCII(buff.buffer.toString('utf8'));
+    return ascii;
 }
 
 export interface DirectRequestParams {

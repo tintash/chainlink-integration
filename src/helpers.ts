@@ -83,4 +83,37 @@ export function getEnumDescription<T extends string, TEnumValue extends number>(
     return getEnumDescription(enumVariable, value);
 }
 
+export function bufferToHexPrefixString(buff: Buffer): string {
+    return '0x' + buff.toString('hex');
+}
+
+export async function paramsToHexPrefixString(params: DirectRequestParams): Promise<DirectRequestBuffer> {
+    if(Object.keys(params).length===0) throw new Error("No body param provided.")
+    const buffer = Buffer.from(JSON.stringify(params));
+    return {
+        buffer: bufferToHexPrefixString(buffer),
+        length: buffer.length, 
+        type: 'bytes'
+    }
+}
+
+export async function hexToDirectRequestParams(hex: string): Promise<DirectRequestParams> {
+    if(hex === "")  throw new Error("Empty hex buffer provided.")
+    const buffer = hexToBuffer(hex);
+    const elements: DirectRequestParams = JSON.parse(buffer.toString());
+    if(typeof elements === 'undefined') throw new Error("Invalid hex buffer provided.")
+    if(Object.keys(elements).length===0) throw new Error("Hex decoded to empty object.")
+    return elements;
+}
+
+export interface DirectRequestParams {
+    [name: string]: string
+}
+
+export interface DirectRequestBuffer {
+    buffer: string, 
+    length: number,
+    type: string
+}
+
 export const printTopic = 'print';

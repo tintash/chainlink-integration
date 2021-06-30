@@ -5,6 +5,7 @@ import { createSTXPostCondition, broadcastTransaction, bufferCVFromString, Chain
 import { StacksMocknet } from '@stacks/network';
 import { getOracleContract } from '../event-helpers';
 import BigNum from 'bn.js';
+import { bufferToHexPrefixString, hexToBuffer, hexToDirectRequestParams, paramsToHexPrefixString } from '../helpers';
 
 export function createObserverRouter() {
     const router = express.Router();
@@ -55,6 +56,34 @@ export function createObserverRouter() {
             });
         } catch (err) {
             res.status(400).json({ msg: err.message });
+        }
+    });
+
+    router.post('/create-buff', async (req, res) => {
+        var elements: {[name: string]: string} = {};
+        Object.keys(req.body).map((key,_) => {
+            const value = req.body[key].toString();
+            if(value && value!=='undefined') elements[key] = value;
+        })
+        
+        if(Object.keys(elements).length===0) res.status(400).json({ msg: 'bad request body'});
+
+        try {
+            const result = await paramsToHexPrefixString(elements);
+            res.status(200).json(result);
+        } catch (err) {
+            res.status(400).json(err.message);
+        }
+    });
+
+    router.post('/decode-buff', async (req, res) => {
+        const buf_string = req.body.buffer;
+        if( buf_string === 'undefined' ||  typeof buf_string != 'string') res.status(400).json({ msg: 'bad request body'});
+        try {
+            const result = await hexToDirectRequestParams(buf_string);
+            res.status(200).json(result);
+        } catch (err) {
+            res.status(400).json(err.message);
         }
     });
 

@@ -4,6 +4,20 @@
 (define-trait oracle-callback
     ((oracle-callback-handler (uint) (response uint uint))))
 
+;; Map of all the requests
+(define-map request-ids { request-id:  (buff 32) } { finished: bool })
+
+;; Total no of requests sent to oracle
+(define-data-var total-requests uint u0)
+
+;; function to calculate request id using certain parameters
+(define-public (create-request-id  (payment uint) (expiration uint))
+    (begin
+        (var-set total-requests (+ (var-get total-requests) u1));; increashing total requests
+        (ok (keccak256 (concat (keccak256 payment) (keccak256 expiration))))
+    )
+)
+
 ;; Creates the Chainlink request
 ;; Stores the hash of the params as the on-chain commitment for the request.
 ;; OracleRequest event for the Chainlink node to detect.
@@ -22,23 +36,28 @@
                                (data-version uint)
                                (data (buff 32)))
     (begin
-        (let ((result (unwrap! (stx-transfer? payment sender 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G) (err u1))))
-            (let ((request-id u1)         ;; todo(ludo): must be unique - EVM version is building request-id by hashing payment+callback+expiration
-                (expiration u999999))     ;; todo(ludo): set
-                (print {
-                    request-id: request-id,
-                    expiration: expiration,
-                    sender: sender,
-                    payment: payment,
-                    spec-id: spec-id,
-                    callback: callback,
-                    nonce: nonce,
-                    data-version: data-version,
-                    data: data 
-                })
-                (ok true)
+        (let ((result (unwrap! (stx-transfer? payment sender 'ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK) (err u1))))
+                (let ((request-id u1)         ;; todo(ludo): must be unique - EVM version is building request-id by hashing payment+callback+expiration
+                        (expiration u999999))     ;; todo(ludo): set        
+                    (let ((hashed-val (unwrap! (create-request-id payment expiration) (err u333))))
+                        (map-set request-ids { request-id: hashed-val } { finished: false })
+                        (print {
+                            request-id: (map-get? request-ids { request-id: hashed-val} ),
+                            expiration: expiration,
+                            sender: sender,
+                            payment: payment,
+                            spec-id: spec-id,
+                            callback: callback,
+                            nonce: nonce,
+                            data-version: data-version,
+                            data: data,
+                            total-requests: (var-get total-requests),
+                            hashed-val: hashed-val
+                        })
+                        (ok true)
+                    )
+                )
             )
-        )
     )
 )
 

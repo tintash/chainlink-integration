@@ -1,4 +1,3 @@
-import { ChainID } from '@stacks/transactions';
 
 export default async (): Promise<void> => {
   console.log('Jest - setup..');

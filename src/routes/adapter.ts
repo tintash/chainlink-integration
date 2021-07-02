@@ -29,6 +29,6 @@ export function createAdapterRouter() {
             res.status(500).json({ msg: err.message });
         }
     });
-
+    
     return router;
 };

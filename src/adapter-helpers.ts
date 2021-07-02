@@ -34,7 +34,7 @@ export interface ChainlinkFulfillmentResponse {
     fulfillment: OracleFulfillment;
 }
 
-export function parseOracleRequestValue(encoded_data: string) {
+export function parseOracleRequestValue(encoded_data: string): OracleFulfillment {
     const cl_val: ClarityValue = deserializeCV(hexToBuffer(encoded_data));
     console.log('mytest->  ',cl_val);
     if (cl_val.type == ClarityType.Tuple) {

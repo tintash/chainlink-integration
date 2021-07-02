@@ -30,11 +30,11 @@
 ;; data The CBOR payload of the request
 (define-public (oracle-request (sender principal)
                                (payment uint)
-                               (spec-id (buff 32))
+                               (spec-id (buff 66))
                                (callback <oracle-callback>)
                                (nonce uint)
                                (data-version uint)
-                               (data (buff 32)))
+                               (data (buff 86)))
     (begin
         (let ((result (unwrap! (stx-transfer? payment sender 'ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK) (err u1))))
                 (let ((request-id u1)         ;; todo(ludo): must be unique - EVM version is building request-id by hashing payment+callback+expiration

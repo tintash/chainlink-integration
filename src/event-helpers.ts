@@ -1,5 +1,6 @@
-import  {ChainID } from '@stacks/transactions';
-import { executeChainlinkRequest, PriceFeedRequest } from './helpers';
+import  { ChainID } from '@stacks/transactions';
+import { parseOracleRequestValue } from './adapter-helpers';
+import {  bufferCVToASCIIString, bufferToHexPrefixString, DirectRequestParams, executeChainlinkRequest, hexToDirectRequestParams } from './helpers';
 
 export interface OracleContractIdentifier {
     address: string;
@@ -35,18 +36,15 @@ export function isOracleContract(principal: string): boolean {
 }
 
 export async function executeChainlinkInitiator(encoded_data: string) {
-    const value_of = 'ETH';
-    const value_in = 'USD';
-    const compareURL = 'https://min-api.cryptocompare.com/data/price?fsym='+value_of+'&tsyms='+value_in;
-
-    const data: PriceFeedRequest = {
-        get: compareURL,
-        path: value_in,
-        payload: encoded_data
-    };
-    
     try {
-        const response = await executeChainlinkRequest(String(process.env.TEST_JOB_ID), data);
+        const oracle_topic_data = parseOracleRequestValue(encoded_data);
+        const job_spec_id = bufferCVToASCIIString(oracle_topic_data.spec_id); //process.env.TEST_JOB_ID
+        console.log('JOB_SPEC_ID -> ', job_spec_id);
+        const hex = bufferToHexPrefixString(oracle_topic_data.data.buffer);
+        const data: DirectRequestParams = await hexToDirectRequestParams(hex);
+        console.log('JOB_DATA -> ', data);
+        data.payload = encoded_data;
+        const response = await executeChainlinkRequest(job_spec_id, data);
         console.log(response);
     } catch (err) {
         console.log(err);

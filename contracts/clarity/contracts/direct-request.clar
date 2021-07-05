@@ -6,9 +6,9 @@
 (use-trait oracle-callback .oracle.oracle-callback)
 
 (define-public (request-api 
-                              (job-spec-id  (buff 66)) 
-                              (data (buff 256)) 
-                              (callback <oracle-callback>)  )
+                          (job-spec-id  (buff 66)) 
+                          (data (buff 1024)) 
+                          (callback <oracle-callback>)  )
     (contract-call?
       .oracle                 ;; oracle name
       oracle-request          ;; oracle method

@@ -19,7 +19,7 @@ import { getOracleContract } from './event-helpers';
 import { hexToBuffer } from './helpers';
 
 export interface OracleFulfillment {
-    request_id: UIntCV;
+    request_id: BufferCV;
     expiration: UIntCV;
     sender: StandardPrincipalCV;
     payment: UIntCV;
@@ -39,7 +39,7 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
     const cl_val: ClarityValue = deserializeCV(hexToBuffer(encoded_data));
     if (cl_val.type == ClarityType.Tuple) {
         const cl_val_data = cl_val.data;
-        const request_id = cl_val_data['request-id'] as UIntCV;
+        const request_id = cl_val_data['request-id'] as BufferCV;
         const sender: StandardPrincipalCV = cl_val_data['sender'] as StandardPrincipalCV;
         const expiration = cl_val_data['expiration'] as UIntCV;
         const payment = cl_val_data['payment'] as UIntCV;
@@ -90,7 +90,10 @@ export async function createOracleFulfillmentTx(
         postConditions: [],
         anchorMode: 1
     };
+    // console.log(txOptions.functionArgs);
     const transaction = await makeContractCall(txOptions);
-    const _ = broadcastTransaction(transaction, network);
+    // console.log(transaction);
+    const broadcastResult = await broadcastTransaction(transaction, network);
+    // console.log(broadcastResult);
     return transaction;
 }

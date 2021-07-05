@@ -2,7 +2,7 @@
 ;; Implementation of the Chainlink oracle protocol
 
 (define-trait oracle-callback
-    ((oracle-callback-handler (uint) (response uint uint))))
+    ((oracle-callback-handler ((optional (buff 128))) (response uint uint))))
 
 ;; Creates the Chainlink request
 ;; Stores the hash of the params as the on-chain commitment for the request.
@@ -56,8 +56,8 @@
                                         (payment uint)
                                         (callback <oracle-callback>)
                                         (expiration uint)
-                                        (data uint))
+                                        (data (optional (buff 128))))
     (let ((reconstructed-request-id u1))       ;; todo(ludo): must be able to reconstruct request-id
         (match (contract-call? callback oracle-callback-handler data)
-            sucess (ok true)
+            success (ok true)
             err (ok false))))

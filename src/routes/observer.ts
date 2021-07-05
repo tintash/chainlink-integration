@@ -40,6 +40,7 @@ export function createObserverRouter() {
             functionName: 'get-eth-price',
             functionArgs: [
                 bufferCVFromString('0x3334346664393436386561363437623838633530336461633830383263306134'),
+                bufferCVFromString("0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d"),
                 contractPrincipalCV('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', 'consumer'),
             ],
             senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),

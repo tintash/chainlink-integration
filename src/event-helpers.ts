@@ -39,14 +39,14 @@ export async function executeChainlinkInitiator(encoded_data: string) {
     try {
         const oracle_topic_data = parseOracleRequestValue(encoded_data);
         const job_spec_id = bufferCVToASCIIString(oracle_topic_data.spec_id);
-        console.log('JOB_SPEC_ID -> ', job_spec_id);
-        const hex = bufferToHexPrefixString(oracle_topic_data.data.buffer);
+        console.log('Chainlink JOB_SPEC_ID:< ', job_spec_id, ' >');
+        const hex = oracle_topic_data.data.buffer.toString();
         const data: DirectRequestParams = await hexToDirectRequestParams(hex);
-        console.log('JOB_DATA -> ', data);
+        console.log('Chainlink JOB_DATA:< ', data, ' >');
         data.payload = encoded_data;
         const response = await executeChainlinkRequest(job_spec_id, data);
-        console.log(response);
+        console.log('Chainlink Initiator Response:< ', response, ' >');    
     } catch (err) {
-        console.log(err);
+        console.log('Chainlink Initiator Error:< ', err, ' >');    
     }
 }

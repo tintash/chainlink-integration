@@ -1,5 +1,9 @@
-import { BufferCV } from '@stacks/transactions';
+import { StacksMocknet, StacksNetwork } from '@stacks/network';
+import { BufferCV, bufferCVFromString, ChainID, contractPrincipalCV, createSTXPostCondition, FungibleConditionCode } from '@stacks/transactions';
 import request from 'request';
+import { getOracleContract } from './event-helpers';
+import BigNum from 'bn.js';
+import * as MockData from './mock/direct-requests.json';
 
 export interface PriceFeedRequestFulfillment {
     result: number;
@@ -137,3 +141,25 @@ export interface DirectRequestBuffer {
 }
 
 export const printTopic = 'print';
+
+export function createDirectRequestTxOptions(network: StacksNetwork, id: number) {
+    const mock_request = MockData[id];  
+    const consumer_address = getOracleContract(ChainID.Testnet).address;
+    const post_condition = createSTXPostCondition('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', FungibleConditionCode.Equal, new BigNum(300));
+    const txOptions = {
+        contractAddress: consumer_address,
+        contractName: 'direct-request',
+        functionName: 'request-api',
+        functionArgs: [
+            bufferCVFromString(mock_request['job-id-buff']),
+            bufferCVFromString(mock_request['params-buff']),
+            contractPrincipalCV('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', 'direct-request'),
+        ],
+        senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),
+        validateWithAbi: true,
+        network,
+        postConditions: [post_condition],
+        anchorMode: 1
+    };
+    return txOptions;
+}

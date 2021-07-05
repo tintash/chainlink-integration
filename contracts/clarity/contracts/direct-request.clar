@@ -1,11 +1,11 @@
 ;; consumer
 
-(define-data-var eth_price (optional (buff 128)) none)
+(define-data-var data-value (optional (buff 128)) none)
 
 (impl-trait .oracle.oracle-callback)
 (use-trait oracle-callback .oracle.oracle-callback)
 
-(define-public (get-eth-price 
+(define-public (request-api 
                               (job-spec-id  (buff 66)) 
                               (data (buff 256)) 
                               (callback <oracle-callback>)  )
@@ -14,21 +14,21 @@
       oracle-request          ;; oracle method
       tx-sender               ;; this contract's address
       u300                    ;; payment in micro stx
-      job-spec-id             ;; chainlink jobspec id ;; 0x3334346664393436386561363437623838633530336461633830383263306134
+      job-spec-id             ;; chainlink jobspec id
       callback                ;; callback principal (addr) 
       u0                      ;; nonce
       u0                      ;; data version
-      data                    ;; data (random for now)
+      data                    ;; data
     )
 )
 
-(define-public (oracle-callback-handler (price  (optional (buff 128))))
+(define-public (oracle-callback-handler (value  (optional (buff 128))))
   (begin
-    (var-set eth_price price)
+    (var-set data-value value)
     (ok u200)
   )
 )
 
-(define-read-only (eth-price)
-  (ok (var-get eth_price))
+(define-read-only (read-data-value)
+  (ok (var-get data-value))
 )

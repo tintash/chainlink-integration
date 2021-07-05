@@ -86,7 +86,7 @@ export async function createOracleFulfillmentTx(
             uintCV(linkFulfillment.result),
         ],
         senderKey: oraclePaymentKey,
-        validateWithAbi: true,
+        validateWithAbi: false,
         network,
         postConditions: [],
         anchorMode: 1

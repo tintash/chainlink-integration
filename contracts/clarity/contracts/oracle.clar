@@ -20,7 +20,7 @@
                                (callback <oracle-callback>)
                                (nonce uint)
                                (data-version uint)
-                               (data (buff 86)))
+                               (data (buff 256)))
     (begin
         (let ((result (unwrap! (stx-transfer? payment sender 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G) (err u1))))
             (let ((request-id u1)         ;; todo(ludo): must be unique - EVM version is building request-id by hashing payment+callback+expiration

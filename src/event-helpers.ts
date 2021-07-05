@@ -38,7 +38,7 @@ export function isOracleContract(principal: string): boolean {
 export async function executeChainlinkInitiator(encoded_data: string) {
     try {
         const oracle_topic_data = parseOracleRequestValue(encoded_data);
-        const job_spec_id = bufferCVToASCIIString(oracle_topic_data.spec_id); //process.env.TEST_JOB_ID
+        const job_spec_id = bufferCVToASCIIString(oracle_topic_data.spec_id);
         console.log('JOB_SPEC_ID -> ', job_spec_id);
         const hex = bufferToHexPrefixString(oracle_topic_data.data.buffer);
         const data: DirectRequestParams = await hexToDirectRequestParams(hex);

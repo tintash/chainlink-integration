@@ -11,14 +11,15 @@ import {
     StacksTransaction,
     broadcastTransaction,
     makeContractCall,
-    uintCV,
     SignedContractCallOptions,
+    bufferCVFromString,
 } from '@stacks/transactions';
+import { optionalCVOf } from '@stacks/transactions/dist/clarity/types/optionalCV';
 import { getOracleContract } from './event-helpers';
 import { hexToBuffer } from './helpers';
 
 export interface OracleFulfillment {
-    request_id: UIntCV;
+    request_id: BufferCV;
     expiration: UIntCV;
     sender: StandardPrincipalCV;
     payment: UIntCV;
@@ -36,10 +37,9 @@ export interface ChainlinkFulfillmentResponse {
 
 export function parseOracleRequestValue(encoded_data: string): OracleFulfillment {
     const cl_val: ClarityValue = deserializeCV(hexToBuffer(encoded_data));
-    console.log('mytest->  ',cl_val);
     if (cl_val.type == ClarityType.Tuple) {
         const cl_val_data = cl_val.data;
-        const request_id = cl_val_data['request-id'] as UIntCV;
+        const request_id = cl_val_data['request-id'] as BufferCV;
         const sender: StandardPrincipalCV = cl_val_data['sender'] as StandardPrincipalCV;
         const expiration = cl_val_data['expiration'] as UIntCV;
         const payment = cl_val_data['payment'] as UIntCV;
@@ -59,7 +59,6 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
             data_version: data_version,
             data: data,
         };
-        console.log('Sajjad->', data);
         return result;
     }
     throw new Error('Invalid oracle request data received back!');
@@ -83,7 +82,7 @@ export async function createOracleFulfillmentTx(
             fulfillment.payment,
             fulfillment.callback,
             fulfillment.expiration,
-            uintCV(linkFulfillment.result),
+            optionalCVOf(bufferCVFromString(linkFulfillment.result))
         ],
         senderKey: oraclePaymentKey,
         validateWithAbi: true,
@@ -91,9 +90,10 @@ export async function createOracleFulfillmentTx(
         postConditions: [],
         anchorMode: 1
     };
-    console.log('Sajjad->', txOptions);
+    // console.log(txOptions.functionArgs);
     const transaction = await makeContractCall(txOptions);
-    console.log('Sajjad->', transaction);
-    const _ = broadcastTransaction(transaction, network);
+    // console.log(transaction);
+    const broadcastResult = await broadcastTransaction(transaction, network);
+    // console.log(broadcastResult);
     return transaction;
 }

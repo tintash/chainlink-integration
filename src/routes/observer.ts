@@ -1,11 +1,9 @@
 import express from 'express';
 import { processNewBlock } from '../initiator';
 import { CoreNodeBlockMessage } from '../event-stream/core-node-message';
-import { createSTXPostCondition, broadcastTransaction, bufferCVFromString, ChainID, contractPrincipalCV, makeContractCall, FungibleConditionCode } from '@stacks/transactions';
+import { broadcastTransaction, ChainID, makeContractCall } from '@stacks/transactions';
 import { StacksMocknet } from '@stacks/network';
-import { getOracleContract } from '../event-helpers';
-import BigNum from 'bn.js';
-import { bufferToHexPrefixString, hexToBuffer, hexToDirectRequestParams, paramsToHexPrefixString } from '../helpers';
+import { bufferToHexPrefixString, createDirectRequestTxOptions, hexToBuffer, hexToDirectRequestParams, paramsToHexPrefixString } from '../helpers';
 
 export function createObserverRouter() {
     const router = express.Router();
@@ -32,22 +30,8 @@ export function createObserverRouter() {
     // For testing purposes only, to be removed
     router.get('/consumer-test', async (req, res) => {
         const network = new StacksMocknet();
-        const consumer_address = getOracleContract(ChainID.Testnet).address;
-        const post_condition = createSTXPostCondition('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', FungibleConditionCode.Equal, new BigNum(300));
-        const txOptions = {
-            contractAddress: consumer_address,
-            contractName: 'consumer',
-            functionName: 'get-eth-price',
-            functionArgs: [
-                bufferCVFromString('0x3334346664393436386561363437623838633530336461633830383263306134'),
-                contractPrincipalCV('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', 'consumer'),
-            ],
-            senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),
-            validateWithAbi: true,
-            network,
-            postConditions: [post_condition],
-            anchorMode: 1
-        };
+        const id = (req.query.id === undefined) ? 0 : parseInt(String(req.query.id));
+        const txOptions =   createDirectRequestTxOptions(network, id)
         try {
             const transaction = await makeContractCall(txOptions);
             const _ = broadcastTransaction(transaction, network);

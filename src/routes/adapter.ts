@@ -16,9 +16,9 @@ export function createAdapterRouter() {
                 result: price,
                 fulfillment: fulfillment,
             };
-            const response = await createOracleFulfillmentTx(linkFulfillment, ChainID.Testnet);
-            const txid = response.txid();
-            console.log(txid);
+            const txid = await createOracleFulfillmentTx(linkFulfillment, ChainID.Testnet);
+            //const txid = response.txid();
+            console.log('tx->', txid);
             res.status(200).json({ 
                 symbol: "ETH-USD",
                 value: price,

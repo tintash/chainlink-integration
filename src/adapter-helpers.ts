@@ -36,7 +36,6 @@ export interface ChainlinkFulfillmentResponse {
 
 export function parseOracleRequestValue(encoded_data: string): OracleFulfillment {
     const cl_val: ClarityValue = deserializeCV(hexToBuffer(encoded_data));
-    console.log('mytest->  ',cl_val);
     if (cl_val.type == ClarityType.Tuple) {
         const cl_val_data = cl_val.data;
         const request_id = cl_val_data['request-id'] as UIntCV;
@@ -59,7 +58,6 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
             data_version: data_version,
             data: data,
         };
-        console.log('Sajjad->', data);
         return result;
     }
     throw new Error('Invalid oracle request data received back!');
@@ -68,7 +66,7 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
 export async function createOracleFulfillmentTx(
     linkFulfillment: ChainlinkFulfillmentResponse,
     chainId: ChainID
-): Promise<StacksTransaction> {
+): Promise<String> {
     const oracle = getOracleContract(chainId);
     const oracleFulfillmentFunction = 'fullfill-oracle-request';
     const oraclePaymentKey = String(process.env.STX_ADDR_PRIVATE_KEY);
@@ -93,7 +91,7 @@ export async function createOracleFulfillmentTx(
     };
     console.log('Sajjad->', txOptions);
     const transaction = await makeContractCall(txOptions);
-    console.log('Sajjad->', transaction);
+    console.log('Sajjad->Nouman', transaction);
     const _ = broadcastTransaction(transaction, network);
-    return transaction;
+    return transaction.txid();
 }

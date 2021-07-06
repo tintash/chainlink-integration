@@ -1,0 +1,40 @@
+openapi: 3.0.2
+servers:
+  - url: http://localhost:3000/
+    description: Local
+info:
+  title: Stacks Chainlink Integration
+  version: '0.0.1'
+  description: |
+    
+paths:
+  /adapter:
+    parameters:
+      - get: url 
+        description: url of get request 
+        required: true
+        schema:
+          type: string
+      - path: json response key
+        description: key of the response from where you want to get the data 
+        required: true
+        schema:
+          type: string
+      - payload: payload
+        description: url of get request 
+        required: true
+        schema:
+          type: string
+      - result: number result 
+        description: result returned from api  
+        required: true
+        schema:
+          type: number
+    post:
+      summary: Adapter callback
+      description: Post data to contract from adapter
+      responses:
+        200:
+          description: Success
+        500:
+          description: Failed to run faucet

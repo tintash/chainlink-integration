@@ -20,7 +20,7 @@ paths:
         required: true
         schema:
           type: string
-      - payload: payload
+      - payload: request
         description: url of get request 
         required: true
         schema:

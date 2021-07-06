@@ -67,7 +67,7 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
 export async function createOracleFulfillmentTx(
     linkFulfillment: ChainlinkFulfillmentResponse,
     chainId: ChainID
-): Promise<String> {
+): Promise<string> {
     const oracle = getOracleContract(chainId);
     const oracleFulfillmentFunction = 'fullfill-oracle-request';
     const oraclePaymentKey = String(process.env.STX_ADDR_PRIVATE_KEY);

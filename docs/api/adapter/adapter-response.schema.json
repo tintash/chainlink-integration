@@ -1,18 +1,19 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "description": "POST Request param body for adapter",
-    "title": "AdapterRequestBody",
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
+    "description": "Adapter response after contract call",
+    "title": "ResponseAdapter",
+    "required": [
+        "data"
+      ],
     "additionalProperties": false,
-    "required": ["data"],
     "properties": {
-      "id": {
+      "value": {
         "type": "string"
       },
       "data": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["payload"],
         "properties": {
           "get": {
             "type": "string"
@@ -26,7 +27,14 @@
           "result": {
             "type": "number"
           }
-        }
+        },
+        "required": [
+          "payload",
+          "result"
+        ]
+      },
+      "txid": {
+        "type": "string"
       }
     }
   }

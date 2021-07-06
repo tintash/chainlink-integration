@@ -33,7 +33,6 @@ async function run() {
     });
   });
 
-  console.log('Files length ', files.length);
   if (files.length === 0) {
     throw new Error(`Did not find any files in ${schemaFilesPath}`);
   }
@@ -55,7 +54,6 @@ async function run() {
       strictIndexSignatures: true,
       declareExternallyReferenced: false,
     });
-    console.log('Output type', outputType);
     fs.appendFileSync(typeFilePath, outputType);
     fs.appendFileSync(typeFilePath, '\n');
   }

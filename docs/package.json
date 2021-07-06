@@ -1,8 +1,8 @@
 {
-  "name": "@stacks/stacks-blockchain-api-types",
+  "name": "chainlink-integration-types",
   "version": "0.1.0",
   "access": "public",
-  "description": "TypeScript descriptions of Stacks 2.0 blockchain API entities",
+  "description": "TypeScript descriptions of chainlink integration API Types",
   "main": "index.d.ts",
   "scripts": {
     "build": "npm run generate:schemas",

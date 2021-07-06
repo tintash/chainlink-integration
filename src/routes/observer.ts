@@ -1,7 +1,7 @@
 import express from 'express';
 import { processNewBlock } from '../initiator';
 import { CoreNodeBlockMessage } from '../event-stream/core-node-message';
-import { broadcastTransaction, ChainID, makeContractCall } from '@stacks/transactions';
+import { broadcastTransaction, ChainID, makeContractCall, TxBroadcastResultRejected } from '@stacks/transactions';
 import { StacksMocknet } from '@stacks/network';
 import { bufferToHexPrefixString, createDirectRequestTxOptions, hexToBuffer, hexToDirectRequestParams, paramsToHexPrefixString } from '../helpers';
 
@@ -34,7 +34,12 @@ export function createObserverRouter() {
         const txOptions =   createDirectRequestTxOptions(network, id)
         try {
             const transaction = await makeContractCall(txOptions);
-            const _ = broadcastTransaction(transaction, network);
+            const broadcastResult = await broadcastTransaction(transaction, network);
+            const txRejected = (broadcastResult as TxBroadcastResultRejected);
+            const error  = txRejected.error;
+            if(error) {
+                res.status(400).json({ msg: error+' with reason: '+txRejected.reason }).end();
+            }
             res.status(200).json({
                 txid: transaction.txid(),
             });

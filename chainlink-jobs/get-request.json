@@ -1,0 +1,23 @@
+{
+    "name": "get-request",
+    "initiators": [
+        {
+            "type": "external",
+            "params": {
+                "name": "external-initiator",
+                "body": {}
+            }
+        }
+    ],
+    "tasks": [
+        {
+            "type": "httpget"
+        },
+        {
+            "type": "jsonparse"
+        },
+        {
+            "type": "external-adapter"
+        }
+    ]
+}

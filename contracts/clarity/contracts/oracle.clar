@@ -35,7 +35,18 @@
 ;; function to remove request-id from map if we want to cancel the request
 (define-public (cancel-request (hashed-request-id (buff 32)) )
     (begin
-        (ok (map-delete request-ids { request-id: hashed-request-id }))
+        (if (unwrap! (is-request-present hashed-request-id) err-request-not-found)
+            (ok (map-delete request-ids { request-id: hashed-request-id })) ;; request-id was present and deleted from map
+            (ok false) ;; request-id not present
+        )
+    )
+)
+
+;; function to check the presence of request-id.
+(define-public (is-request-present (hashed-request-id (buff 32)) )
+    (if (is-none (map-get? request-ids { request-id: hashed-request-id }))
+        (ok false)
+        (ok true)
     )
 )
 

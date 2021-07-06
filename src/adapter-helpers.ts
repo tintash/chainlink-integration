@@ -13,6 +13,7 @@ import {
     makeContractCall,
     SignedContractCallOptions,
     bufferCVFromString,
+    TxBroadcastResultRejected,
 } from '@stacks/transactions';
 import { optionalCVOf } from '@stacks/transactions/dist/clarity/types/optionalCV';
 import { getOracleContract } from './event-helpers';
@@ -90,10 +91,11 @@ export async function createOracleFulfillmentTx(
         postConditions: [],
         anchorMode: 1
     };
-    // console.log(txOptions.functionArgs);
     const transaction = await makeContractCall(txOptions);
-    // console.log(transaction);
     const broadcastResult = await broadcastTransaction(transaction, network);
-    // console.log(broadcastResult);
+    const error = (broadcastResult as TxBroadcastResultRejected);
+    if(error) {
+        throw new Error(error.error+' with reason: '+error.reason);
+    }
     return transaction;
 }

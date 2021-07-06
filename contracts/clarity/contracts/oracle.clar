@@ -35,7 +35,18 @@
 ;; function to remove request-id from map if we want to cancel the request
 (define-public (cancel-request (hashed-request-id (buff 32)) )
     (begin
-        (ok (map-delete request-ids { request-id: hashed-request-id }))
+        (if (unwrap! (is-request-present hashed-request-id) err-request-not-found)
+            (ok (map-delete request-ids { request-id: hashed-request-id })) ;; request-id was present and deleted from map
+            (ok false) ;; request-id not present
+        )
+    )
+)
+
+;; function to check the presence of request-id.
+(define-public (is-request-present (hashed-request-id (buff 32)) )
+    (if (is-none (map-get? request-ids { request-id: hashed-request-id }))
+        (ok false)
+        (ok true)
     )
 )
 
@@ -98,11 +109,12 @@
                                         (data (optional (buff 128))))
     (let ((reconstructed-request-id (unwrap! (create-request-id payment expiration) err-reconstructed-id-construction-failed)))       ;; todo(ludo): must be able to reconstruct request-id  
         (if (is-eq reconstructed-request-id request-id)
-            (if (is-eq false (is-none (map-get? request-ids { request-id: reconstructed-request-id }))) ;; This statement computes to true if reconstructed-request-id is present in the map 
+            (if (is-none (map-get? request-ids { request-id: reconstructed-request-id })) ;; This statement computes to true if reconstructed-request-id is not present in the map             
+                err-request-not-found   ;; reconstructed-request-id not present in the map 
                 (if (< block-height (+ expiration expiration-limit)) ;; check if the request id is expired or not
                     (begin   
                         (map-delete request-ids { request-id: reconstructed-request-id })                                      
-                        (match (contract-call? callback oracle-callback-handler data);; reconstructed-request-id found
+                        (match (contract-call? callback oracle-callback-handler data)
                             sucess (ok true)
                             err (ok false))
                     )
@@ -110,8 +122,7 @@
                         (map-delete request-ids { request-id: reconstructed-request-id }) 
                         err-request-expired 
                     )
-                )              
-                err-request-not-found   ;; reconstructed-request-id not present in the map 
+                )  
             )
             err-reconstructed-id-not-equal ;; reconstructed-request-id and request-id not equal
         )       

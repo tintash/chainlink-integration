@@ -93,9 +93,11 @@ export async function createOracleFulfillmentTx(
     };
     const transaction = await makeContractCall(txOptions);
     const broadcastResult = await broadcastTransaction(transaction, network);
-    const error = (broadcastResult as TxBroadcastResultRejected);
+    const txRejected = (broadcastResult as TxBroadcastResultRejected);
+    const error  = txRejected.error;
+    console.log('asdfasdfas: ',error);
     if(error) {
-        throw new Error(error.error+' with reason: '+error.reason);
+        throw new Error(error+' with reason: '+txRejected.reason);
     }
     return transaction;
 }

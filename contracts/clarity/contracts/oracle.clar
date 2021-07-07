@@ -8,12 +8,17 @@
 (define-constant err-request-not-found (err u13))
 (define-constant err-reconstructed-id-not-equal (err u14))
 (define-constant err-request-expired (err u15))
+(define-constant err-invalid-tx-sender (err u16))
 
 ;; Exipiration limit
 (define-constant expiration-limit u1000)
 
 ;; Observer-server's wallet address
 (define-constant initiator 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G)
+
+;; Contract owners
+(define-map contract-owners principal bool)
+(define-private (is-valid-owner?) (is-some (map-get? contract-owners tx-sender)))
 
 ;; Traits
 (define-trait oracle-callback
@@ -107,24 +112,17 @@
                                         (callback <oracle-callback>)
                                         (expiration uint)
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (create-request-id payment expiration) err-reconstructed-id-construction-failed)))       ;; todo(ludo): must be able to reconstruct request-id  
-        (if (is-eq reconstructed-request-id request-id)
-            (if (is-none (map-get? request-ids { request-id: reconstructed-request-id })) ;; This statement computes to true if reconstructed-request-id is not present in the map             
-                err-request-not-found   ;; reconstructed-request-id not present in the map 
-                (if (< block-height (+ expiration expiration-limit)) ;; check if the request id is expired or not
-                    (begin   
-                        (map-delete request-ids { request-id: reconstructed-request-id })                                      
-                        (match (contract-call? callback oracle-callback-handler data)
-                            sucess (ok true)
-                            err (ok false))
-                    )
-                    (begin  ;; block-height exceeded the limit and request-id expired
-                        (map-delete request-ids { request-id: reconstructed-request-id }) 
-                        err-request-expired 
-                    )
-                )  
-            )
-            err-reconstructed-id-not-equal ;; reconstructed-request-id and request-id not equal
-        )       
+    (let ((reconstructed-request-id (unwrap! (create-request-id payment expiration) err-reconstructed-id-construction-failed)))         ;; todo(ludo): must be able to reconstruct request-id  
+        (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                           ;; reconstructed-request-id and request-id not equal
+        (asserts! (is-valid-owner?) err-invalid-tx-sender)
+        (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                      ;; reconstructed-request-id not present in the map
+        (map-delete request-ids { request-id: reconstructed-request-id })
+        (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                 ;; block-height exceeded the limit and request-id expired
+        (match (contract-call? callback oracle-callback-handler data)
+            sucess (ok true)
+            err (ok false)
+        )
     )
 )
+
+(map-set contract-owners initiator true)

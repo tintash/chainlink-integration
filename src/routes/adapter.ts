@@ -1,9 +1,10 @@
 import { ChainID } from '@stacks/transactions';
 import express from 'express';
-import { validate } from '../helpers';
+import { validate } from '../validate-helpers';
 import { ChainlinkFulfillmentResponse, createOracleFulfillmentTx, parseOracleRequestValue } from '../adapter-helpers';
 import {ResponseAdapter} from 'chainlink-integration-types';
 
+const adapterRequestSchemaPath = 'chainlink-integration-types/api/adapter/post-request-adapter.schema.json';
 export function createAdapterRouter() {
     const router = express.Router();
     router.use(express.json());
@@ -11,8 +12,8 @@ export function createAdapterRouter() {
     router.post('/', async (req, res) => {
         try {
             console.log('Chainlink Callback Body:< ', req.body, ' >');
-            const requestPath = 'chainlink-integration-types/api/adapter/post-request-adapter.schema.json';
-            const schemaValidation = await validate(requestPath, req.body);
+            
+            const schemaValidation = await validate(adapterRequestSchemaPath, req.body);
             if(!schemaValidation.valid) {
                 const error = schemaValidation.error? schemaValidation.error: 'Invalid Schema';
                 res.status(500).json(error);

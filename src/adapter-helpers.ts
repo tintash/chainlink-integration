@@ -28,6 +28,7 @@ export interface OracleFulfillment {
     callback: ContractPrincipalCV;
     nonce: UIntCV;
     data_version: UIntCV;
+    request_count: UIntCV;
     data: BufferCV;
 }
 
@@ -48,6 +49,7 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
         const callback = cl_val_data['callback'] as ContractPrincipalCV;
         const nonce = cl_val_data['nonce'] as UIntCV;
         const data_version = cl_val_data['data-version'] as UIntCV;
+        const request_count = cl_val_data['request-count'] as UIntCV;
         const data: BufferCV = cl_val_data['data'] as BufferCV;
         const result: OracleFulfillment = {
             request_id: request_id,
@@ -58,6 +60,7 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
             callback: callback,
             nonce: nonce,
             data_version: data_version,
+            request_count: request_count,
             data: data,
         };
         return result;
@@ -83,6 +86,7 @@ export async function createOracleFulfillmentTx(
             fulfillment.payment,
             fulfillment.callback,
             fulfillment.expiration,
+            fulfillment.request_count,
             optionalCVOf(bufferCVFromString(linkFulfillment.result))
         ],
         senderKey: oraclePaymentKey,

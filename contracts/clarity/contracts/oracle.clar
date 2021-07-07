@@ -28,12 +28,19 @@
 (define-map request-ids { request-id:  (buff 32) } { expiration: uint })
 
 ;; Total no of requests sent to oracle (variable for future usage)
-(define-data-var total-requests uint u0)
+(define-data-var request-count uint u0)
 
 ;; function to calculate request id using certain parameters
 (define-public (create-request-id  (payment uint) (expiration uint))
     (begin
-        (ok (keccak256 (concat (keccak256 payment) (keccak256 expiration))))
+        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count)))))
+    )
+)
+
+;; function to calculate request id using certain parameters
+(define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint))
+    (begin
+        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count))))
     )
 )
 
@@ -75,6 +82,7 @@
     (begin
         (let ((result (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed)))
             (let ((expiration-block-height block-height))     ;; todo(ludo): set        
+                (var-set request-count (+ u1 (var-get request-count)))
                 (let ((hashed-val (unwrap! (create-request-id payment expiration-block-height) err-request-id-creation-failed)))
                     (map-set request-ids { request-id: hashed-val } { expiration: expiration-block-height })
                     (print {
@@ -87,7 +95,7 @@
                         nonce: nonce,
                         data-version: data-version,
                         data: data,
-                        total-requests: (var-get total-requests),
+                        request-count: (var-get request-count),
                         hashed-val: hashed-val
                     })
                     (ok true)
@@ -111,8 +119,9 @@
                                         (payment uint)
                                         (callback <oracle-callback>)
                                         (expiration uint)
+                                        (req-count uint)
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (create-request-id payment expiration) err-reconstructed-id-construction-failed)))         ;; todo(ludo): must be able to reconstruct request-id  
+    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count) err-reconstructed-id-construction-failed)))         ;; todo(ludo): must be able to reconstruct request-id  
         (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                           ;; reconstructed-request-id and request-id not equal
         (asserts! (is-valid-owner?) err-invalid-tx-sender)
         (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                      ;; reconstructed-request-id not present in the map

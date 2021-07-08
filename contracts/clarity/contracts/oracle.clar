@@ -8,12 +8,17 @@
 (define-constant err-request-not-found (err u13))
 (define-constant err-reconstructed-id-not-equal (err u14))
 (define-constant err-request-expired (err u15))
+(define-constant err-invalid-tx-sender (err u16))
 
 ;; Exipiration limit
 (define-constant expiration-limit u1000)
 
 ;; Observer-server's wallet address
 (define-constant initiator 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G)
+
+;; Contract owners
+(define-map contract-owners principal bool)
+(define-private (is-valid-owner?) (is-some (map-get? contract-owners tx-sender)))
 
 ;; Traits
 (define-trait oracle-callback
@@ -23,12 +28,19 @@
 (define-map request-ids { request-id:  (buff 32) } { expiration: uint })
 
 ;; Total no of requests sent to oracle (variable for future usage)
-(define-data-var total-requests uint u0)
+(define-data-var request-count uint u0)
 
 ;; function to calculate request id using certain parameters
 (define-public (create-request-id  (payment uint) (expiration uint))
     (begin
-        (ok (keccak256 (concat (keccak256 payment) (keccak256 expiration))))
+        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count)))))
+    )
+)
+
+;; function to calculate request id using certain parameters
+(define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint))
+    (begin
+        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count))))
     )
 )
 
@@ -70,6 +82,7 @@
     (begin
         (let ((result (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed)))
             (let ((expiration-block-height block-height))     ;; todo(ludo): set        
+                (var-set request-count (+ u1 (var-get request-count)))
                 (let ((hashed-val (unwrap! (create-request-id payment expiration-block-height) err-request-id-creation-failed)))
                     (map-set request-ids { request-id: hashed-val } { expiration: expiration-block-height })
                     (print {
@@ -82,7 +95,7 @@
                         nonce: nonce,
                         data-version: data-version,
                         data: data,
-                        total-requests: (var-get total-requests),
+                        request-count: (var-get request-count),
                         hashed-val: hashed-val
                     })
                     (ok true)
@@ -106,25 +119,19 @@
                                         (payment uint)
                                         (callback <oracle-callback>)
                                         (expiration uint)
+                                        (req-count uint)
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (create-request-id payment expiration) err-reconstructed-id-construction-failed)))       ;; todo(ludo): must be able to reconstruct request-id  
-        (if (is-eq reconstructed-request-id request-id)
-            (if (is-none (map-get? request-ids { request-id: reconstructed-request-id })) ;; This statement computes to true if reconstructed-request-id is not present in the map             
-                err-request-not-found   ;; reconstructed-request-id not present in the map 
-                (if (< block-height (+ expiration expiration-limit)) ;; check if the request id is expired or not
-                    (begin   
-                        (map-delete request-ids { request-id: reconstructed-request-id })                                      
-                        (match (contract-call? callback oracle-callback-handler data)
-                            sucess (ok true)
-                            err (ok false))
-                    )
-                    (begin  ;; block-height exceeded the limit and request-id expired
-                        (map-delete request-ids { request-id: reconstructed-request-id }) 
-                        err-request-expired 
-                    )
-                )  
-            )
-            err-reconstructed-id-not-equal ;; reconstructed-request-id and request-id not equal
-        )       
+    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
+        (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
+        (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
+        (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map
+        (map-delete request-ids { request-id: reconstructed-request-id })                                                                               ;; remove request-id from map
+        (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                                 ;; block-height exceeded the limit and request-id expired
+        (match (contract-call? callback oracle-callback-handler data)
+            sucess (ok true)
+            err (ok false)
+        )
     )
 )
+
+(map-set contract-owners initiator true)                    ;; set observer-server as owner 

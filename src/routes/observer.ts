@@ -10,6 +10,10 @@ export function createObserverRouter() {
     router.use(express.json());
 
     router.post('/new_block', async (req, res) => {
+        if(Object.keys(req.body).length == 0) {
+            res.sendStatus(500);
+            return;
+        }
         const core_message: CoreNodeBlockMessage = req.body;
         const _ = processNewBlock(ChainID.Testnet, core_message)
         res.sendStatus(200).end();

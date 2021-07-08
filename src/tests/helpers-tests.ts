@@ -1,5 +1,6 @@
 import { hexToDirectRequestParams, paramsToHexPrefixString } from "../helpers";
 import { parseOracleRequestValue } from "../adapter-helpers";
+import { isOracleContract } from "../event-helpers";
 
 test('error: parse oracle request value', () => {
     const param = 'dummy'; 
@@ -45,4 +46,17 @@ test('parse oracle request', async () => {
     expect(result.request_id.type).toBe(1);
     expect(result.sender.type).toBe(5);
     expect(result.sender.address.hash160).toBe('888a0a096bd302b3a4130616c00458e243ee5337');
+});
+
+
+test('success: is oracle contract', async () => {
+    const contractIdentifier =  'ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC.oracle';
+    const result = isOracleContract(contractIdentifier);
+    expect(result).toBe(true);
+})
+
+test('failure: is oracle contract', async () => {
+    const contractIdentifier =  'ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC.consumer';
+    const result = isOracleContract(contractIdentifier);
+    expect(result).toBe(false);
 })

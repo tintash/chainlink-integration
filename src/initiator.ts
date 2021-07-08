@@ -8,6 +8,8 @@ export async function processNewBlock(
     chainId: ChainID,
     msg: CoreNodeBlockMessage
 ): Promise<void> {
+
+
     const parsedMsg = parseMessageTransactions(chainId, msg);
     for (const event of parsedMsg.events) {
         if(event.type === CoreNodeEventType.ContractEvent) {
@@ -15,7 +17,7 @@ export async function processNewBlock(
                 isOracleContract(event.contract_event.contract_identifier) &&
                 event.contract_event.topic === printTopic
             ) {
-                const result = await executeChainlinkInitiator(event.contract_event.raw_value);
+              const result = await executeChainlinkInitiator(event.contract_event.raw_value);
                 return result;
             }
         }

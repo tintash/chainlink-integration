@@ -32,7 +32,7 @@ Once you have setup the chainlink node and tested it works fine, it's time to ru
 
 First clone the repository by using the following command.
 
-`git clone https://github.com/fariedt/stacks-blockchain-api` 
+`git clone https://github.com/blockstack/stacks-blockchain-api` 
 
 and build the application.
 

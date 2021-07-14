@@ -25,27 +25,32 @@
     ((oracle-callback-handler ((optional (buff 128))) (response uint uint))))
 
 ;; Map of all the requests
-(define-map request-ids { request-id:  (buff 32) } { expiration: uint })
+(define-map request-ids { request-id:  (buff 66) } { expiration: uint })
 
-;; Total no of requests sent to oracle (variable for future usage)
+;; Total no of requests sent to oracle 
 (define-data-var request-count uint u0)
 
+;; getting updated request counts
+(define-public (get-request-count)
+    (ok (var-get request-count))
+)
+
 ;; function to calculate request id using certain parameters
-(define-public (create-request-id  (payment uint) (expiration uint))
+(define-public (create-request-id  (payment uint) (expiration uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count)))))
+        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))
     )
 )
 
 ;; function to calculate request id using certain parameters
-(define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint))
+(define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count))))
+        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count)) (keccak256 sender-id-buff))))
     )
 )
 
 ;; function to remove request-id from map if we want to cancel the request
-(define-public (cancel-request (hashed-request-id (buff 32)) )
+(define-public (cancel-request (hashed-request-id (buff 66)) )
     (begin
         (if (unwrap! (is-request-present hashed-request-id) err-request-not-found)
             (ok (map-delete request-ids { request-id: hashed-request-id })) ;; request-id was present and deleted from map
@@ -55,7 +60,7 @@
 )
 
 ;; function to check the presence of request-id.
-(define-public (is-request-present (hashed-request-id (buff 32)) )
+(define-public (is-request-present (hashed-request-id (buff 66)) )
     (if (is-none (map-get? request-ids { request-id: hashed-request-id }))
         (ok false)
         (ok true)
@@ -75,6 +80,7 @@
 (define-public (oracle-request (sender principal)
                                 (payment uint)
                                 (spec-id (buff 66))
+                                (sender-id-buff (buff 84))                                
                                 (callback <oracle-callback>)
                                 (nonce uint)
                                 (data-version uint)
@@ -83,7 +89,7 @@
         (let ((result (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed)))
             (let ((expiration-block-height block-height))     ;; todo(ludo): set        
                 (var-set request-count (+ u1 (var-get request-count)))
-                (let ((hashed-val (unwrap! (create-request-id payment expiration-block-height) err-request-id-creation-failed)))
+                (let ((hashed-val (unwrap! (create-request-id payment expiration-block-height sender-id-buff) err-request-id-creation-failed)))
                     (map-set request-ids { request-id: hashed-val } { expiration: expiration-block-height })
                     (print {
                         request-id: hashed-val,
@@ -96,7 +102,8 @@
                         data-version: data-version,
                         data: data,
                         request-count: (var-get request-count),
-                        hashed-val: hashed-val
+                        hashed_val: hashed-val,
+                        sender-id-buff: sender-id-buff
                     })
                     (ok true)
                 )
@@ -115,13 +122,14 @@
 ;; expiration The expiration that the node should respond by before the requester can cancel
 ;; data The data to return to the consuming contract
 ;; Status if the external call was successful
-(define-public (fullfill-oracle-request (request-id (buff 32))
+(define-public (fullfill-oracle-request (request-id (buff 66))
                                         (payment uint)
                                         (callback <oracle-callback>)
                                         (expiration uint)
                                         (req-count uint)
+                                        (sender-id-buff (buff 84))
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
+    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
         (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
         (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
         (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map

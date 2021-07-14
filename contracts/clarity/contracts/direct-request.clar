@@ -6,15 +6,17 @@
 (use-trait oracle-callback .oracle.oracle-callback)
 
 (define-public (request-api 
-                          (job-spec-id  (buff 66)) 
+                          (job-spec-id (buff 66)) 
+                          (sender-id-buff (buff 84)) 
                           (data (buff 1024)) 
-                          (callback <oracle-callback>)  )
+                          (callback <oracle-callback>))                        
     (contract-call?
       .oracle                 ;; oracle name
       oracle-request          ;; oracle method
       tx-sender               ;; this contract's address
-      u350                    ;; payment in micro stx
-      job-spec-id             ;; chainlink jobspec id
+      u400                    ;; payment in micro stx
+      job-spec-id             ;; chainlink-job id
+      sender-id-buff          ;; transaction-sender-id encoded to buffer 
       callback                ;; callback principal (addr) 
       u0                      ;; nonce
       u0                      ;; data version

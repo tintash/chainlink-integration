@@ -67,6 +67,11 @@
     )
 )
 
+;; get the block height for tests
+(define-public (get-block-height)
+    (ok block-height)
+)
+
 ;; Creates the Chainlink request
 ;; Stores the hash of the params as the on-chain commitment for the request.
 ;; OracleRequest event for the Chainlink node to detect.
@@ -139,6 +144,20 @@
             sucess (ok true)
             err (ok false)
         )
+    )
+)
+
+;;temporary
+(define-public (fullfill-oracle-request-test (request-id (buff 66))
+                                        (payment uint)
+                                        (callback <oracle-callback>)
+                                        (expiration uint)
+                                        (req-count uint)
+                                        (sender-id-buff (buff 84))
+                                        (data (optional (buff 128))))
+    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
+        ;;(asserts! (is-eq reconstructed-request-id request-id)  err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
+        (ok request-id)
     )
 )
 

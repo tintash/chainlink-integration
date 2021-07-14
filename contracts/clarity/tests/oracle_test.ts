@@ -2,8 +2,22 @@
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.6.0/index.ts';
 import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
+import * as fs from "fs";
 //This variable is used in code to encode string to buffer array types
 var textEncoder = new TextEncoder();
+const senderIdBuffer = textEncoder.encode( '0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145')
+console.log(senderIdBuffer.toString());
+
+const byteToHex: any = [];
+export function buff(val: ArrayBuffer) {
+    const buff = new Uint8Array(val);
+    const hexOctets = new Array(buff.length);
+
+    for (let i = 0; i < buff.length; ++i)
+        hexOctets[i] = byteToHex[buff[i]];
+
+    return `0x${hexOctets.join("")}`;
+}
 
 Clarinet.test({
     name: "Ensure that oracle <...>",
@@ -15,7 +29,7 @@ Clarinet.test({
                 types.principal(wallet_1.address),
                 types.uint(500),
                 types.buff(textEncoder.encode('0x3334346664393436386561363437623838633530336461633830383263306134')),
-                types.buff(textEncoder.encode('0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145')),
+                types.buff(senderIdBuffer),
                 types.principal("ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.direct-request"),
                 types.uint(0),
                 types.uint(0),
@@ -25,6 +39,9 @@ Clarinet.test({
 
            //Test no:2 checking that reuest count is u1
             Tx.contractCall("oracle", "get-request-count", [], wallet_1.address),
+            
+            // checking block height
+            Tx.contractCall("oracle","get-block-height",[], wallet_1.address),
 
 
         //Test no:5 Expecting u10 error while sending u0 STX
@@ -32,7 +49,7 @@ Clarinet.test({
                 types.principal(wallet_1.address),
                 types.uint(0),
                 types.buff(textEncoder.encode('0x3334346664393436386561363437623838633530336461633830383263306134')),
-                types.buff(textEncoder.encode('0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145')),
+                types.buff(senderIdBuffer),
                 types.principal("ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.direct-request"),
                 types.uint(0),
                 types.uint(0),
@@ -41,7 +58,19 @@ Clarinet.test({
               wallet_1.address),
 
         //Test no:4 checking that request count is now u2
-        Tx.contractCall("oracle", "get-request-count", [], wallet_1.address),
+            Tx.contractCall("oracle", "get-request-count", [], wallet_1.address),
+
+        //Test no:6 Expecting request id does not match error. (err u12)
+            // Tx.contractCall("oracle", "fullfill-oracle-request", [
+            //     types.buff(textEncoder.encode('0x131c025a62b57a22341da6edc2a75a172bad7c76c08069ba7c5f7948a0fa2970')),
+            //     types.uint(500),
+            //     types.principal("ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.direct-request"),
+            //     types.uint(0),
+            //     types.uint(2),
+            //     types.buff(textEncoder.encode('0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145')),
+            //     types.some('0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d'),
+            // ],
+            //     wallet_1.address),
 
 
         //Test no:6 Expecting request id does not match error. (err u12)
@@ -109,42 +138,79 @@ Clarinet.test({
         block.receipts[0].result
         .expectOk()
         .expectBool(true);
+        console.log(block.receipts[0].events[1].contract_event.value);
+
+        // block.receipts[0].events
+        // .exp
 
         // contracts events are two
         // block-height 
+
+        block.receipts[1].result //checking request count (should be u1)
+        .expectOk()
+        .expectUint(1);
+
+        block.receipts[2].result //checking block-height (currently theres only one block)
+        .expectOk()
+        .expectUint(1);
+
+        block.receipts[3].result
+        .expectErr()
+        .expectUint(10);
+
+        block.receipts[4].result //checking request count (should be u1) afetr error
+        .expectOk()
+        .expectUint(1);
+
 
         let event = block.receipts[0].events[1];
         let {contract_event} = event;
         //console.log(contract_event);
 
-        let {topic, value} = contract_event;
-        //console.log(topic);
-        // console.log(value);
+        let {value} = contract_event;
 
-        let callback = value as {callback: string};
-        console.log(typeof value);
+        const splittedParams = value.split(',');
+     
+        let elements: {[name: string]: string} = {};
+        splittedParams.forEach((obj: string) => {
+            const arr = obj.split(':');
+            elements[arr[0].replace(/\s+/g, '').toString()] = arr[1].replace(/\s+/g, '').toString();
+           
+        });
+        //console.log(elements.hashed_val);
+       
+
+        block = chain.mineBlock([
+            /* 
+             * Add transactions with: 
+             * Tx.contractCall(...)
+            */
+            //Test no:4 checking that request count is now u2
+            Tx.contractCall("oracle", "get-request-count", [], wallet_1.address),
+
+            //Test no:6 Expecting request id does not match error. (err u12)
+            Tx.contractCall("oracle", "fullfill-oracle-request-test", [
+                types.buff(Buffer.from(elements.hashed_val, 'hex')),
+                types.uint(500),
+                types.principal("ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.direct-request"),
+                types.uint(1),
+                types.uint(1),
+                types.buff(textEncoder.encode('0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145')),
+                types.some('0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d'),
+            ],
+                wallet_1.address),
 
 
-        // let x = JSON.stringify(value);
-        // console.log(x);
-        // let y = JSON.parse(x);
-        // console.log(y);
 
+        ]);
+        // assertEquals(block.receipts.length, 0);
+        // assertEquals(block.height, 3);
 
-
-        block.receipts[1].result
+        block.receipts[0].result
         .expectOk()
         .expectUint(1);
 
-        block.receipts[2].result
-        .expectErr()
-        .expectUint(10);
-
-        block.receipts[3].result
-        .expectOk()
-        .expectUint(1);
-
-
+        console.log(block.receipts[1].result);
 
         // block.receipts[2].result //Test no:3 err-reconstructed-id-not-equal (err u14)
         // .expectErr()
@@ -161,17 +227,6 @@ Clarinet.test({
         // block.receipts[2].result //Test no:6  request not expired
         // .expectOk()
         // .expectBool(true);
-       
-
-        block = chain.mineBlock([
-            /* 
-             * Add transactions with: 
-             * Tx.contractCall(...)
-            */
-
-        ]);
-        assertEquals(block.receipts.length, 0);
-        assertEquals(block.height, 3);
     },
 });
 // Clarinet.test({

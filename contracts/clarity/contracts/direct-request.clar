@@ -14,7 +14,7 @@
       .oracle                 ;; oracle name
       oracle-request          ;; oracle method
       tx-sender               ;; this contract's address
-      u400                    ;; payment in micro stx
+      u500                    ;; payment in micro stx
       job-spec-id             ;; chainlink-job id
       sender-id-buff          ;; transaction-sender-id encoded to buffer 
       callback                ;; callback principal (addr) 

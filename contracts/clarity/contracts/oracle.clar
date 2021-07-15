@@ -14,7 +14,9 @@
 (define-constant expiration-limit u1000)
 
 ;; Observer-server's wallet address
-(define-constant initiator 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G)
+(define-constant initiator 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2) ;;wallet-2
+
+;; ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G ;;actual initiator
 
 ;; Contract owners
 (define-map contract-owners principal bool)
@@ -25,7 +27,7 @@
     ((oracle-callback-handler ((optional (buff 128))) (response uint uint))))
 
 ;; Map of all the requests
-(define-map request-ids { request-id:  (buff 66) } { expiration: uint })
+(define-map request-ids { request-id:  (buff 32) } { expiration: uint })
 
 ;; Total no of requests sent to oracle 
 (define-data-var request-count uint u0)
@@ -50,7 +52,7 @@
 )
 
 ;; function to remove request-id from map if we want to cancel the request
-(define-public (cancel-request (hashed-request-id (buff 66)) )
+(define-public (cancel-request (hashed-request-id (buff 32)) )
     (begin
         (if (unwrap! (is-request-present hashed-request-id) err-request-not-found)
             (ok (map-delete request-ids { request-id: hashed-request-id })) ;; request-id was present and deleted from map
@@ -60,7 +62,7 @@
 )
 
 ;; function to check the presence of request-id.
-(define-public (is-request-present (hashed-request-id (buff 66)) )
+(define-public (is-request-present (hashed-request-id (buff 32)) )
     (if (is-none (map-get? request-ids { request-id: hashed-request-id }))
         (ok false)
         (ok true)
@@ -97,18 +99,18 @@
                 (let ((hashed-val (unwrap! (create-request-id payment expiration-block-height sender-id-buff) err-request-id-creation-failed)))
                     (map-set request-ids { request-id: hashed-val } { expiration: expiration-block-height })
                     (print {
-                        request-id: hashed-val,
+                        request_id: hashed-val,
                         expiration: expiration-block-height,
                         sender: sender,
                         payment: payment,
-                        spec-id: spec-id,
+                        spec_id: spec-id,
                         callback: callback,
                         nonce: nonce,
                         data-version: data-version,
                         data: data,
-                        request-count: (var-get request-count),
+                        request_count: (var-get request-count),
                         hashed_val: hashed-val,
-                        sender-id-buff: sender-id-buff
+                        sender_id_buff: sender-id-buff
                     })
                     (ok true)
                 )
@@ -127,7 +129,7 @@
 ;; expiration The expiration that the node should respond by before the requester can cancel
 ;; data The data to return to the consuming contract
 ;; Status if the external call was successful
-(define-public (fullfill-oracle-request (request-id (buff 66))
+(define-public (fullfill-oracle-request (request-id (buff 32))
                                         (payment uint)
                                         (callback <oracle-callback>)
                                         (expiration uint)
@@ -144,20 +146,6 @@
             sucess (ok true)
             err (ok false)
         )
-    )
-)
-
-;;temporary
-(define-public (fullfill-oracle-request-test (request-id (buff 66))
-                                        (payment uint)
-                                        (callback <oracle-callback>)
-                                        (expiration uint)
-                                        (req-count uint)
-                                        (sender-id-buff (buff 84))
-                                        (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
-        ;;(asserts! (is-eq reconstructed-request-id request-id)  err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
-        (ok request-id)
     )
 )
 

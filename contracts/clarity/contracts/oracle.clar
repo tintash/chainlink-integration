@@ -15,7 +15,6 @@
 
 ;; Observer-server's wallet address
 (define-constant initiator 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2) ;;wallet-2
-
 ;; ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G ;;actual initiator
 
 ;; Contract owners
@@ -106,7 +105,7 @@
                         spec_id: spec-id,
                         callback: callback,
                         nonce: nonce,
-                        data-version: data-version,
+                        data_version: data-version,
                         data: data,
                         request_count: (var-get request-count),
                         hashed_val: hashed-val,

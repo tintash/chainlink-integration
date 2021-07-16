@@ -18,8 +18,11 @@ Clarinet.test({
     async fn(chain: Chain, accounts: Map<string, Account>) {
         const wallet_1 = accounts.get("wallet_1")!;
         const wallet_2 = accounts.get("wallet_2")!;
+        
+        const wallet1Address = wallet_1.address;
+        const wallet2Address = wallet_2.address;
 
-        let directRequestParams = [
+        const directRequestParams = [
             "0x3334346664393436386561363437623838633530336461633830383263306134",
             "0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145",
             "0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d",
@@ -27,15 +30,15 @@ Clarinet.test({
         ];
 
         let block = chain.mineBlock([
-            
+
            //Correct request
-            Tx.contractCall("direct-request", "request-api", directRequestParams, wallet_1.address),
+            Tx.contractCall("direct-request", "request-api", directRequestParams, wallet1Address),
 
             //Initial data should be none
-            Tx.contractCall("direct-request", "read-data-value", [],  wallet_1.address),      
+            Tx.contractCall("direct-request", "read-data-value", [],  wallet1Address),      
         ]);
 
-        block.receipts[0].result
+        block.receipts[0].result 
         .expectOk()
         .expectBool(true);
 
@@ -48,7 +51,7 @@ Clarinet.test({
         let {value} = contract_event;
         let elements = getEventElements(value);
 
-        let fulfillmentRequestParams = [
+        const fulfillmentRequestParams = [
             elements.hashed_val,
             types.uint(500),
             types.principal("ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.direct-request"),
@@ -61,11 +64,10 @@ Clarinet.test({
         block = chain.mineBlock([
 
             //Fulfilling request using Wallet-2 that is listed in oracle as initiator (expecting (ok true))
-            Tx.contractCall("oracle", "fullfill-oracle-request", fulfillmentRequestParams,
-            wallet_2.address),
+            Tx.contractCall("oracle", "fullfill-oracle-request", fulfillmentRequestParams, wallet2Address),
 
             //Now data should not be none after fulfilling request
-            Tx.contractCall("direct-request", "read-data-value", [],  wallet_1.address),
+            Tx.contractCall("direct-request", "read-data-value", [], wallet1Address),
 
         ]);
 

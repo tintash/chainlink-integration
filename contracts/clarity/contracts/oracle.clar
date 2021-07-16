@@ -68,11 +68,6 @@
     )
 )
 
-;; get the block height for tests
-(define-public (get-block-height)
-    (ok block-height)
-)
-
 ;; Creates the Chainlink request
 ;; Stores the hash of the params as the on-chain commitment for the request.
 ;; OracleRequest event for the Chainlink node to detect.

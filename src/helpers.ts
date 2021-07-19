@@ -145,7 +145,7 @@ export const printTopic = 'print';
 export function createDirectRequestTxOptions(network: StacksNetwork, id: number) {
     const mock_request = MockData[id];  
     const consumer_address = getOracleContract(ChainID.Testnet).address;
-    const post_condition = createSTXPostCondition('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', FungibleConditionCode.Equal, new BigNum(350));
+    const post_condition = createSTXPostCondition('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', FungibleConditionCode.Equal, new BigNum(500));
     const sender_principal_buff = bufferToHexPrefixString(Buffer.from(String(process.env.STX_ADDR)));
     const txOptions = {
         contractAddress: consumer_address,

@@ -14,8 +14,7 @@
 (define-constant expiration-limit u1000)
 
 ;; Observer-server's wallet address
-(define-constant initiator 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2) ;;wallet-2
-;; ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G ;;actual initiator
+(define-constant initiator 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G)
 
 ;; Contract owners
 (define-map contract-owners principal bool)
@@ -144,3 +143,4 @@
 )
 
 (map-set contract-owners initiator true)                    ;; set observer-server as owner 
+(map-set contract-owners 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2 true) ;; clarinet contract tester

@@ -76,7 +76,7 @@ Clarinet.test({
         let elements = getEventElements(value); //getting response elements of first oracle request
 
         let fulfillmentRequestParams = [
-            elements.hashed_val,
+            elements.request_id,
             types.uint(500),
             types.principal("ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.direct-request"),
             elements.expiration,

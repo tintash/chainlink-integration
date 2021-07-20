@@ -85,31 +85,28 @@
                                 (nonce uint)
                                 (data-version uint)
                                 (data (buff 1024)))
-    (begin
-        (let ((result (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed)))
-            (let ((expiration-block-height block-height))     ;; todo(ludo): set        
-                (var-set request-count (+ u1 (var-get request-count)))
-                (let ((hashed-val (unwrap! (create-request-id payment expiration-block-height sender-id-buff) err-request-id-creation-failed)))
-                    (map-set request-ids { request-id: hashed-val } { expiration: expiration-block-height })
-                    (print {
-                        request_id: hashed-val,
-                        expiration: expiration-block-height,
-                        sender: sender,
-                        payment: payment,
-                        spec_id: spec-id,
-                        callback: callback,
-                        nonce: nonce,
-                        data_version: data-version,
-                        data: data,
-                        request_count: (var-get request-count),
-                        hashed_val: hashed-val,
-                        sender_id_buff: sender-id-buff
-                    })
-                    (ok true)
-                )
+
+        (begin
+            (asserts! (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed) err-stx-transfer-failed)       
+            (var-set request-count (+ u1 (var-get request-count)))
+            (let ((hashed-val (unwrap! (create-request-id payment block-height sender-id-buff) err-request-id-creation-failed)))
+                (map-set request-ids { request-id: hashed-val } { expiration: block-height })
+                (print {
+                    request_id: hashed-val,
+                    expiration: block-height,
+                    sender: sender,
+                    payment: payment,
+                    spec_id: spec-id,
+                    callback: callback,
+                    nonce: nonce,
+                    data_version: data-version,
+                    data: data,
+                    request_count: (var-get request-count),
+                    sender_id_buff: sender-id-buff
+                })
+                (ok true)
             )
-        )
-    )
+        )           
 )
 
 ;; Called by the Chainlink node to fulfill requests

@@ -29,6 +29,7 @@ export interface OracleFulfillment {
     nonce: UIntCV;
     data_version: UIntCV;
     request_count: UIntCV;
+    sender_buff: BufferCV;
     data: BufferCV;
 }
 
@@ -41,15 +42,16 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
     const cl_val: ClarityValue = deserializeCV(hexToBuffer(encoded_data));
     if (cl_val.type == ClarityType.Tuple) {
         const cl_val_data = cl_val.data;
-        const request_id = cl_val_data['request-id'] as BufferCV;
+        const request_id = cl_val_data['request_id'] as BufferCV;
         const sender: StandardPrincipalCV = cl_val_data['sender'] as StandardPrincipalCV;
         const expiration = cl_val_data['expiration'] as UIntCV;
         const payment = cl_val_data['payment'] as UIntCV;
-        const spec_id: BufferCV = cl_val_data['spec-id'] as BufferCV;
+        const spec_id: BufferCV = cl_val_data['spec_id'] as BufferCV;
         const callback = cl_val_data['callback'] as ContractPrincipalCV;
         const nonce = cl_val_data['nonce'] as UIntCV;
-        const data_version = cl_val_data['data-version'] as UIntCV;
-        const request_count = cl_val_data['request-count'] as UIntCV;
+        const data_version = cl_val_data['data_version'] as UIntCV;
+        const request_count = cl_val_data['request_count'] as UIntCV;
+        const sender_buff:BufferCV = cl_val_data['sender_id_buff'] as BufferCV;
         const data: BufferCV = cl_val_data['data'] as BufferCV;
         const result: OracleFulfillment = {
             request_id: request_id,
@@ -61,6 +63,7 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
             nonce: nonce,
             data_version: data_version,
             request_count: request_count,
+            sender_buff: sender_buff,
             data: data,
         };
         return result;
@@ -87,6 +90,7 @@ export async function createOracleFulfillmentTx(
             fulfillment.callback,
             fulfillment.expiration,
             fulfillment.request_count,
+            fulfillment.sender_buff,
             optionalCVOf(bufferCVFromString(linkFulfillment.result))
         ],
         senderKey: oraclePaymentKey,

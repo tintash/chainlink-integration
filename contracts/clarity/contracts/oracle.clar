@@ -27,20 +27,25 @@
 ;; Map of all the requests
 (define-map request-ids { request-id:  (buff 32) } { expiration: uint })
 
-;; Total no of requests sent to oracle (variable for future usage)
+;; Total no of requests sent to oracle 
 (define-data-var request-count uint u0)
 
+;; getting updated request counts
+(define-public (get-request-count)
+    (ok (var-get request-count))
+)
+
 ;; function to calculate request id using certain parameters
-(define-public (create-request-id  (payment uint) (expiration uint))
+(define-public (create-request-id  (payment uint) (expiration uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count)))))
+        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))
     )
 )
 
 ;; function to calculate request id using certain parameters
-(define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint))
+(define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count))))
+        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count)) (keccak256 sender-id-buff))))
     )
 )
 
@@ -75,34 +80,33 @@
 (define-public (oracle-request (sender principal)
                                 (payment uint)
                                 (spec-id (buff 66))
+                                (sender-id-buff (buff 84))                                
                                 (callback <oracle-callback>)
                                 (nonce uint)
                                 (data-version uint)
                                 (data (buff 1024)))
-    (begin
-        (let ((result (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed)))
-            (let ((expiration-block-height block-height))     ;; todo(ludo): set        
-                (var-set request-count (+ u1 (var-get request-count)))
-                (let ((hashed-val (unwrap! (create-request-id payment expiration-block-height) err-request-id-creation-failed)))
-                    (map-set request-ids { request-id: hashed-val } { expiration: expiration-block-height })
-                    (print {
-                        request-id: hashed-val,
-                        expiration: expiration-block-height,
-                        sender: sender,
-                        payment: payment,
-                        spec-id: spec-id,
-                        callback: callback,
-                        nonce: nonce,
-                        data-version: data-version,
-                        data: data,
-                        request-count: (var-get request-count),
-                        hashed-val: hashed-val
-                    })
-                    (ok true)
-                )
+
+        (begin
+            (asserts! (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed) err-stx-transfer-failed)       
+            (var-set request-count (+ u1 (var-get request-count)))
+            (let ((hashed-val (unwrap! (create-request-id payment block-height sender-id-buff) err-request-id-creation-failed)))
+                (map-set request-ids { request-id: hashed-val } { expiration: block-height })
+                (print {
+                    request_id: hashed-val,
+                    expiration: block-height,
+                    sender: sender,
+                    payment: payment,
+                    spec_id: spec-id,
+                    callback: callback,
+                    nonce: nonce,
+                    data_version: data-version,
+                    data: data,
+                    request_count: (var-get request-count),
+                    sender_id_buff: sender-id-buff
+                })
+                (ok true)
             )
-        )
-    )
+        )           
 )
 
 ;; Called by the Chainlink node to fulfill requests
@@ -120,8 +124,9 @@
                                         (callback <oracle-callback>)
                                         (expiration uint)
                                         (req-count uint)
+                                        (sender-id-buff (buff 84))
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
+    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
         (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
         (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
         (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map
@@ -135,3 +140,4 @@
 )
 
 (map-set contract-owners initiator true)                    ;; set observer-server as owner 
+(map-set contract-owners 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2 true) ;; clarinet contract tester

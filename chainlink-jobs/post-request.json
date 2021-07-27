@@ -1,0 +1,23 @@
+{
+    "name": "post-request",
+    "initiators": [
+        {
+            "type": "external",
+            "params": {
+                "name": "external-initiator", 
+                "body": {}
+            }
+        }
+    ],
+    "tasks": [
+        {
+            "type": "httppost"
+        },
+        {
+            "type": "jsonparse"
+        },
+        {
+            "type": "external-adapter"
+        }
+    ]
+}

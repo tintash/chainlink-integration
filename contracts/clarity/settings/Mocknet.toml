@@ -1,0 +1,6 @@
+[network]
+name = "mocknet"
+node_rpc_address = "http://localhost:20443"
+
+[accounts.deployer]
+mnemonic = "elevator pulse copper license toilet kid city render can useful below toward collect employ credit nice carpet hello family wool bicycle unique fire spider"

@@ -1,0 +1,11 @@
+[project]
+name = "clarity"
+requirements = []
+
+[contracts.oracle]
+path = "contracts/oracle.clar"
+depends_on = []
+
+[contracts.direct-request]
+path = "contracts/direct-request.clar"
+depends_on = ["oracle"]

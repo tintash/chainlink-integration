@@ -1,5 +1,5 @@
 import express from 'express';
-import { requestEthereumPrice } from '../middleware/TestConsumerMware';
+import { requestEthereumPrice } from '../middleware/testConsumerMware';
 
 export function createConsumerRouter() {
   const router = express.Router();

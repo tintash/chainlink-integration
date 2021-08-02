@@ -5,7 +5,7 @@ import { Socket } from 'net';
 import { addAsync } from '@awaitjs/express';
 import { createAdapterRouter } from './routes/adapter';
 import { createObserverRouter } from './routes/observer';
-import { createConsumerRouter } from './routes/TestnetConsumer';
+import { createConsumerRouter } from './routes/testnetConsumer';
 import morgan from 'morgan';
 import * as bodyParser from 'body-parser';
 

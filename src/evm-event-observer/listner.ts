@@ -8,7 +8,7 @@ export function createEVMObserver() {
 
   const oracle = new web3.eth.Contract(
     oracleContractABI as AbiItem[],
-    String(process.env.ETHEREUM_CHAINLINK_ORACLE_CONTRACT)
+    String(process.env.ETHEREUM_STACKS_CONTRACT_CONSUMER_CONTRACT)
   );
 
   return oracle.events.OracleRequest({}, function (error: any, event: any) {

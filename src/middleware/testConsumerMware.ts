@@ -7,14 +7,9 @@ let provider = new HDWalletProvider(
 );
 const web3 = new Web3(provider);
 const consumerContractABI = JSON.parse(
-  readFileSync(
-    '/Users/vector-pc/chainlink-integration/src/contract-abi/testnetConsumer.json',
-    'utf-8'
-  )
+  readFileSync('src/contract-abi/testnetConsumer.json', 'utf-8')
 );
-const oracleContractABI = JSON.parse(
-  readFileSync('/Users/vector-pc/chainlink-integration/src/contract-abi/Oracle.json', 'utf-8')
-);
+const oracleContractABI = JSON.parse(readFileSync('src/contract-abi/oracle.json', 'utf-8'));
 
 let oracleRequestABI = oracleContractABI.find(
   (obj: { name: string }) => obj.name === 'OracleRequest'

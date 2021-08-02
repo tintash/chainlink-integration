@@ -6,6 +6,7 @@ import { addAsync } from '@awaitjs/express';
 import { createAdapterRouter } from './routes/adapter';
 import { createEVMObserver } from './evm-event-observer/listner';
 import { createObserverRouter } from './routes/observer';
+import { createConsumerRouter } from './routes/testnetConsumer';
 import morgan from 'morgan';
 import * as bodyParser from 'body-parser';
 
@@ -19,12 +20,13 @@ export function startApiServer(): Server {
 
   const adapterRouter = createAdapterRouter();
   const observerRouter = createObserverRouter();
-  app.use('/adapter', adapterRouter);
-  app.use('/', observerRouter);
+  const consumerRouter = createConsumerRouter();
 
+  app.use('/adapter', adapterRouter);
+  app.use('/consumer', consumerRouter);
+  app.use('/', observerRouter);
   const port = parseInt(String(process.env.PORT)) || 3000;
   app.set('port', port);
-
   const server = http.createServer(app);
   server.listen(port, '0.0.0.0');
   const serverSockets = new Set<Socket>();

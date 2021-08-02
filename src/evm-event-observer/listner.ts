@@ -4,14 +4,16 @@ import { readFileSync } from 'fs';
 
 export function createEVMObserver() {
   const web3 = new Web3(String(process.env.ETHEREUM_URL));
-  const oracleContractABI = JSON.parse(readFileSync('src/contract-abi/oracle.json', 'utf-8'));
+  const oracleContractABI = JSON.parse(
+    readFileSync('src/contract-abi/stacksRequestConsumer.json', 'utf-8')
+  );
 
   const oracle = new web3.eth.Contract(
     oracleContractABI as AbiItem[],
     String(process.env.ETHEREUM_STACKS_CONTRACT_CONSUMER_CONTRACT)
   );
 
-  return oracle.events.OracleRequest({}, function (error: any, event: any) {
+  return oracle.events.GetRequestFulfillmentEvent({}, function (error: any, event: any) {
     console.log(event);
   });
 }

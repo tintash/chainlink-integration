@@ -7,7 +7,7 @@ import 'https://github.com/smartcontractkit/chainlink/contracts/src/v0.4/vendor/
 contract StacksRequestConsumer is ChainlinkClient, Ownable {
   uint256 private constant ORACLE_PAYMENT = 1 * LINK;
 
-  event GetRequestFulfillmentEvent(bytes32 indexed requestId, string indexed response);
+  event GetRequestFulfillmentEvent(bytes32 indexed requestId, bytes32 indexed response);
 
   constructor() public Ownable() {
     setPublicChainlinkToken();
@@ -22,14 +22,14 @@ contract StacksRequestConsumer is ChainlinkClient, Ownable {
     Chainlink.Request memory req = buildChainlinkRequest(
       stringToBytes32(_jobId),
       this,
-      this.getRequest.selector
+      this.fulfillGetRequest.selector
     );
     req.add('get', _requestUrl);
     req.add('path', _responsePath);
     sendChainlinkRequestTo(_oracle, req, ORACLE_PAYMENT);
   }
 
-  function fulfillGetRequest(bytes32 _requestId, string _response)
+  function fulfillGetRequest(bytes32 _requestId, bytes32 _response)
     public
     recordChainlinkFulfillment(_requestId)
   {

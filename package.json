@@ -11,7 +11,8 @@
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:eslint": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe",
     "lint:prettier": "prettier --check src/**/*.{ts,json}",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe --fix && prettier --write --check src/**/*.{ts,json}"
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe --fix && prettier --write --check src/**/*.{ts,json}",
+    "migrate": "node-pg-migrate -j ts -m src/migrations"
   },
   "keywords": [],
   "prettier": "@stacks/prettier-config",
@@ -24,6 +25,7 @@
     "@stacks/prettier-config": "^0.0.8",
     "@stacks/transactions": "^2.0.0-beta.1",
     "@types/morgan": "^1.9.2",
+    "@types/node-pg-migrate": "^2.3.1",
     "@types/nodemon": "^1.19.0",
     "@types/request": "^2.48.5",
     "@types/supertest": "^2.0.11",
@@ -33,10 +35,13 @@
     "express-winston": "^4.1.0",
     "jest": "^27.0.5",
     "morgan": "^1.10.0",
+    "node-pg-migrate": "^5.10.0",
     "nodemon": "^2.0.7",
+    "pg": "^8.7.1",
     "request": "^2.88.2",
     "supertest": "^6.1.3",
     "ts-jest": "^27.0.3",
+    "ts-node": "^10.1.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
@@ -44,6 +49,7 @@
     "@types/debug": "^4.1.5",
     "@types/express": "^4.17.12",
     "@types/jest": "^26.0.23",
+    "@types/pg": "^8.6.1",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
     "eslint": "^7.28.0",

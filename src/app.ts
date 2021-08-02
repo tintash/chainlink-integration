@@ -7,6 +7,7 @@ import {createAdapterRouter} from './routes/adapter';
 import {createObserverRouter} from './routes/observer';
 import morgan from 'morgan';
 import * as bodyParser from 'body-parser';
+import { getPgClientConfig } from './datastore/postgres-store';
 
 
 
@@ -42,3 +43,7 @@ export function startApiServer(): Server {
 
 export const App = startApiServer();
 console.log('Server initiated!');
+
+
+const config = getPgClientConfig()
+console.log(config);

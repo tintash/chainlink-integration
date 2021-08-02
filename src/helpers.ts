@@ -5,6 +5,14 @@ import { getOracleContract } from './event-helpers';
 import BigNum from 'bn.js';
 import * as MockData from './mock/direct-requests.json';
 
+export const isDevEnv = process.env.NODE_ENV === 'development';
+export const isTestEnv = process.env.NODE_ENV === 'test';
+export const isProdEnv =
+    process.env.NODE_ENV === 'production' ||
+    process.env.NODE_ENV === 'prod' ||
+    !process.env.NODE_ENV ||
+    (!isTestEnv && !isDevEnv);
+
 export interface PriceFeedRequestFulfillment {
     result: number;
     payload: any
@@ -164,4 +172,27 @@ export function createDirectRequestTxOptions(network: StacksNetwork, id: number)
         anchorMode: 1
     };
     return txOptions;
+}
+
+export function parsePort(portVal: number | string | undefined): number | undefined {
+    if (portVal === undefined) {
+        return undefined;
+    }
+    if (/^[-+]?(\d+|Infinity)$/.test(portVal.toString())) {
+        const port = Number(portVal);
+        if (port < 1 || port > 65535) {
+        throw new Error(`Port ${port} is invalid`);
+    }
+        return port;
+    } else {
+        throw new Error(`Port ${portVal} is invalid`);
+    }
+}
+
+export function timeout(ms: number): Promise<void> {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, ms);
+    });
 }

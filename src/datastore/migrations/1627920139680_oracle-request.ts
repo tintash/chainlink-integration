@@ -4,7 +4,7 @@ import { MigrationBuilder, ColumnDefinitions } from 'node-pg-migrate';
 export const shorthands: ColumnDefinitions | undefined = undefined;
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
-    pgm.createTable('oracle_request', {
+    pgm.createTable('oracle_requests', {
         id: {
             type: 'serial',
             primaryKey: true,
@@ -19,7 +19,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
         },
         expiration: {
             notNull: true,
-            type: 'integer',
+            type: 'numeric',
+
         },
         sender: {
             type: 'string',
@@ -27,7 +28,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
         },
         payment: {
             notNull: true,
-            type: 'integer',
+            type: 'numeric',
         },
         spec_id: {
             notNull: true,
@@ -38,15 +39,15 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
             notNull: true,
         },
         nonce: {
-            type: 'integer',
+            type: 'numeric',
             notNull: true,
         },
         data_version: {
-            type: 'integer',
+            type: 'numeric',
             notNull: true,
         },
         request_count: {
-            type: 'integer',
+            type: 'numeric',
             notNull: true,
         },
         sender_buff: {
@@ -58,10 +59,10 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
             notNull: true,
         }
     });
-    pgm.createIndex('oracle_request', 'request_id');
-    pgm.createIndex('oracle_request', 'evm_request_id');
+    pgm.createIndex('oracle_requests', 'request_id');
+    pgm.createIndex('oracle_requests', 'evm_request_id');
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
-    pgm.dropTable('oracle_request');
+    pgm.dropTable('oracle_requests');
 }

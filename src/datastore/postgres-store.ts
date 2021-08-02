@@ -1,12 +1,11 @@
 import * as path from 'path';
 import PgMigrate, { RunnerOption } from 'node-pg-migrate';
 import { Pool, PoolClient, ClientConfig, Client, ClientBase, QueryResult, QueryConfig } from 'pg';
-import { hexToBuffer, isDevEnv, isTestEnv, parsePort, timeout } from '../helpers';
+import { isDevEnv, isTestEnv, parsePort, timeout } from '../helpers';
 import { OracleFulfillment } from '../adapter-helpers';
 
 const MIGRATIONS_TABLE = 'pgmigrations';
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
-console.log(MIGRATIONS_DIR.toString());
 
 export type ElementType<T extends any[]> = T extends (infer U)[] ? U : never;
 export type FoundOrNot<T> = { found: true; result: T } | { found: false };
@@ -93,14 +92,14 @@ const ORACLE_REQUEST_COLUMNS = `
 interface OracleRequestQueryResult {
     request_id: Buffer;
     evm_request_id: Buffer;
-    expiration: number;
+    expiration: string;
     sender: string;
-    payment: number;
+    payment: string;
     spec_id: Buffer;
     callback: string;
-    nonce: number;
-    data_version: number;
-    request_count: number;
+    nonce: string;
+    data_version: string;
+    request_count: string;
     sender_buff: Buffer;
     data: Buffer;
 };
@@ -136,8 +135,6 @@ export interface DataStore {
 export class PgDataStore implements DataStore {
     readonly pool: Pool;
     private constructor(pool: Pool) {
-        // eslint-disable-next-line constructor-super
-        // super();
         this.pool = pool;
     }
     
@@ -145,10 +142,10 @@ export class PgDataStore implements DataStore {
         return this.query(async client => {
             const queryResult = await client.query(
                 `
-                SELECT * FROM oracle_request
+                SELECT * FROM oracle_requests
                 WHERE evm_request_id = $1
                 `,
-                [hexToBuffer(evm_request_id)]
+                [evm_request_id]
             );
             if (queryResult.rowCount > 0) {
                 return {
@@ -165,28 +162,27 @@ export class PgDataStore implements DataStore {
             try {
                 await client.query(
                     `
-                    INSERT INTO oracle_request(
-                        request_id, evm_request_id, expiration, sender, payment, spec_id,
-                        callback, nonce, data_version, request_count, sender_buff, data
+                    INSERT INTO oracle_requests(
+                        ${ORACLE_REQUEST_COLUMNS}
                     ) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                     `,
                     [
                         oracle_data.request_id,
                         evm_request_id,
-                        oracle_data.expiration,
+                        oracle_data.expiration.value.toString(),
                         oracle_data.sender,
-                        oracle_data.payment,
+                        oracle_data.payment.value.toString(),
                         oracle_data.spec_id,
                         oracle_data.callback,
-                        oracle_data.nonce,
-                        oracle_data.data_version,
-                        oracle_data.request_count,
+                        oracle_data.nonce.value.toString(),
+                        oracle_data.data_version.value.toString(),
+                        oracle_data.request_count.value.toString(),
                         oracle_data.sender_buff,
                         oracle_data.data
                     ]
                 );
             } catch (error) {
-                console.log(`Error performing faucet request update: ${error}`, error);
+                console.log(`Error performing oracle request update: ${error}`, error);
                 throw error;
             }
         });
@@ -336,4 +332,11 @@ export class PgDataStore implements DataStore {
             }
         });
     }
+
+   
+    async close(): Promise<void> {
+        await this.pool.end();
+    }
 }
+
+

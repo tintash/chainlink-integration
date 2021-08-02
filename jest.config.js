@@ -2,7 +2,7 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     rootDir: 'src',
-    testMatch: ['<rootDir>/tests/datastore-tests.ts'],
+    testMatch: ['<rootDir>/tests/**/*.ts'],
     testPathIgnorePatterns: ['<rootDir>/tests/setup.ts', '<rootDir>/tests/teardown.ts'],
     collectCoverageFrom: ['<rootDir>/**/*.ts'],
     coveragePathIgnorePatterns: [''],

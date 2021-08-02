@@ -3,21 +3,6 @@ import { MigrationBuilder, ColumnDefinitions } from 'node-pg-migrate';
 
 export const shorthands: ColumnDefinitions | undefined = undefined;
 
-interface OracleRequestQueryResult {
-    request_id: Buffer;
-    evm_request_id: Buffer;
-    expiration: number;
-    sender: string;
-    payment: number;
-    spec_id: Buffer;
-    callback: string;
-    nonce: number;
-    data_version: number;
-    request_count: number;
-    sender_buff: Buffer;
-    data: Buffer;
-};
-
 export async function up(pgm: MigrationBuilder): Promise<void> {
     pgm.createTable('oracle_request', {
         id: {

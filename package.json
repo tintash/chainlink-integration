@@ -12,7 +12,7 @@
     "lint:eslint": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe",
     "lint:prettier": "prettier --check src/**/*.{ts,json}",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe --fix && prettier --write --check src/**/*.{ts,json}",
-    "migrate": "node-pg-migrate -j ts -m src/migrations"
+    "migrate": "node-pg-migrate -j ts -m src/datastore/migrations"
   },
   "keywords": [],
   "prettier": "@stacks/prettier-config",

@@ -43,7 +43,5 @@ export function startApiServer(): Server {
 
 export const App = startApiServer();
 console.log('Server initiated!');
-
-
-const config = getPgClientConfig()
-console.log(config);
+// const config = getPgClientConfig()
+// console.log(config);

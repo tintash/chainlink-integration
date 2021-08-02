@@ -6,6 +6,8 @@ import { OracleFulfillment } from '../adapter-helpers';
 
 const MIGRATIONS_TABLE = 'pgmigrations';
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
+console.log(MIGRATIONS_DIR.toString());
+
 export type ElementType<T extends any[]> = T extends (infer U)[] ? U : never;
 export type FoundOrNot<T> = { found: true; result: T } | { found: false };
 

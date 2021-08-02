@@ -11,8 +11,8 @@ describe('datastore tests', () => {
     let client: PoolClient;
 
     beforeEach(async () => {
-        process.env.PG_DATABASE = 'postgres';
-        await cycleMigrations();
+        // process.env.PG_DATABASE = 'postgres';
+        // await cycleMigrations();
         db = await PgDataStore.connect();
         client = await db.pool.connect();
     });

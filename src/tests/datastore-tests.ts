@@ -39,25 +39,4 @@ describe('datastore tests', () => {
         await db?.close();
         await runMigrations(undefined, 'down');
     });
-
-    // test('or-test', async () => {
-    //     const client = new Client({
-    //         database: process.env['PG_DATABASE'],
-    //         user: process.env['PG_USER'],
-    //         password: process.env['PG_PASSWORD'],
-    //         host: process.env['PG_HOST'],
-    //         port: 5432
-    //     });
-        
-    //     await client.connect();
-        
-    //     try {
-    //         const result = await client.query(`SELECT * FROM oracle_request;`);
-    //         console.log(result.rows);
-    //         client.end();
-    //     } catch (e) {
-    //         console.error(e.stack);
-    //         client.end();
-    //     }
-    // });
 });

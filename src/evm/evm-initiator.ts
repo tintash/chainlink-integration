@@ -26,7 +26,6 @@ export async function requestChainlink(oracleTopicData: OracleFulfillment): Prom
   const requestType: DirectRequestType =
     params.get !== undefined ? DirectRequestType.GET : DirectRequestType.POST;
   const evmResponse = await makeEVMContractCall(jobId, requestType, urlPath, params.path);
-  // await cycleMigrations();
   const db: PgDataStore = await PgDataStore.connect();
   const client: PoolClient = await db.pool.connect();
   await db.updateOracleRequest(oracleTopicData, evmResponse.requestId);

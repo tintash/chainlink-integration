@@ -11,7 +11,6 @@ import { StacksMocknet } from '@stacks/network';
 import {
   bufferToHexPrefixString,
   createDirectRequestTxOptions,
-  hexToBuffer,
   hexToDirectRequestParams,
   paramsToHexPrefixString,
 } from '../helpers';
@@ -97,7 +96,7 @@ export function createObserverRouter() {
     if (key === 'undefined' || typeof key != 'string')
       res.status(400).json({ msg: 'bad request body' });
     try {
-      const result = await bufferToHexPrefixString(Buffer.from(key));
+      const result = bufferToHexPrefixString(Buffer.from(key));
       res.status(200).json({
         key: key,
         buffer: result,

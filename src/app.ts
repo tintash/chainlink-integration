@@ -4,9 +4,8 @@ import http, { Server } from 'http';
 import { Socket } from 'net';
 import { addAsync } from '@awaitjs/express';
 import { createAdapterRouter } from './routes/adapter';
-import { createEVMObserver } from './evm-event-observer/listner';
+import { createEVMObserver } from './evm/evm-observer';
 import { createObserverRouter } from './routes/observer';
-import { createConsumerRouter } from './routes/testnetConsumer';
 import morgan from 'morgan';
 import * as bodyParser from 'body-parser';
 import { getPgClientConfig } from './datastore/postgres-store';
@@ -21,10 +20,8 @@ export function startApiServer(): Server {
 
   const adapterRouter = createAdapterRouter();
   const observerRouter = createObserverRouter();
-  const consumerRouter = createConsumerRouter();
 
   app.use('/adapter', adapterRouter);
-  app.use('/consumer', consumerRouter);
   app.use('/', observerRouter);
   const port = parseInt(String(process.env.PORT)) || 3000;
   app.set('port', port);

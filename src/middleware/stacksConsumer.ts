@@ -14,38 +14,42 @@ const oracleContractABI = JSON.parse(readFileSync('src/contract-abi/oracle.json'
 const oracleRequestABI = oracleContractABI.find(
   (obj: { name: string }) => obj.name === 'OracleRequest'
 );
-const contract = new web3.eth.Contract(consumerContractABI, process.env.CONSUMER_CONTRACT_ADDR);
+const contract = new web3.eth.Contract(
+  consumerContractABI,
+  process.env.ETHEREUM_STACKS_CONTRACT_CONSUMER_CONTRACT
+);
 
 const options = {
   from: process.env.ETH_ADDR,
-  gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei')),
+  gasPrice: web3.utils.toHex(web3.utils.toWei('4', 'gwei')),
   gas: web3.utils.toHex(150000),
 };
+
+interface EvmResponse {
+  status: Boolean;
+  txHash: String;
+  blockHash: String;
+  blockNumber: Number;
+  requestId: String;
+  requesterContractADDR: String;
+}
 export async function getRequest(oracleAddress: string, jobId: string, url: string, path: string) {
   return new Promise((resolve, _reject) => {
-    let response = {
-      status: false,
-      txHash: null,
-      blockHash: null,
-      blockNumber: null,
-      requestId: '',
-      requesterContractADDR: '',
-      error: { status: false, msg: null },
-    };
     contract.methods
       .getRequest(oracleAddress, jobId, url, path)
       .send(options)
       .on('receipt', function (receipt: any) {
         const { status, transactionHash, blockHash, blockNumber, events } = receipt;
+        var response:EvmResponse
         if (status == true && transactionHash && blockHash && blockNumber && events.length != 0) {
           const requestEventDecoded: { [key: string]: string } = web3.eth.abi.decodeLog(
             oracleRequestABI.inputs,
             receipt.events[2].raw.data,
             receipt.events[2].raw.topics
           );
+          console.log('here goes recepipt', receipt);
           const { requestId, requester } = requestEventDecoded;
-          response = {
-            ...response,
+           response = {
             status,
             txHash: transactionHash,
             blockHash,
@@ -53,23 +57,13 @@ export async function getRequest(oracleAddress: string, jobId: string, url: stri
             requestId,
             requesterContractADDR: requester,
           };
-          // response.status = receipt.status;
-          // response.txHash = receipt.transactionHash;
-          // response.blockHash = receipt.blockHash;
-          // response.blockNumber = receipt.blockNumber;
-          //   response.requestId = requestEventDecoded.requestId;
-          //  response.requesterContractADDR = requestEventDecoded.requester;
+          resolve(response);
         }
-        resolve(response);
       })
-      .on('error', function (error: null, receipt: any) {
+      .on('error', function (error: any, receipt: any) {
         // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
         console.log('Error Encountered', error);
-        if (error) {
-          response.error.status = true;
-          response.error.msg = error;
-        }
-        resolve(response);
+        throw new Error(`Transaction Failed ${error}`);
       });
   });
 }

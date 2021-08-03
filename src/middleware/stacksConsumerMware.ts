@@ -7,7 +7,7 @@ let provider = new HDWalletProvider(
 );
 const web3 = new Web3(provider);
 const consumerContractABI = JSON.parse(
-  readFileSync('src/contract-abi/testnetConsumer.json', 'utf-8')
+  readFileSync('src/contract-abi/stacksRequestConsumer.json', 'utf-8')
 );
 const oracleContractABI = JSON.parse(readFileSync('src/contract-abi/oracle.json', 'utf-8'));
 
@@ -21,7 +21,7 @@ let options = {
   gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei')),
   gas: web3.utils.toHex(150000),
 };
-export async function requestEthereumPrice(oracleAddress: string, jobId: string) {
+export async function getRequest(oracleAddress: string, jobId: string, url: string, path: string) {
   return new Promise((resolve, _reject) => {
     let response = {
       status: false,
@@ -33,7 +33,7 @@ export async function requestEthereumPrice(oracleAddress: string, jobId: string)
       error: { status: false, msg: null },
     };
     contract.methods
-      .requestEthereumPrice(oracleAddress, jobId)
+      .getRequest(oracleAddress, jobId, url, path)
       .send(options)
       .on('receipt', function (receipt: any) {
         if (

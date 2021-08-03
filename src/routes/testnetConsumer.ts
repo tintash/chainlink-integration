@@ -1,5 +1,5 @@
 import express from 'express';
-import { requestEthereumPrice } from '../middleware/testConsumerMware';
+import { getRequest } from '../middleware/stacksConsumerMware';
 
 export function createConsumerRouter() {
   const router = express.Router();
@@ -9,10 +9,12 @@ export function createConsumerRouter() {
     try {
       let oracleAddress = req.body.oracleAddress;
       let jobId = req.body.jobId;
-      if (!oracleAddress || oracleAddress.length != 42 || !jobId) {
+      let url = req.body.URL
+      let path = req.body.path
+      if (!oracleAddress || oracleAddress.length != 42 || !jobId || !url || !path) {
         res.status(400).json({ msg: `Invalid Parameters` });
       }
-      const response: any = await requestEthereumPrice(oracleAddress, jobId);
+      const response: any = await getRequest(oracleAddress, jobId, url, path);
       if (response.status == true && response.error.status == false) {
         res.status(200).json(response);
       } else if (response.false == false && response.error.status == true) {

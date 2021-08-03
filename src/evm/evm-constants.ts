@@ -10,7 +10,7 @@ export const provider = new HDWalletProvider(
 export const web3 = new Web3(provider);
 
 export const consumerContractABI = JSON.parse(
-  readFileSync('src/contract-abi/stacksRequestConsumer.json', 'utf-8')
+  readFileSync('src/contract-abi/evm-direct-request-consumer-abi.json', 'utf-8')
 );
 
 export const oracleContractABI = JSON.parse(readFileSync('src/contract-abi/oracle.json', 'utf-8'));
@@ -36,4 +36,9 @@ export interface EVMResponse {
   blockNumber: number;
   requestId: string;
   requesterContractADDR: string;
+}
+
+export enum DirectRequestType {
+  GET,
+  POST,
 }

@@ -1,6 +1,11 @@
-import { contract, options, oracleRequestABI, web3 } from './evm-constants';
+import { contract, EVMResponse, options, oracleRequestABI, web3 } from './evm-constants';
 
-export async function getRequest(oracleAddress: string, jobId: string, url: string, path: string) {
+export async function getRequest(
+  oracleAddress: string,
+  jobId: string,
+  url: string,
+  path: string
+): Promise<EVMResponse> {
   return new Promise((resolve, _reject) => {
     contract.methods
       .getRequest(oracleAddress, jobId, url, path)
@@ -14,14 +19,15 @@ export async function getRequest(oracleAddress: string, jobId: string, url: stri
             receipt.events[2].raw.topics
           );
           const { requestId, requester } = requestEventDecoded;
-          resolve({
-            status,
+          const result: EVMResponse = {
+            status: status,
             txHash: transactionHash,
-            blockHash,
-            blockNumber,
-            requestId,
+            blockHash: blockHash,
+            blockNumber: blockNumber,
+            requestId: requestId,
             requesterContractADDR: requester,
-          });
+          };
+          resolve(result);
         }
       })
       .on('error', function (error: any, receipt: any) {

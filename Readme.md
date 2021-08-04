@@ -10,7 +10,7 @@ This document outlines the components required and contains all the instructions
 
 
 ### Sequence diagram of DRM(Direct Request Model)
-![alt text](./diagrams/sequence-diagram.png)
+![Scheme](diagrams/sequence-diagram.png)
 
 
 ### Components for running the DRM(Direct Request Model)

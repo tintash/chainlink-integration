@@ -8,7 +8,10 @@
 
 This document outlines the components required and contains all the instructions required for running the direct request model on your system.
 
-  
+
+### Sequence diagram of DRM(Direct Request Model)
+![alt text](./diagrams/sequence-diagram.png)
+
 
 ### Components for running the DRM(Direct Request Model)
 

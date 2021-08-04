@@ -199,7 +199,7 @@ export class PgDataStore implements DataStore {
         await client.connect();
         connectionOkay = true;
         break;
-      } catch (error: unknown) {
+      } catch (error: any) {
         if (
           error.code !== 'ECONNREFUSED' &&
           error.message !== 'Connection terminated unexpectedly'
@@ -252,28 +252,28 @@ export class PgDataStore implements DataStore {
       try {
         const client = await this.pool.connect();
         return client;
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          if (error.code === 'ECONNREFUSED') {
-            console.log(`Postgres connection ECONNREFUSED, will retry, attempt #${retryAttempts}`);
-            await timeout(1000);
-          } else if (error.code === 'ETIMEDOUT') {
-            console.log(`Postgres connection ETIMEDOUT, will retry, attempt #${retryAttempts}`);
-            await timeout(1000);
-          } else if (error.message === 'the database system is starting up') {
-            console.log(
-              `Postgres connection failed while database system is restarting, will retry, attempt #${retryAttempts}`
-            );
-            await timeout(1000);
-          } else if (error.message === 'Connection terminated unexpectedly') {
-            console.log(
-              `Postgres connection terminated unexpectedly, will retry, attempt #${retryAttempts}`
-            );
-            await timeout(1000);
-          }
-        } else {
-          throw error;
+      } catch (error) {
+        //if (error instanceof Error) {
+        if (error.code === 'ECONNREFUSED') {
+          console.log(`Postgres connection ECONNREFUSED, will retry, attempt #${retryAttempts}`);
+          await timeout(1000);
+        } else if (error.code === 'ETIMEDOUT') {
+          console.log(`Postgres connection ETIMEDOUT, will retry, attempt #${retryAttempts}`);
+          await timeout(1000);
+        } else if (error.message === 'the database system is starting up') {
+          console.log(
+            `Postgres connection failed while database system is restarting, will retry, attempt #${retryAttempts}`
+          );
+          await timeout(1000);
+        } else if (error.message === 'Connection terminated unexpectedly') {
+          console.log(
+            `Postgres connection terminated unexpectedly, will retry, attempt #${retryAttempts}`
+          );
+          await timeout(1000);
         }
+        //} else {
+        // throw error;
+        //}
       }
     }
   }

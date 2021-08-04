@@ -16,8 +16,8 @@ import { PgDataStore, OracleRequestQueryResult } from '../datastore/postgres-sto
 export async function processEVMFulfullmentEvent(evmRequestId: string, evmResult: string) {
   try {
     // await cycleMigrations();
-    console.log('TEMPORARY: REQ_ID: ' + evmRequestId);
-    console.log('TEMPORARY: RESULT: ' + evmResult);
+    // console.log('EVM_REQ_ID: ' + evmRequestId);
+    console.log('adapter evm-req-id: ---- : ' + evmRequestId);
 
     const db: PgDataStore = await PgDataStore.connect();
     const client: PoolClient = await db.pool.connect();
@@ -30,7 +30,6 @@ export async function processEVMFulfullmentEvent(evmRequestId: string, evmResult
       result: evmResult,
       fulfillment: queryResultToOracleFulfillment(oracleQueryResult.result),
     };
-    console.log(linkFulfillment);
     const response = await createOracleFulfillmentTx(linkFulfillment, ChainID.Testnet);
     const txid = response.txid();
     console.log('|CHAINLINK-EVM-ADAPTER| 0x' + txid);

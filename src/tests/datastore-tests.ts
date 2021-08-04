@@ -52,7 +52,7 @@ describe('datastore tests', () => {
       evmRequestId
     );
     if (queryResult.found) {
-      console.log(JSON.parse(queryResult.result.callback) as ContractPrincipalCV);
+      console.log(queryResult.result);
     }
   });
 

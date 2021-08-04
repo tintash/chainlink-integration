@@ -1,5 +1,6 @@
 import { hexToDirectRequestParams, paramsToHexPrefixString } from '../helpers';
 import { parseOracleRequestValue } from '../adapter-helpers';
+import { getRequest } from '../evm/evm-helper';
 
 test('error: parse oracle request value', () => {
   const param = 'dummy';
@@ -35,4 +36,13 @@ test('hex to direct request params', async () => {
   const result = await hexToDirectRequestParams(param);
   expect(result.get).toBe('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD');
   expect(result.path).toBe('USD');
+});
+
+test('throws error for invalid parameters', () => {
+  const params = {
+    oracleAddress: '',
+    jobid: '',
+    url: '',
+    paht: '',
+  };
 });

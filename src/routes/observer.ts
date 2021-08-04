@@ -14,7 +14,7 @@ import {
   hexToDirectRequestParams,
   paramsToHexPrefixString,
 } from '../helpers';
-import { getRequest } from '../evm/evm-helper';
+import { getRequest, postRequest } from '../evm/evm-helper';
 
 export function createObserverRouter() {
   const router = express.Router();
@@ -106,6 +106,21 @@ export function createObserverRouter() {
     }
   });
 
+  router.post('/evm-test', async (req, res) => {
+    try {
+      const { oracleAddress, jobId, url, path, body } = req.body;
+      if (!oracleAddress || oracleAddress.length != 42 || !jobId || !url || !path) {
+        res.status(400).json({ msg: `Invalid Parameters` });
+      }
+      const response: any = await postRequest(oracleAddress, jobId, url, path , body);
+      if (response.status == true) {
+        res.status(200).json(response);
+      }
+    } catch (err: any) {
+      res.status(500).json({ msg: err.message });
+    }
+  });
+
   router.use((req, res, next) => {
     const ei_ci_acckey = req.headers['x-chainlink-ea-accesskey'];
     const ei_ci_secret = req.headers['x-chainlink-ea-secret'];
@@ -125,21 +140,6 @@ export function createObserverRouter() {
       status: 404,
       message: 'Not Found',
     });
-  });
-
-  router.post('/evm-test', async (req, res) => {
-    try {
-      const { oracleAddress, jobId, url, path } = req.body;
-      if (!oracleAddress || oracleAddress.length != 42 || !jobId || !url || !path) {
-        res.status(400).json({ msg: `Invalid Parameters` });
-      }
-      const response: any = await getRequest(oracleAddress, jobId, url, path);
-      if (response.status == true) {
-        res.status(200).json(response);
-      }
-    } catch (err: any) {
-      res.status(500).json({ msg: err.message });
-    }
   });
 
   return router;

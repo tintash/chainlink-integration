@@ -15,6 +15,54 @@
 	},
 	{
 		"constant": false,
+		"inputs": [
+			{
+				"name": "_requestId",
+				"type": "bytes32"
+			},
+			{
+				"name": "_response",
+				"type": "bytes32"
+			}
+		],
+		"name": "fulfillPostRequest",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_oracle",
+				"type": "address"
+			},
+			{
+				"name": "_jobId",
+				"type": "string"
+			},
+			{
+				"name": "_requestUrl",
+				"type": "string"
+			},
+			{
+				"name": "_responsePath",
+				"type": "string"
+			},
+			{
+				"name": "_data",
+				"type": "string"
+			}
+		],
+		"name": "postRequest",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
 		"inputs": [],
 		"name": "renounceOwnership",
 		"outputs": [],
@@ -149,7 +197,24 @@
 				"type": "bytes32"
 			}
 		],
-		"name": "GetRequestFulfillmentEvent",
+		"name": "GetRequestFulfilled",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "requestId",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"name": "response",
+				"type": "bytes32"
+			}
+		],
+		"name": "PostRequestFulfilled",
 		"type": "event"
 	},
 	{

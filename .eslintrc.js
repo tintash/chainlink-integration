@@ -9,7 +9,7 @@ module.exports = {
         ecmaVersion: 2020,
         sourceType: 'module',
     },
-    ignorePatterns: ['lib/*', 'client/*'],
+    ignorePatterns: ['lib/*', 'client/*', '.eslintrc.js'],
     rules: {
         'prettier/prettier': 'error',
 
@@ -24,6 +24,7 @@ module.exports = {
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/restrict-template-expressions': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'off',
         '@typescript-eslint/restrict-plus-operands': 'off',

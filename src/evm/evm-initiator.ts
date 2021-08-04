@@ -18,7 +18,7 @@ export async function initiateEVMRequest(encoded_data: string) {
 export async function requestChainlink(oracleTopicData: OracleFulfillment): Promise<string> {
   const jobId = bufferCVToASCIIString(oracleTopicData.spec_id);
   const paramHex = oracleTopicData.data.buffer.toString();
-  const params: DirectRequestParams = await hexToDirectRequestParams(paramHex);
+  const params: DirectRequestParams = hexToDirectRequestParams(paramHex);
   const urlPath = params.get !== undefined ? params.get : params.post;
   if (urlPath === undefined) {
     throw new Error('invalid direct request parameters.');

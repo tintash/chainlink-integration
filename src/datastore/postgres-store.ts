@@ -252,8 +252,7 @@ export class PgDataStore implements DataStore {
       try {
         const client = await this.pool.connect();
         return client;
-      } catch (error) {
-        //if (error instanceof Error) {
+      } catch (error: any) {
         if (error.code === 'ECONNREFUSED') {
           console.log(`Postgres connection ECONNREFUSED, will retry, attempt #${retryAttempts}`);
           await timeout(1000);
@@ -271,9 +270,6 @@ export class PgDataStore implements DataStore {
           );
           await timeout(1000);
         }
-        //} else {
-        // throw error;
-        //}
       }
     }
   }

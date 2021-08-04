@@ -20,21 +20,21 @@ export function createObserverRouter() {
   const router = express.Router();
   router.use(express.json());
 
-  router.post('/new_block', async (req, res) => {
+  router.post('/new_block', (req, res) => {
     const core_message: CoreNodeBlockMessage = req.body;
     const _ = processNewBlock(ChainID.Testnet, core_message);
     res.sendStatus(200).end();
   });
 
-  router.post('/new_burn_block', async (req, res) => {
+  router.post('/new_burn_block', (req, res) => {
     res.sendStatus(200);
   });
 
-  router.post('/new_mempool_tx', async (req, res) => {
+  router.post('/new_mempool_tx', (req, res) => {
     res.sendStatus(200);
   });
 
-  router.post('/drop_mempool_tx', async (req, res) => {
+  router.post('/drop_mempool_tx', (req, res) => {
     res.sendStatus(200);
   });
 
@@ -57,12 +57,12 @@ export function createObserverRouter() {
       res.status(200).json({
         txid: transaction.txid(),
       });
-    } catch (err) {
+    } catch (err: any) {
       res.status(400).json({ msg: err.message });
     }
   });
 
-  router.post('/create-buff', async (req, res) => {
+  router.post('/create-buff', (req, res) => {
     const elements: { [name: string]: string } = {};
     Object.keys(req.body).map((key, _) => {
       const value = req.body[key].toString();
@@ -72,26 +72,26 @@ export function createObserverRouter() {
     if (Object.keys(elements).length === 0) res.status(400).json({ msg: 'bad request body' });
 
     try {
-      const result = await paramsToHexPrefixString(elements);
+      const result = paramsToHexPrefixString(elements);
       res.status(200).json(result);
-    } catch (err) {
+    } catch (err: any) {
       res.status(400).json(err.message);
     }
   });
 
-  router.post('/decode-buff', async (req, res) => {
+  router.post('/decode-buff', (req, res) => {
     const buf_string = req.body.buffer;
     if (buf_string === 'undefined' || typeof buf_string != 'string')
       res.status(400).json({ msg: 'bad request body' });
     try {
-      const result = await hexToDirectRequestParams(buf_string);
+      const result = hexToDirectRequestParams(buf_string);
       res.status(200).json(result);
-    } catch (err) {
+    } catch (err: any) {
       res.status(400).json(err.message);
     }
   });
 
-  router.post('/key-to-buff', async (req, res) => {
+  router.post('/key-to-buff', (req, res) => {
     const key = req.body.key;
     if (key === 'undefined' || typeof key != 'string')
       res.status(400).json({ msg: 'bad request body' });
@@ -101,7 +101,7 @@ export function createObserverRouter() {
         key: key,
         buffer: result,
       });
-    } catch (err) {
+    } catch (err: any) {
       res.status(400).json(err.message);
     }
   });
@@ -137,7 +137,7 @@ export function createObserverRouter() {
       if (response.status == true) {
         res.status(200).json(response);
       }
-    } catch (err) {
+    } catch (err: any) {
       res.status(500).json({ msg: err.message });
     }
   });

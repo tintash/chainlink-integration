@@ -63,7 +63,7 @@ export function createObserverRouter() {
   });
 
   router.post('/create-buff', async (req, res) => {
-    var elements: { [name: string]: string } = {};
+    const elements: { [name: string]: string } = {};
     Object.keys(req.body).map((key, _) => {
       const value = req.body[key].toString();
       if (value && value !== 'undefined') elements[key] = value;

@@ -3,7 +3,6 @@ import path from 'path';
 import http, { Server } from 'http';
 import { Socket } from 'net';
 import { addAsync } from '@awaitjs/express';
-import { createAdapterRouter } from './routes/adapter';
 import { createEVMObserver } from './evm/evm-observer';
 import { createObserverRouter } from './routes/observer';
 import morgan from 'morgan';
@@ -17,10 +16,8 @@ export function startApiServer(): Server {
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(logger);
 
-  const adapterRouter = createAdapterRouter();
   const observerRouter = createObserverRouter();
 
-  app.use('/adapter', adapterRouter);
   app.use('/', observerRouter);
   const port = parseInt(String(process.env.PORT)) || 3000;
   app.set('port', port);

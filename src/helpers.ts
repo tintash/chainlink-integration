@@ -7,7 +7,6 @@ import {
   createSTXPostCondition,
   FungibleConditionCode,
 } from '@stacks/transactions';
-import request from 'request';
 import { getOracleContract } from './event-helpers';
 import BigNum from 'bn.js';
 import * as MockData from './mock/direct-requests.json';
@@ -31,37 +30,8 @@ export interface PriceFeedRequest {
   payload: string;
 }
 
-export async function executeChainlinkRequest(jobId: string, data: DirectRequestParams) {
-  const chainlinkNodeURL =
-    String(process.env.EI_CHAINLINKURL) + String(process.env.EI_LINK_JOB_PATH) + jobId + '/runs';
-  const options = {
-    url: chainlinkNodeURL,
-    method: 'POST',
-    headers: createChainlinkRequestHeaders(),
-    json: data,
-  };
-  console.log('Chainlink Initiator Params:< ', options, ' >');
-
-  return new Promise((resolve, reject) => {
-    request(options, (error: any, response: unknown, body: any) => {
-      if (error) {
-        reject(error);
-      }
-      resolve(response);
-    });
-  });
-}
-
 export function isInvalidComparison(req: any) {
   return typeof req.body.value_of === 'undefined' || typeof req.body.value_in === 'undefined';
-}
-
-export function createChainlinkRequestHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'X-Chainlink-EA-AccessKey': process.env.EI_IC_ACCESSKEY,
-    'X-Chainlink-EA-Secret': process.env.EI_IC_SECRET,
-  };
 }
 
 /**
@@ -108,9 +78,7 @@ export function bufferToHexPrefixString(buff: Buffer): string {
   return '0x' + buff.toString('hex');
 }
 
-export async function paramsToHexPrefixString(
-  params: DirectRequestParams
-): Promise<DirectRequestBuffer> {
+export function paramsToHexPrefixString(params: DirectRequestParams): DirectRequestBuffer {
   if (Object.keys(params).length === 0) throw new Error('No body param provided.');
   const buffer = Buffer.from(JSON.stringify(params));
   return {
@@ -120,7 +88,7 @@ export async function paramsToHexPrefixString(
   };
 }
 
-export async function hexToDirectRequestParams(hex: string): Promise<DirectRequestParams> {
+export function hexToDirectRequestParams(hex: string): DirectRequestParams {
   if (hex === '') throw new Error('Empty hex buffer provided.');
   const buffer = hexToBuffer(hex);
   const elements: DirectRequestParams = JSON.parse(buffer.toString());

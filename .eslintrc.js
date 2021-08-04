@@ -24,6 +24,7 @@ module.exports = {
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-error': 'off',
         '@typescript-eslint/restrict-template-expressions': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'off',
         '@typescript-eslint/restrict-plus-operands': 'off',
@@ -31,4 +32,4 @@ module.exports = {
         // TODO: temporarily disable this until the express async handler is typed correctly
         '@typescript-eslint/no-misused-promises': 'off',
     },
-};  
+};

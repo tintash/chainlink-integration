@@ -1,5 +1,5 @@
 import { ChainID } from '@stacks/transactions/dist/constants';
-import { executeChainlinkInitiator, isOracleContract } from './event-helpers';
+import { isOracleContract } from './event-helpers';
 import { CoreNodeBlockMessage, CoreNodeEventType } from './event-stream/core-node-message';
 import { parseMessageTransactions } from './event-stream/reader';
 import { initiateEVMRequest } from './evm/evm-initiator';
@@ -13,7 +13,6 @@ export async function processNewBlock(chainId: ChainID, msg: CoreNodeBlockMessag
         isOracleContract(event.contract_event.contract_identifier) &&
         event.contract_event.topic === printTopic
       ) {
-        // const result = await executeChainlinkInitiator(event.contract_event.raw_value);
         const result = await initiateEVMRequest(event.contract_event.raw_value);
         return result;
       }

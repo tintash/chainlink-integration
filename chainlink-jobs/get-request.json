@@ -1,23 +1,24 @@
 {
-    "name": "get-request",
     "initiators": [
         {
-            "type": "external",
+            "type": "runlog",
             "params": {
-                "name": "external-initiator",
-                "body": {}
+                "address": "0x516bab9884c2abe9950a424b36dc3bb35603a2dc"
             }
         }
     ],
     "tasks": [
         {
-            "type": "httpget"
+            "type": "httppost"
         },
         {
             "type": "jsonparse"
         },
         {
-            "type": "external-adapter"
+            "type": "ethbytes32"
+        },
+        {
+            "type": "ethtx"
         }
     ]
 }

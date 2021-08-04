@@ -54,13 +54,13 @@ export async function runMigrations(
       migrationsTable: MIGRATIONS_TABLE,
       count: Infinity,
       logger: {
-        info: msg => {
+        info: (msg: string) => {
           console.log('PGSTORE INFO: ' + msg);
         },
-        warn: msg => {
+        warn: (msg: string) => {
           console.log('PGSTORE WARNING: ' + msg);
         },
-        error: msg => {
+        error: (msg: string) => {
           console.log('PGSTORE ERROR: ' + msg);
         },
       },

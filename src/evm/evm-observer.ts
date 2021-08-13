@@ -14,7 +14,14 @@ export function createEVMObserver() {
     String(process.env.ETHEREUM_STACKS_CONTRACT_CONSUMER_CONTRACT)
   );
 
-  const emitter = oracle.events.GetRequestFulfilled({}, function (error: any, event: any) {
+  oracle.events.GetRequestFulfilled({}, function (error: any, event: any) {
+    const evmRequestId = event.raw.topics[1];
+    const evmResult = web3.utils.toAscii(event.raw.topics[2]);
+    const processResult = processEVMFulfullmentEvent(evmRequestId, evmResult);
+    console.log(processResult);
+  });
+
+  oracle.events.PostRequestFulfilled({}, function (error: any, event: any) {
     const evmRequestId = event.raw.topics[1];
     const evmResult = web3.utils.toAscii(event.raw.topics[2]);
     const processResult = processEVMFulfullmentEvent(evmRequestId, evmResult);

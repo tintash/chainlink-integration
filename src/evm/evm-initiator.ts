@@ -1,6 +1,6 @@
 import { PoolClient } from 'pg';
 import { OracleFulfillment, parseOracleRequestValue } from '../adapter-helpers';
-import { PgDataStore } from '../datastore/postgres-store';
+import { FoundOrNot, OracleRequestQueryResult, PgDataStore } from '../datastore/postgres-store';
 import { bufferCVToASCIIString, DirectRequestParams, hexToDirectRequestParams } from '../helpers';
 import { EVMResponse, DirectRequestType } from './evm-constants';
 import { getRequest, postRequest } from './evm-helper';
@@ -29,7 +29,14 @@ export async function requestChainlink(oracleTopicData: OracleFulfillment): Prom
   const evmResponse = await makeEVMContractCall(jobId, requestType, urlPath, params.path, body);
   const db: PgDataStore = await PgDataStore.connect();
   const client: PoolClient = await db.pool.connect();
+  console.log('initiator evm-req-id: ---- : ' + evmResponse.requestId);
   await db.updateOracleRequest(oracleTopicData, evmResponse.requestId);
+  const queryResult: FoundOrNot<OracleRequestQueryResult> = await db.getOracleRequest(
+    evmResponse.requestId
+  );
+  if (queryResult.found) {
+    console.log('db evm-req-id: ---- : ' + queryResult.result.evm_request_id);
+  }
   return evmResponse.txHash;
 }
 
@@ -43,10 +50,12 @@ export async function makeEVMContractCall(
   const oracleAddr = String(process.env.ETHEREUM_CHAINLINK_ORACLE_CONTRACT);
   let result: EVMResponse;
   switch (requestType) {
-    case DirectRequestType.POST:
-      result = await getRequest(oracleAddr, jobId, url, decodePath);
     case DirectRequestType.GET:
+      result = await getRequest(oracleAddr, jobId, url, decodePath);
+      break;
+    case DirectRequestType.POST:
       result = await postRequest(oracleAddr, jobId, url, decodePath, body);
+      break;
   }
   return result;
 }

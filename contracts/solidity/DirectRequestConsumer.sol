@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity 0.4.24;
 
 import 'https://github.com/smartcontractkit/chainlink/contracts/src/v0.4/ChainlinkClient.sol';
@@ -7,7 +6,8 @@ import 'https://github.com/smartcontractkit/chainlink/contracts/src/v0.4/vendor/
 contract StacksRequestConsumer is ChainlinkClient, Ownable {
   uint256 private constant ORACLE_PAYMENT = 1 * LINK;
 
-  event GetRequestFulfillmentEvent(bytes32 indexed requestId, bytes32 indexed response);
+  event GetRequestFulfilled(bytes32 indexed requestId, bytes32 indexed response);
+  event PostRequestFulfilled(bytes32 indexed requestId, bytes32 indexed response);
 
   constructor() public Ownable() {
     setPublicChainlinkToken();
@@ -16,8 +16,8 @@ contract StacksRequestConsumer is ChainlinkClient, Ownable {
   function getRequest(
     address _oracle,
     string _jobId,
-    string _requestUrl,
-    string _responsePath
+    string memory _requestUrl,
+    string memory _responsePath
   ) public onlyOwner {
     Chainlink.Request memory req = buildChainlinkRequest(
       stringToBytes32(_jobId),
@@ -28,12 +28,37 @@ contract StacksRequestConsumer is ChainlinkClient, Ownable {
     req.add('path', _responsePath);
     sendChainlinkRequestTo(_oracle, req, ORACLE_PAYMENT);
   }
+  
+  function postRequest(
+    address _oracle,
+    string _jobId,
+    string memory _requestUrl,
+    string memory _responsePath,
+    string memory _data
+  ) public onlyOwner {
+    Chainlink.Request memory req = buildChainlinkRequest(
+      stringToBytes32(_jobId),
+      this,
+      this.fulfillPostRequest.selector
+    );
+    req.add('post', _requestUrl);
+    req.add('path', _responsePath);
+    req.add('body',_data );
+    sendChainlinkRequestTo(_oracle, req, ORACLE_PAYMENT);
+  }
 
   function fulfillGetRequest(bytes32 _requestId, bytes32 _response)
     public
     recordChainlinkFulfillment(_requestId)
   {
-    emit GetRequestFulfillmentEvent(_requestId, _response);
+    emit GetRequestFulfilled(_requestId, _response);
+  }
+  
+  function fulfillPostRequest(bytes32 _requestId, bytes32 _response)
+    public
+    recordChainlinkFulfillment(_requestId)
+  {
+    emit PostRequestFulfilled(_requestId, _response);
   }
 
   function getChainlinkToken() public view returns (address) {

@@ -192,6 +192,10 @@
       (ok "Sender or recipient is on the blacklist and prevented from transacting")
       (ok "Unknown Error Code"))))
 
+;; Transfer And Call
+(define-public (transfer-and-call)
+    (ok true)
+)
 
 ;; Initialization
 ;; --------------------------------------------------------------------------
@@ -206,6 +210,7 @@
     (var-set token-name name-to-set)
     (var-set token-symbol symbol-to-set)
     (var-set token-decimals decimals-to-set)
+    (map-set roles { role: MINTER_ROLE, account: tx-sender } { allowed: true })
     (map-set roles { role: OWNER_ROLE, account: initial-owner } { allowed: true })
     (ok true)))
 

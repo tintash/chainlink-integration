@@ -1,11 +1,22 @@
 [project]
 name = "clarity"
 requirements = []
+[contracts.direct-request]
+path = "contracts/direct-request.clar"
+depends_on = ["oracle"]
 
 [contracts.oracle]
 path = "contracts/oracle.clar"
 depends_on = []
 
-[contracts.direct-request]
-path = "contracts/direct-request.clar"
-depends_on = ["oracle"]
+[contracts.stxlink-token]
+depends_on = ["ft-trait", "restricted-token-trait"]
+path = "contracts/stxlink-token.clar"
+
+[contracts.ft-trait]
+depends_on = []
+path = "contracts/ft-trait.clar"
+
+[contracts.restricted-token-trait]
+depends_on = []
+path = "contracts/restricted-token-trait.clar"

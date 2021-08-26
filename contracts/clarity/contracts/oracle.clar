@@ -13,9 +13,6 @@
 ;; Exipiration limit
 (define-constant expiration-limit u1000)
 
-;; Observer-server's wallet address
-(define-constant initiator 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G)
-
 ;; Contract owners
 (define-map contract-owners principal bool)
 (define-private (is-valid-owner?) (is-some (map-get? contract-owners tx-sender)))
@@ -32,18 +29,17 @@
 
 ;; getting updated request counts
 (define-public (get-request-count)
-    (ok (var-get request-count))
-)
+    (ok (var-get request-count)))
 
 ;; function to calculate request id using certain parameters
-(define-public (create-request-id  (payment uint) (expiration uint) (sender-id-buff (buff 84)))
+(define-public (create-request-id (expiration uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))))
+        (ok (keccak256 (concat (concat (keccak256 expiration) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))))
 
 ;; function to calculate request id using certain parameters
-(define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint) (sender-id-buff (buff 84)))
+(define-public (reconstruct-request-id (expiration uint) (req-count uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count)) (keccak256 sender-id-buff))))))
+        (ok (keccak256 (concat (concat (keccak256 expiration) (keccak256 req-count)) (keccak256 sender-id-buff))))))
 
 ;; function to remove request-id from map if we want to cancel the request
 (define-public (cancel-request (hashed-request-id (buff 32)) )
@@ -63,14 +59,12 @@
 ;; Stores the hash of the params as the on-chain commitment for the request.
 ;; OracleRequest event for the Chainlink node to detect.
 ;; sender The sender of the request
-;; payment The amount of payment given (specified in microSTX)
 ;; spec-id The Job Specification ID
 ;; callback The principal to invoke for the response
 ;; nonce The nonce sent by the requester
 ;; data-version The specified data version
 ;; data The CBOR payload of the request
 (define-public (oracle-request (sender principal)
-                                (payment uint)
                                 (spec-id (buff 66))
                                 (sender-id-buff (buff 84))                                
                                 (callback <oracle-callback>)
@@ -79,15 +73,13 @@
                                 (data (buff 1024)))
 
         (begin
-            (asserts! (unwrap! (stx-transfer? payment sender initiator) err-stx-transfer-failed) err-stx-transfer-failed)       
             (var-set request-count (+ u1 (var-get request-count)))
-            (let ((hashed-val (unwrap! (create-request-id payment block-height sender-id-buff) err-request-id-creation-failed)))
+            (let ((hashed-val (unwrap! (create-request-id block-height sender-id-buff) err-request-id-creation-failed)))
                 (map-set request-ids { request-id: hashed-val } { expiration: block-height })
                 (print {
                     request_id: hashed-val,
                     expiration: block-height,
                     sender: sender,
-                    payment: payment,
                     spec_id: spec-id,
                     callback: callback,
                     nonce: nonce,
@@ -103,21 +95,19 @@
 ;; call the callback address' callback function without bubbling up error
 ;; in an assertion so that the node can get paid.
 ;; request-id The fulfillment request ID that must match the requester's
-;; payment The payment amount that will be released for the oracle (specified in microSTX)
 ;; callback The principal to invoke for the response
 ;; expiration The expiration that the node should respond by before the requester can cancel
 ;; data The data to return to the consuming contract
 ;; Status if the external call was successful
 (define-public (fullfill-oracle-request (request-id (buff 32))
-                                        (payment uint)
                                         (callback <oracle-callback>)
                                         (expiration uint)
                                         (req-count uint)
                                         (sender-id-buff (buff 84))
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id payment expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
+    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
         (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
-        ;; (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
+        (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
         (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map
         (map-delete request-ids { request-id: reconstructed-request-id })                                                                               ;; remove request-id from map
         (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                                 ;; block-height exceeded the limit and request-id expired
@@ -125,5 +115,18 @@
             sucess (ok true)
             err (ok false))))
 
-(map-set contract-owners initiator true)                    ;; set observer-server as owner 
-(map-set contract-owners 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2 true) ;; clarinet contract tester
+(map-set contract-owners tx-sender true)
+
+;; Following are for clarinet testings
+;; TODO: remove for testnet
+(map-set contract-owners 'ST3X3TP269TNNGT3EQKF3JY1TK2M343FMZ8BNMV0G true) 
+(map-set contract-owners 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE true)
+(map-set contract-owners 'ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK true)
+(map-set contract-owners 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2 true)
+(map-set contract-owners 'ST21HMSJATHZ888PD0S0SSTWP4J61TCRJYEVQ0STB true)
+(map-set contract-owners 'ST2QXSK64YQX3CQPC530K79XWQ98XFAM9W3XKEH3N true)
+(map-set contract-owners 'ST3DG3R65C9TTEEW5BC5XTSY0M1JM7NBE7GVWKTVJ true)
+(map-set contract-owners 'ST3R3B1WVY7RK5D3SV5YTH01XSX1S4NN5B3QK2X0W true)
+(map-set contract-owners 'ST3ZG8F9X4VKVTVQB2APF4NEYEE1HQHC2EDBF09JN true)
+(map-set contract-owners 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8 true)
+(map-set contract-owners 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA true)

@@ -48,6 +48,9 @@
 (define-read-only (get-total-supply)
   (ok (ft-get-supply stxlink-token)))
 
+;; Returns principle of deployer 
+(define-read-only (get-deployer)
+  (ok (var-get deployer-principal)))
 
 ;; Write function to transfer tokens between accounts - conforms to SIP 10
 ;; --------------------------------------------------------------------------
@@ -89,18 +92,18 @@
 ;; Add a principal to the specified role
 ;; Only existing principals with the OWNER_ROLE can modify roles
 (define-public (add-principal-to-role (role-to-add uint) (principal-to-add principal))   
-   (begin
+  (begin
     ;; Check the contract-caller to verify they have the owner role
     (asserts! (has-role OWNER_ROLE contract-caller) (err PERMISSION_DENIED_ERROR))
     ;; Print the action for any off chain watchers
     (print { action: "add-principal-to-role", role-to-add: role-to-add, principal-to-add: principal-to-add })
     (ok (map-set roles { role: role-to-add, account: principal-to-add } { allowed: true }))))
-   
+
 ;; Remove a principal from the specified role
 ;; Only existing principals with the OWNER_ROLE can modify roles
 ;; WARN: Removing all owners will irrevocably lose all ownership permissions
 (define-public (remove-principal-from-role (role-to-remove uint) (principal-to-remove principal))   
-   (begin
+  (begin
     ;; Check the contract-caller to verify they have the owner role
     (asserts! (has-role OWNER_ROLE contract-caller) (err PERMISSION_DENIED_ERROR))
     ;; Print the action for any off chain watchers
@@ -198,7 +201,7 @@
     (if (is-eq restriction-code RESTRICTION_BLACKLIST)
       (ok "Sender or recipient is on the blacklist and prevented from transacting")
       (ok "Unknown Error Code"))))
-       
+
 ;; Transfer And Call
 (define-public (transfer-and-call 
                   (job-spec-id (buff 66)) 
@@ -211,7 +214,6 @@
       .oracle                 ;; oracle name
       oracle-request          ;; oracle method
       tx-sender               ;; this contract's address
-      u500                    ;; payment in micro stx
       job-spec-id             ;; chainlink-job id
       sender-id-buff          ;; transaction-sender-id encoded to buffer 
       callback                ;; callback principal (addr) 
@@ -233,7 +235,7 @@
     (var-set token-name name-to-set)
     (var-set token-symbol symbol-to-set)
     (var-set token-decimals decimals-to-set)
-    (map-set roles { role: MINTER_ROLE, account: tx-sender } { allowed: true })
+    ;; (map-set roles { role: MINTER_ROLE, account: tx-sender } { allowed: true })
     (map-set roles { role: OWNER_ROLE, account: initial-owner } { allowed: true })
     (ok true)))
 

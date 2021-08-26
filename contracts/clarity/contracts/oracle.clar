@@ -38,16 +38,12 @@
 ;; function to calculate request id using certain parameters
 (define-public (create-request-id  (payment uint) (expiration uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))
-    )
-)
+        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))))
 
 ;; function to calculate request id using certain parameters
 (define-public (reconstruct-request-id  (payment uint) (expiration uint) (req-count uint) (sender-id-buff (buff 84)))
     (begin
-        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count)) (keccak256 sender-id-buff))))
-    )
-)
+        (ok (keccak256 (concat (concat (concat (keccak256 payment) (keccak256 expiration)) (keccak256 req-count)) (keccak256 sender-id-buff))))))
 
 ;; function to remove request-id from map if we want to cancel the request
 (define-public (cancel-request (hashed-request-id (buff 32)) )
@@ -55,17 +51,13 @@
         (if (unwrap! (is-request-present hashed-request-id) err-request-not-found)
             (ok (map-delete request-ids { request-id: hashed-request-id })) ;; request-id was present and deleted from map
             (ok false) ;; request-id not present
-        )
-    )
-)
+        )))
 
 ;; function to check the presence of request-id.
 (define-public (is-request-present (hashed-request-id (buff 32)) )
     (if (is-none (map-get? request-ids { request-id: hashed-request-id }))
         (ok false)
-        (ok true)
-    )
-)
+        (ok true)))
 
 ;; Creates the Chainlink request
 ;; Stores the hash of the params as the on-chain commitment for the request.
@@ -104,10 +96,7 @@
                     request_count: (var-get request-count),
                     sender_id_buff: sender-id-buff
                 })
-                (ok true)
-            )
-        )           
-)
+                (ok true))))
 
 ;; Called by the Chainlink node to fulfill requests
 ;; Given params must hash back to the commitment stored from `oracle-request`.
@@ -134,10 +123,7 @@
         (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                                 ;; block-height exceeded the limit and request-id expired
         (match (contract-call? callback oracle-callback-handler data)
             sucess (ok true)
-            err (ok false)
-        )
-    )
-)
+            err (ok false))))
 
 (map-set contract-owners initiator true)                    ;; set observer-server as owner 
 (map-set contract-owners 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2 true) ;; clarinet contract tester

@@ -3,7 +3,7 @@ name = "clarity"
 requirements = []
 [contracts.direct-request]
 path = "contracts/direct-request.clar"
-depends_on = ["oracle"]
+depends_on = ["oracle", "stxlink-token"]
 
 [contracts.oracle]
 path = "contracts/oracle.clar"

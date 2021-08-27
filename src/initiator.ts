@@ -6,7 +6,6 @@ import { printTopic } from './helpers';
 
 export async function processNewBlock(chainId: ChainID, msg: CoreNodeBlockMessage): Promise<void> {
   const parsedMsg = parseMessageTransactions(chainId, msg);
-  console.log(parsedMsg.events.length);
   for (const event of parsedMsg.events) {
     if (event.type === CoreNodeEventType.ContractEvent) {
       if (

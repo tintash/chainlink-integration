@@ -164,7 +164,9 @@ export function createDirectRequestTxOptions(network: StacksNetwork, id: number)
   );
   const jobIdBuff = bufferToHexPrefixString(Buffer.from(mockRequest['job-id']));
   const paramBuff = bufferToHexPrefixString(Buffer.from(JSON.stringify(mockRequest.params)));
-  const senderPrincipalBuff = bufferToHexPrefixString(Buffer.from(String(process.env.STX_ADDR)));
+  const senderPrincipalBuff = bufferToHexPrefixString(
+    Buffer.from(String(process.env.TEST_ACC_STX))
+  );
   const txOptions = {
     contractAddress: consumerAddress,
     contractName: 'direct-request',

@@ -11,7 +11,6 @@ import { StacksMocknet } from '@stacks/network';
 import {
   bufferToHexPrefixString,
   createDirectRequestTxOptions,
-  hexToBuffer,
   hexToDirectRequestParams,
   paramsToHexPrefixString,
 } from '../helpers';

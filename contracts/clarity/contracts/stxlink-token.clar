@@ -239,3 +239,10 @@
     (map-set roles { role: OWNER_ROLE, account: initial-owner } { allowed: true })
     (ok true)))
 
+
+;; Initialize at deployment
+(initialize "STXLINK" "SL" u1 tx-sender)
+;; Add MINTER_ROLE to deployer
+(add-principal-to-role MINTER_ROLE tx-sender)
+;; Mint 2000 stx-link to test address
+(mint-tokens u2000 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6)

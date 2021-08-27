@@ -4,6 +4,8 @@ import {
   bufferCVFromString,
   ChainID,
   contractPrincipalCV,
+  createAssetInfo,
+  createFungiblePostCondition,
   createSTXPostCondition,
   FungibleConditionCode,
 } from '@stacks/transactions';
@@ -151,28 +153,32 @@ export interface DirectRequestBuffer {
 export const printTopic = 'print';
 
 export function createDirectRequestTxOptions(network: StacksNetwork, id: number) {
-  const mock_request = MockData[id];
-  const consumer_address = getOracleContract(ChainID.Testnet).address;
-  const post_condition = createSTXPostCondition(
-    'ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC',
+  const mockRequest = MockData[id];
+  const consumerAddress = getOracleContract(ChainID.Testnet).address;
+  const assetInfo = createAssetInfo(String(process.env.STX_ADDR), 'stxlink-token', 'STXLINK');
+  const postCondition = createFungiblePostCondition(
+    String(process.env.STX_ADDR),
     FungibleConditionCode.Equal,
-    new BigNum(500)
+    new BigNum(1),
+    assetInfo
   );
-  const sender_principal_buff = bufferToHexPrefixString(Buffer.from(String(process.env.STX_ADDR)));
+  const jobIdBuff = bufferToHexPrefixString(Buffer.from(mockRequest['job-id']));
+  const paramBuff = bufferToHexPrefixString(Buffer.from(JSON.stringify(mockRequest.params)));
+  const senderPrincipalBuff = bufferToHexPrefixString(Buffer.from(String(process.env.STX_ADDR)));
   const txOptions = {
-    contractAddress: consumer_address,
+    contractAddress: consumerAddress,
     contractName: 'direct-request',
-    functionName: 'request-api',
+    functionName: 'create-request',
     functionArgs: [
-      bufferCVFromString(mock_request['job-id-buff']),
-      bufferCVFromString(sender_principal_buff),
-      bufferCVFromString(mock_request['params-buff']),
-      contractPrincipalCV('ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC', 'direct-request'),
+      bufferCVFromString(jobIdBuff),
+      bufferCVFromString(senderPrincipalBuff),
+      bufferCVFromString(paramBuff),
+      contractPrincipalCV(String(process.env.STX_ADDR), 'direct-request'),
     ],
     senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),
     validateWithAbi: true,
     network,
-    postConditions: [post_condition],
+    postConditions: [postCondition],
     anchorMode: 1,
   };
   return txOptions;

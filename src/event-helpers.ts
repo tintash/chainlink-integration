@@ -6,10 +6,22 @@ import {
   executeChainlinkRequest,
   hexToDirectRequestParams,
 } from './helpers';
+import BigNum from 'bn.js';
 
 export interface OracleContractIdentifier {
   address: string;
   name: string;
+}
+
+export interface JobSpecResponse {
+  type: string;
+  id: string;
+  attributes: JobSpecResponseAttributes;
+}
+
+export interface JobSpecResponseAttributes {
+  id: string;
+  minPayment: Number;
 }
 
 export function getOracleContract(chainId: ChainID) {
@@ -44,13 +56,18 @@ export async function executeChainlinkInitiator(encoded_data: string) {
   try {
     const oracleTopicData = parseOracleRequestValue(encoded_data);
     const jobSpecId = bufferCVToASCIIString(oracleTopicData.specId);
+    const JobCost = oracleTopicData.payment.value;
     console.log('Chainlink JOB_SPEC_ID:< ', jobSpecId, ' >');
-    const hex = oracleTopicData.data.buffer.toString();
-    const data: DirectRequestParams = hexToDirectRequestParams(hex);
-    console.log('Chainlink JOB_DATA:< ', data, ' >');
-    data.payload = encoded_data;
-    const response = await executeChainlinkRequest(jobSpecId, data);
-    console.log('Chainlink Initiator Response:< ', response, ' >');
+    const madePayment: BigNum = getJobSpecMinPayment(jobSpecId);
+    if (JobCost > madePayment) {
+      throw `rejecting job ${jobSpecId} with payment ${madePayment} below minimum threshold ${JobCost}`
+    }
+      const hex = oracleTopicData.data.buffer.toString();
+      const data: DirectRequestParams = hexToDirectRequestParams(hex);
+      console.log('Chainlink JOB_DATA:< ', data, ' >');
+      data.payload = encoded_data;
+      const response = await executeChainlinkRequest(jobSpecId, data);
+      console.log('Chainlink Initiator Response:< ', response, ' >');
   } catch (err) {
     console.log('Chainlink Initiator Error:< ', err, ' >');
   }

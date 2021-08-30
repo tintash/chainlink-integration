@@ -29,6 +29,7 @@ export interface OracleFulfillment {
   dataVersion: UIntCV;
   requestCount: UIntCV;
   senderBuff: BufferCV;
+  payment: UIntCV;
   data: BufferCV;
 }
 
@@ -50,6 +51,7 @@ export function parseOracleRequestValue(encodedData: string): OracleFulfillment 
     const dataVersion = cvData['data_version'] as UIntCV;
     const requestCount = cvData['request_count'] as UIntCV;
     const senderBuff: BufferCV = cvData['sender_id_buff'] as BufferCV;
+    const payment = cvData['payment'] as UIntCV;
     const data: BufferCV = cvData['data'] as BufferCV;
     const result: OracleFulfillment = {
       requestId: requestId,
@@ -61,6 +63,7 @@ export function parseOracleRequestValue(encodedData: string): OracleFulfillment 
       dataVersion: dataVersion,
       requestCount: requestCount,
       senderBuff: senderBuff,
+      payment: payment,
       data: data,
     };
     return result;

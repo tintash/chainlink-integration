@@ -61,6 +61,7 @@
 ;; sender The sender of the request
 ;; spec-id The Job Specification ID
 ;; callback The principal to invoke for the response
+;; payment The payment in FTs sent by the requester
 ;; nonce The nonce sent by the requester
 ;; data-version The specified data version
 ;; data The CBOR payload of the request
@@ -68,6 +69,7 @@
                                 (spec-id (buff 66))
                                 (sender-id-buff (buff 84))                                
                                 (callback <oracle-callback>)
+                                (payment uint)
                                 (nonce uint)
                                 (data-version uint)
                                 (data (buff 1024)))
@@ -82,6 +84,7 @@
                     sender: sender,
                     spec_id: spec-id,
                     callback: callback,
+                    payment: payment,
                     nonce: nonce,
                     data_version: data-version,
                     data: data,

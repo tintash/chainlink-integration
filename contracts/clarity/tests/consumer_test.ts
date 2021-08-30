@@ -26,23 +26,22 @@ Clarinet.test({
         ];
 
         let block = chain.mineBlock([
-            Tx.contractCall("stxlink-token", "initialize", [types.ascii('STXLINK'), types.ascii('SL'), types.uint(4), types.principal(wallet1Address)], deployer.address),
-            Tx.contractCall("stxlink-token", "add-principal-to-role", [types.uint(1), types.principal(wallet1Address)], wallet1Address),
-            Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  wallet1Address),
+            Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
             //Successful request
             Tx.contractCall("direct-request", "create-request", directRequestParams, wallet1Address),
             //Initial data should be none
             Tx.contractCall("direct-request", "read-data-value", [],  wallet1Address),      
         ]);
-        block.receipts[3].result 
+
+        block.receipts[1].result 
         .expectOk()
         .expectBool(true);
 
-        block.receipts[4].result //initially no value present in the data-value variable
+        block.receipts[2].result //initially no value present in the data-value variable
         .expectOk()
         .expectNone();
 
-        let event = block.receipts[3].events[1];
+        let event = block.receipts[1].events[1];
         let {contract_event} = event;
         let {value} = contract_event;
         let elements = getEventElements(value);

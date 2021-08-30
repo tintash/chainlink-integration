@@ -19,43 +19,38 @@ Clarinet.test({
 
         let block = chain.mineBlock([
             // Token Initialization
-            Tx.contractCall("stxlink-token", "initialize", [types.ascii('STXLINK'), types.ascii('SL'), types.uint(4), types.principal(wallet1Address)], deployer.address),
-            Tx.contractCall("stxlink-token", "add-principal-to-role", [types.uint(1), types.principal(wallet1Address)], wallet1Address),
+            Tx.contractCall("stxlink-token", "add-principal-to-role", [types.uint(1), types.principal(wallet1Address)], deployer.address),
             Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  wallet1Address),
             Tx.contractCall("stxlink-token", "get-balance", [types.principal(wallet1Address)], deployer.address),
             Tx.contractCall("direct-request", "create-request", directRequestParams, wallet1Address),
             Tx.contractCall("stxlink-token", "get-balance", [types.principal(deployer.address+'.oracle')], wallet1Address),
             Tx.contractCall("stxlink-token", "get-balance", [types.principal(wallet1Address)], deployer.address),
         ]);
-        
+
         block.receipts[0].result 
         .expectOk()
         .expectBool(true);
+        assertEquals(block.receipts[0].events.length, 1);
 
         block.receipts[1].result 
         .expectOk()
         .expectBool(true);
-        assertEquals(block.receipts[1].events.length, 1);
+        assertEquals(block.receipts[1].events.length, 2);
 
         block.receipts[2].result 
         .expectOk()
-        .expectBool(true);
-        assertEquals(block.receipts[2].events.length, 2);
-
-        block.receipts[3].result 
-        .expectOk()
         .expectUint(2000);
         
-        block.receipts[4].result 
+        block.receipts[3].result 
         .expectOk()
         .expectBool(true);
-        assertEquals(block.receipts[4].events.length, 2);
+        assertEquals(block.receipts[3].events.length, 2);
 
-        block.receipts[5].result 
+        block.receipts[4].result 
         .expectOk()
         .expectUint(1);
 
-        block.receipts[6].result 
+        block.receipts[5].result 
         .expectOk()
         .expectUint(1999);
     },

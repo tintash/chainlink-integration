@@ -25,6 +25,7 @@ export interface OracleFulfillment {
   sender: StandardPrincipalCV;
   specId: BufferCV;
   callback: ContractPrincipalCV;
+  payment: UIntCV;
   nonce: UIntCV;
   dataVersion: UIntCV;
   requestCount: UIntCV;
@@ -47,6 +48,7 @@ export function parseOracleRequestValue(encodedData: string): OracleFulfillment 
     const expiration = cvData['expiration'] as UIntCV;
     const specId: BufferCV = cvData['spec_id'] as BufferCV;
     const callback = cvData['callback'] as ContractPrincipalCV;
+    const payment = cvData['payment'] as UIntCV;
     const nonce = cvData['nonce'] as UIntCV;
     const dataVersion = cvData['data_version'] as UIntCV;
     const requestCount = cvData['request_count'] as UIntCV;
@@ -59,6 +61,7 @@ export function parseOracleRequestValue(encodedData: string): OracleFulfillment 
       sender: sender,
       specId: specId,
       callback: callback,
+      payment: payment,
       nonce: nonce,
       dataVersion: dataVersion,
       requestCount: requestCount,

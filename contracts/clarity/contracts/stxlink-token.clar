@@ -217,6 +217,7 @@
       job-spec-id             ;; chainlink-job id
       sender-id-buff          ;; transaction-sender-id encoded to buffer 
       callback                ;; callback principal (addr) 
+      MINIMUM_PAYMENT         ;; payment
       u0                      ;; nonce
       u0                      ;; data version
       data                    ;; data
@@ -227,7 +228,7 @@
 
 ;; Check to ensure that the same account that deployed the contract is initializing it
 ;; Only allow this funtion to be called once by checking "is-initialized"
-(define-public (initialize (name-to-set (string-ascii 32)) (symbol-to-set (string-ascii 32) ) (decimals-to-set uint) (initial-owner principal))
+(define-private (initialize (name-to-set (string-ascii 32)) (symbol-to-set (string-ascii 32) ) (decimals-to-set uint) (initial-owner principal))
   (begin
     (asserts! (is-eq tx-sender (var-get deployer-principal)) (err PERMISSION_DENIED_ERROR))
     (asserts! (not (var-get is-initialized)) (err PERMISSION_DENIED_ERROR))

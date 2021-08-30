@@ -15,6 +15,8 @@ import {
   paramsToHexPrefixString,
 } from '../helpers';
 
+import { getJobSpecMinPayment } from '../initiator-helpers';
+
 export function createObserverRouter() {
   const router = express.Router();
   router.use(express.json());
@@ -85,6 +87,20 @@ export function createObserverRouter() {
     try {
       const result = hexToDirectRequestParams(buf_string);
       res.status(200).json(result);
+    } catch (err: any) {
+      res.status(400).json(err.message);
+    }
+  });
+
+  router.get('/job-min-payment', async (req, res) => {
+    const jobId = req.body.jobId;
+    if (jobId === 'undefined' || typeof jobId != 'string')
+      res.status(400).json({ msg: 'bad request body' });
+    try {
+      const minPayment = await getJobSpecMinPayment(jobId);
+      res.status(200).json({
+        minPayment: minPayment,
+      });
     } catch (err: any) {
       res.status(400).json(err.message);
     }

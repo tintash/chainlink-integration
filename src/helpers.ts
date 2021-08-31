@@ -155,9 +155,9 @@ export const printTopic = 'print';
 export function createDirectRequestTxOptions(network: StacksNetwork, id: number) {
   const mockRequest = MockData[id];
   const consumerAddress = getOracleContract(ChainID.Testnet).address;
-  const assetInfo = createAssetInfo(String(process.env.STX_ADDR), 'stxlink-token', 'STXLINK');
+  const assetInfo = createAssetInfo(String(process.env.STX_ADDR), 'stxlink-token', 'stxlink-token');
   const postCondition = createFungiblePostCondition(
-    String(process.env.STX_ADDR),
+    String(process.env.TEST_ACC_STX),
     FungibleConditionCode.Equal,
     new BigNum(1),
     assetInfo

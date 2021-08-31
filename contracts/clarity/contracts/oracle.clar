@@ -108,15 +108,24 @@
                                         (req-count uint)
                                         (sender-id-buff (buff 84))
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))          ;; todo(ludo): must be able to reconstruct request-id  
-        (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
-        (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
-        (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map
-        (map-delete request-ids { request-id: reconstructed-request-id })                                                                               ;; remove request-id from map
-        (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                                 ;; block-height exceeded the limit and request-id expired
-        (match (contract-call? callback oracle-callback-handler data)
-            sucess (ok true)
-            err (ok false))))
+    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))
+        (if (is-eq reconstructed-request-id request-id)
+            (if (is-valid-owner?)
+                (if (is-some (map-get? request-ids { request-id: reconstructed-request-id }))
+                    (begin (map-delete request-ids { request-id: reconstructed-request-id })
+                        (if (< block-height (+ expiration expiration-limit))
+                            (match (contract-call? callback oracle-callback-handler data)
+                                sucess (ok true)
+                                err (ok false))
+                        err-request-expired)) err-request-not-found) err-invalid-tx-sender) err-reconstructed-id-not-equal)))
+    ;; (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
+    ;; (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
+    ;; (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map
+    ;; (map-delete request-ids { request-id: reconstructed-request-id })                                                                               ;; remove request-id from map
+    ;; (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                                 ;; block-height exceeded the limit and request-id expired
+    ;; (match (contract-call? callback oracle-callback-handler data)
+    ;;     sucess (ok true)
+    ;;     err (ok false))))
 
 (map-set contract-owners tx-sender true)
 

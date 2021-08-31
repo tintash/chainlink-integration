@@ -59,10 +59,10 @@ export async function executeChainlinkInitiator(encoded_data: string) {
     const jobSpecId = bufferCVToASCIIString(oracleTopicData.specId);
     const JobCost = oracleTopicData.payment.value;
     console.log('Chainlink JOB_SPEC_ID:< ', jobSpecId, ' >');
-    const madePayment: BigNum = await getJobSpecMinPayment(jobSpecId);
-    if (JobCost > madePayment) {
-      throw `rejecting job ${jobSpecId} with payment ${madePayment} below minimum threshold ${JobCost}`;
-    }
+    // const madePayment: BigNum = await getJobSpecMinPayment(jobSpecId);
+    // if (JobCost > madePayment) {
+    //   throw `rejecting job ${jobSpecId} with payment ${madePayment} below minimum threshold ${JobCost}`;
+    // }
     const hex = oracleTopicData.data.buffer.toString();
     const data: DirectRequestParams = hexToDirectRequestParams(hex);
     console.log('Chainlink JOB_DATA:< ', data, ' >');

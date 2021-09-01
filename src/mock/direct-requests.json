@@ -2,7 +2,7 @@
     {
         "id": 0,
         "type": "get",
-        "job-id": "8c40a85bb6bf4f83aa0e9f0770a20c56",
+        "job-id": "2dfc497f039b48c3a6e5c482cd55981f",
         "params": {
             "get": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD",
             "path": "USD"
@@ -11,7 +11,7 @@
     {
         "id": 1,
         "type": "get",
-        "job-id": "8c40a85bb6bf4f83aa0e9f0770a20c56",
+        "job-id": "2dfc497f039b48c3a6e5c482cd55981f",
         "params": {
             "get": "https://min-api.cryptocompare.com/data/price?fsym=STX&tsyms=USD",
             "path": "USD"
@@ -20,7 +20,7 @@
     {
         "id": 2,
         "type": "post",
-        "job-id": "0b9e009f086e4f9693c48667a5afd14c",
+        "job-id": "87eb0f58108e4085a52a153919b571b9",
         "params": {
             "post": "https://reqres.in/api/register",
             "body": "{\n    \"email\": \"eve.holt@reqres.in\",\n    \"password\": \"pistol\"\n}",
@@ -30,7 +30,7 @@
     {
         "id": 3,
         "type": "post",
-        "job-id": "0b9e009f086e4f9693c48667a5afd14c",
+        "job-id": "87eb0f58108e4085a52a153919b571b9",
         "params":  {
             "post": "https://stacks-node-api.testnet.stacks.co/rosetta/v1/network/options",
             "body": "{\"network_identifier\": {\n            \"blockchain\": \"stacks\",\n            \"network\": \"testnet\"\n    }\n}",

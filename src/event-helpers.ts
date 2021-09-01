@@ -7,7 +7,7 @@ import {
   hexToDirectRequestParams,
 } from './helpers';
 import BigNum from 'bn.js';
-import { getJobSpecMinPayment } from './initiator-helpers';
+import { getJobSpecMinPayment, validatePayment } from './initiator-helpers';
 
 export interface OracleContractIdentifier {
   address: string;
@@ -57,12 +57,13 @@ export async function executeChainlinkInitiator(encoded_data: string) {
   try {
     const oracleTopicData = parseOracleRequestValue(encoded_data);
     const jobSpecId = bufferCVToASCIIString(oracleTopicData.specId);
-    const JobCost = oracleTopicData.payment.value;
+    const transferedAmount = oracleTopicData.payment.value;
     console.log('Chainlink JOB_SPEC_ID:< ', jobSpecId, ' >');
-    // const madePayment: BigNum = await getJobSpecMinPayment(jobSpecId);
-    // if (JobCost > madePayment) {
-    //   throw `rejecting job ${jobSpecId} with payment ${madePayment} below minimum threshold ${JobCost}`;
-    // }
+    const jobCost: bigint = await getJobSpecMinPayment(jobSpecId);
+    const validation: boolean = await validatePayment(transferedAmount, jobCost)
+    if (validation == false || !validation) {
+      throw `rejecting job ${jobSpecId} with payment ${jobCost} below minimum threshold ${transferedAmount.toString()}`;
+    }
     const hex = oracleTopicData.data.buffer.toString();
     const data: DirectRequestParams = hexToDirectRequestParams(hex);
     console.log('Chainlink JOB_DATA:< ', data, ' >');

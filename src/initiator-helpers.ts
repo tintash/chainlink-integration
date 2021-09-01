@@ -14,11 +14,11 @@ async function getChainlinkClientSessionCookie(): Promise<string> {
   }).then(response => String(response.headers.get('set-cookie')).replace(',', ';'));
 }
 
-export async function getJobSpecMinPayment(jobId: string): Promise<BigNum> {
+export async function getJobSpecMinPayment(jobId: string): Promise<bigint> {
   if (process.env.CHAINLINK_COOKIE === undefined || process.env.CHAINLINK_COOKIE || '') {
     process.env['CHAINLINK_COOKIE'] = await getChainlinkClientSessionCookie();
   }
-
+  console.log(`http://localhost:6688/v2/specs/${jobId}`);
   return fetch(`http://localhost:6688/v2/specs/${jobId}`, {
     method: 'GET',
     headers: {
@@ -28,4 +28,8 @@ export async function getJobSpecMinPayment(jobId: string): Promise<BigNum> {
   })
     .then(response => response.json())
     .then(res => res.data.attributes.minPayment);
+}
+
+export async function validatePayment(payment: bigint, cost: bigint): Promise<boolean>{
+  return (payment >= cost)
 }

@@ -6,7 +6,7 @@ import {
   executeChainlinkRequest,
   hexToDirectRequestParams,
 } from './helpers';
-import BigNum from 'bn.js';
+
 import { getJobSpecMinPayment, validatePayment } from './initiator-helpers';
 
 export interface OracleContractIdentifier {

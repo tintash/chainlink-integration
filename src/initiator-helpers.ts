@@ -1,4 +1,4 @@
-import BigNum from 'bn.js';
+import fetch from 'node-fetch';
 
 async function getChainlinkClientSessionCookie(): Promise<string> {
   console.log('here: ', process.env.CHAINLINK_EMAIL, process.env.CHAINLINK_PASSWORD);
@@ -15,21 +15,25 @@ async function getChainlinkClientSessionCookie(): Promise<string> {
 }
 
 export async function getJobSpecMinPayment(jobId: string): Promise<bigint> {
-  if (process.env.CHAINLINK_COOKIE === undefined || process.env.CHAINLINK_COOKIE || '') {
-    process.env['CHAINLINK_COOKIE'] = await getChainlinkClientSessionCookie();
+  try {
+    if (process.env.CHAINLINK_COOKIE === undefined || process.env.CHAINLINK_COOKIE || '') {
+      process.env['CHAINLINK_COOKIE'] = await getChainlinkClientSessionCookie();
+    }
+    console.log(`http://localhost:6688/v2/specs/${jobId}`);
+    return fetch(`http://localhost:6688/v2/specs/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: String(process.env.CHAINLINK_COOKIE),
+      },
+    })
+      .then(response => response.json())
+      .then(res => res.data.attributes.minPayment);
+  } catch (error) {
+    throw new Error('Error While Fetching JobSpec MinPayment');
   }
-  console.log(`http://localhost:6688/v2/specs/${jobId}`);
-  return fetch(`http://localhost:6688/v2/specs/${jobId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      cookie: String(process.env.CHAINLINK_COOKIE),
-    },
-  })
-    .then(response => response.json())
-    .then(res => res.data.attributes.minPayment);
 }
 
-export async function validatePayment(payment: bigint, cost: bigint): Promise<boolean>{
-  return (payment >= cost)
+export async function validatePayment(payment: bigint, cost: bigint): Promise<boolean> {
+  return payment >= cost;
 }

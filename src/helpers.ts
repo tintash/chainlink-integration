@@ -12,7 +12,7 @@ import {
 import request from 'request';
 import { getOracleContract } from './event-helpers';
 import BigNum from 'bn.js';
-import * as MockData from './mock/direct-requests.json';
+import { MockRequests } from './mock/direct-requests';
 
 export interface PriceFeedRequestFulfillment {
   result: number;
@@ -153,7 +153,7 @@ export interface DirectRequestBuffer {
 export const printTopic = 'print';
 
 export function createDirectRequestTxOptions(network: StacksNetwork, id: number) {
-  const mockRequest = MockData[id];
+  const mockRequest = MockRequests[id];
   const consumerAddress = getOracleContract(ChainID.Testnet).address;
   const assetInfo = createAssetInfo(String(process.env.STX_ADDR), 'stxlink-token', 'stxlink-token');
   const postCondition = createFungiblePostCondition(
@@ -162,7 +162,7 @@ export function createDirectRequestTxOptions(network: StacksNetwork, id: number)
     new BigNum(1),
     assetInfo
   );
-  const jobIdBuff = bufferToHexPrefixString(Buffer.from(mockRequest['job-id']));
+  const jobIdBuff = bufferToHexPrefixString(Buffer.from(String(mockRequest['job-id'])));
   const paramBuff = bufferToHexPrefixString(Buffer.from(JSON.stringify(mockRequest.params)));
   const senderPrincipalBuff = bufferToHexPrefixString(
     Buffer.from(String(process.env.TEST_ACC_STX))

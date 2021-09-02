@@ -1,36 +1,47 @@
 import fetch from 'node-fetch';
 
-async function getChainlinkClientSessionCookie(): Promise<string> {
-  console.log('here: ', process.env.CHAINLINK_EMAIL, process.env.CHAINLINK_PASSWORD);
-  return fetch('http://localhost:6688/sessions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: process.env.CHAINLINK_EMAIL,
-      password: process.env.CHAINLINK_PASSWORD,
-    }),
-  }).then(response => String(response.headers.get('set-cookie')).replace(',', ';'));
+export async function getChainlinkClientSessionCookie(): Promise<string> {
+  try {
+    let cookie_array = String(process.env.CHAINLINK_COOKIE).split(';');
+    const cookie_expires_at = new Date(
+      String(cookie_array.find(x => x.match('Expires='))).replace('Expires=', '')
+    );
+
+    if (
+      process.env.CHAINLINK_COOKIE === undefined ||
+      process.env.CHAINLINK_COOKIE === '' ||
+      cookie_expires_at.getTime() < Date.now()
+    ) {
+      return fetch('http://localhost:6688/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: process.env.CHAINLINK_EMAIL,
+          password: process.env.CHAINLINK_PASSWORD,
+        }),
+      }).then(response => String(response.headers.get('set-cookie')).replace(',', ';'));
+    }
+  } catch (error) {
+    throw new Error(`{ error: chainlink login credentials not provided, msg: ${error.message} }`);
+  }
+  return String(process.env.CHAINLINK_COOKIE);
 }
 
 export async function getJobSpecMinPayment(jobId: string): Promise<bigint> {
   try {
-    if (process.env.CHAINLINK_COOKIE === undefined || process.env.CHAINLINK_COOKIE || '') {
-      process.env['CHAINLINK_COOKIE'] = await getChainlinkClientSessionCookie();
-    }
-    console.log(`http://localhost:6688/v2/specs/${jobId}`);
     return fetch(`http://localhost:6688/v2/specs/${jobId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        cookie: String(process.env.CHAINLINK_COOKIE),
+        cookie: await getChainlinkClientSessionCookie(),
       },
     })
       .then(response => response.json())
       .then(res => res.data.attributes.minPayment);
   } catch (error) {
-    throw new Error('Error While Fetching JobSpec MinPayment');
+    throw new Error(`{ error: Failed Fetching JobSpec MinPayment, msg ${error.message} }`);
   }
 }
 

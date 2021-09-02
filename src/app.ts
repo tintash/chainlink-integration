@@ -7,6 +7,8 @@ import { createAdapterRouter } from './routes/adapter';
 import { createObserverRouter } from './routes/observer';
 import morgan from 'morgan';
 import * as bodyParser from 'body-parser';
+import { createExternalInitiator, createBridge, createJobs } from './configure-chainlink';
+import { getChainlinkClientSessionCookie } from './initiator-helpers';
 
 export function startApiServer(): Server {
   const app = addAsync(express());
@@ -36,6 +38,15 @@ export function startApiServer(): Server {
 
   return server;
 }
+async function configureChainlink(): Promise<void> {
+  const cookie = await getChainlinkClientSessionCookie();
+  const ok0 = await createExternalInitiator(cookie);
+  const ok1 = await createBridge(cookie);
+  if (ok0 && ok1) {
+    createJobs(cookie);
+  }
+}
 
+configureChainlink();
 export const App = startApiServer();
 console.log('Server initiated!');

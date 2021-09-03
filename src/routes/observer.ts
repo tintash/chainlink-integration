@@ -93,14 +93,14 @@ export function createObserverRouter() {
   });
 
   router.get('/job-min-payment', async (req, res) => {
-    const jobId = req.body.jobId;
+    const { jobId } = req.body;
     if (jobId === 'undefined' || typeof jobId != 'string')
       res.status(400).json({ msg: 'bad request body' });
     try {
-      const cookie: string = await getChainlinkClientSessionCookie()
+      const cookie: string = await getChainlinkClientSessionCookie();
       const minPayment = await getJobSpecMinPayment(jobId, cookie);
       res.status(200).json({
-        minPayment: minPayment,
+        minPayment,
       });
     } catch (err: any) {
       res.status(400).json(err.message);

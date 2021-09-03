@@ -38,13 +38,16 @@ export function startApiServer(): Server {
 
   return server;
 }
+
 async function configureChainlink(): Promise<void> {
   const cookie = await getChainlinkClientSessionCookie();
-  const ok0 = await createExternalInitiator(cookie);
-  const ok1 = await createBridge(cookie);
-  if (ok0 && ok1) {
-    createJobs(cookie);
-  }
+  Promise.all([createExternalInitiator(cookie), createBridge(cookie)]).then(
+    ([eiName, bridgeName]) => {
+      if (eiName !== '' && bridgeName !== '') {
+        createJobs(cookie);
+      }
+    }
+  );
 }
 
 configureChainlink();

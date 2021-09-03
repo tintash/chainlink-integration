@@ -24,7 +24,7 @@ test('request params to hex prefix string', () => {
   expect(result.type).toBe('bytes');
 });
 
-test('error: hex to direct request params', async () => {
+test.only('error: hex to direct request params', async () => {
   const param = '';
   await expect(hexToDirectRequestParams(param)).rejects.toThrowError('Empty hex buffer provided.');
 });

@@ -29,17 +29,21 @@ export async function getChainlinkClientSessionCookie(): Promise<string> {
   return String(process.env.CHAINLINK_COOKIE);
 }
 
-export async function getJobSpecMinPayment(jobId: string): Promise<bigint> {
+export async function getJobSpecMinPayment(jobId: string, cookie: string): Promise<bigint> {
   try {
     return fetch(`http://localhost:6688/v2/specs/${jobId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        cookie: await getChainlinkClientSessionCookie(),
+        cookie: cookie,
       },
     })
       .then(response => response.json())
-      .then(res => res.data.attributes.minPayment);
+      .then(res => {
+        if(!res.data) throw new Error('Invalid Job ID or Cookie While Fetching JobSpec MinPayment')
+        else if(res.data.id == jobId && !res.data.attributes.minPayment) return 1
+        return res.data.attributes.minPayment;
+      });
   } catch (error) {
     throw new Error(`{ error: Failed Fetching JobSpec MinPayment, msg ${error.message} }`);
   }

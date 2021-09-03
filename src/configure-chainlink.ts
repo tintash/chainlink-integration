@@ -232,7 +232,6 @@ async function createJob(jobPayload: string, cookie: string, envVar: string): Pr
         .then(response => {
           console.log(`created new job with ID: ${response.data.id}`);
           process.env[envVar] = response.data.id;
-          // console.log(`${envVar}: `, process.env[envVar]);
           setEnvValue(envVar, response.data.id);
         })
         .then(() => true);

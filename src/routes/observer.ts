@@ -15,7 +15,7 @@ import {
   paramsToHexPrefixString,
 } from '../helpers';
 
-import { getJobSpecMinPayment } from '../initiator-helpers';
+import { getJobSpecMinPayment, getChainlinkClientSessionCookie } from '../initiator-helpers';
 
 export function createObserverRouter() {
   const router = express.Router();
@@ -97,7 +97,8 @@ export function createObserverRouter() {
     if (jobId === 'undefined' || typeof jobId != 'string')
       res.status(400).json({ msg: 'bad request body' });
     try {
-      const minPayment = await getJobSpecMinPayment(jobId);
+      const cookie: string = await getChainlinkClientSessionCookie()
+      const minPayment = await getJobSpecMinPayment(jobId, cookie);
       res.status(200).json({
         minPayment: minPayment,
       });

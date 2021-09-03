@@ -1,4 +1,8 @@
-import { validatePayment, getJobSpecMinPayment } from '../initiator-helpers';
+import {
+  validatePayment,
+  getJobSpecMinPayment,
+  getChainlinkClientSessionCookie,
+} from '../initiator-helpers';
 
 test('Returns True on payment > Jobcost', () => {
   const payment = BigInt(20);
@@ -22,16 +26,47 @@ test('Returns False on payment < jobcost', () => {
 });
 
 test('Throws error on invalid job id', async () => {
-  const param = 'dummy';
-  await expect(getJobSpecMinPayment(param)).rejects.toThrowError(
-    'Cannot read property \'attributes\' of undefined'
+  const jobID = 'dummy';
+  const cookie = await getChainlinkClientSessionCookie();
+  await expect(getJobSpecMinPayment(jobID, cookie)).rejects.toThrowError(
+    'Invalid Job ID or Cookie While Fetching JobSpec MinPayment'
   );
 });
 
+test('Throws error on invalid cookie', async () => {
+  const jobID = process.env.CHAINLINK_GET_JOB_ID || 'c7c16681f7704af4a247aa7b65064c4d';
+  const cookie = 'invalidcookie';
+  await expect(getJobSpecMinPayment(jobID, cookie)).rejects.toThrowError(
+    'Invalid Job ID or Cookie While Fetching JobSpec MinPayment'
+  );
+});
 
-test('successfully fetches minnimum job payment for valid jobID', async () => {
-  const jobID = process.env.TEST_JOBID || '4e6a6f71d5b9417591446b7163985951';
-  const result = await getJobSpecMinPayment(jobID)
-  expect(result).toBeDefined()
-  expect(typeof result).toBe("string");
+test('Fetches job cost/min payment with corrrect jobID and cookie', async () => {
+  const jobID = process.env.CHAINLINK_GET_JOB_ID || 'c7c16681f7704af4a247aa7b65064c4d';
+  const cookie = await getChainlinkClientSessionCookie();
+  const result = getJobSpecMinPayment(jobID, cookie);
+  expect(result).resolves.toBeDefined();
+});
+
+
+
+test('Fetches cookie with valid credentials', async () => {
+  process.env.CHAINLINK_COOKIE= undefined
+  const cookie = await getChainlinkClientSessionCookie();
+  expect(cookie).toBeDefined();
+  expect(typeof cookie).toBe("string");
+  // expect(typeof cookie).toBe("string")
+  // afterAll(() => {
+  //   process.env.CHAINLINK_EMAIL = 'test@tintash.com';
+  //   process.env.CHAINLINK_PASSWORD = '12345678'
+  // });
+});
+
+test('Error : While Fetching cookie with invalid credentials', async () => {
+  process.env.CHAINLINK_EMAIL = '';
+  process.env.CHAINLINK_PASSWORD = ''
+  process.env.CHAINLINK_COOKIE= undefined
+  await expect(getChainlinkClientSessionCookie()).rejects.toThrow();
+  process.env.CHAINLINK_EMAIL = 'test@tintash.com';
+  process.env.CHAINLINK_PASSWORD = '12345678';
 });

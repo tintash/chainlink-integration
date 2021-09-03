@@ -7,7 +7,7 @@ import {
   hexToDirectRequestParams,
 } from './helpers';
 
-import { getJobSpecMinPayment, validatePayment } from './initiator-helpers';
+import { getJobSpecMinPayment, validatePayment, getChainlinkClientSessionCookie } from './initiator-helpers';
 
 export interface OracleContractIdentifier {
   address: string;
@@ -59,7 +59,9 @@ export async function executeChainlinkInitiator(encoded_data: string) {
     const jobSpecId = bufferCVToASCIIString(oracleTopicData.specId);
     const transferedAmount = oracleTopicData.payment.value;
     console.log('Chainlink JOB_SPEC_ID:< ', jobSpecId, ' >');
-    const jobCost: bigint = await getJobSpecMinPayment(jobSpecId);
+    const cookie: string = await getChainlinkClientSessionCookie()
+    if(!cookie) throw new Error('Unauthorized: Please use valid api credentials')
+    const jobCost: bigint = await getJobSpecMinPayment(jobSpecId, cookie);
     const validation: boolean = await validatePayment(transferedAmount, jobCost)
     if (validation == false || !validation) {
       throw `rejecting job ${jobSpecId} with payment ${jobCost} below minimum threshold ${transferedAmount.toString()}`;

@@ -1,3 +1,4 @@
+import { response } from 'express';
 import fs from 'fs';
 import os from 'os';
 import { getRequestJob } from './chainlink-jobs/get-request';
@@ -85,7 +86,11 @@ async function hasExternalInitiator(name: string, cookie: string): Promise<boole
   })
     .then(response => response.json())
     .then(response => response as ExternalInitiators)
-    .then(response => response.data.some(initiator => initiator.attributes.name === name));
+    .then(response => response.data.some(initiator => initiator.attributes.name === name))
+    .catch(error => {
+      console.error(error);
+      return false;
+    });
 }
 
 async function hasBridge(name: string, cookie: string): Promise<boolean> {
@@ -95,19 +100,24 @@ async function hasBridge(name: string, cookie: string): Promise<boolean> {
       'Content-Type': 'application/json',
       cookie,
     },
-  }).then(response => {
-    if (response.status === 404) {
+  })
+    .then(response => {
+      if (response.status === 404) {
+        return false;
+      } else if (!response.ok) {
+        throw new Error(
+          `{ error: failed to get external initiator with given name, code: ${response.status} }`
+        );
+      }
+      return response
+        .json()
+        .then(response => response as Bridge)
+        .then(response => response.data.attributes.name === name);
+    })
+    .catch(error => {
+      console.error(error);
       return false;
-    } else if (!response.ok) {
-      throw new Error(
-        `{ error: failed to get external initiator with given name, code: ${response.status} }`
-      );
-    }
-    return response
-      .json()
-      .then(response => response as Bridge)
-      .then(response => response.data.attributes.name === name);
-  });
+    });
 }
 
 export async function createExternalInitiator(cookie: string): Promise<boolean> {
@@ -128,23 +138,30 @@ export async function createExternalInitiator(cookie: string): Promise<boolean> 
         name: eiName,
         url: eiURL,
       }),
-    }).then(response => {
-      if (!response.ok) {
-        throw new Error(`{ error: failed to create external initiator code: ${response.status} }`);
-      }
-      return response
-        .json()
-        .then(response => response as NewExternalInitiator)
-        .then(response => {
-          console.log(`created new external initiator: "${response.data.attributes.name}"`);
-          setEnvValue('EI_IC_ACCESSKEY', response.data.attributes.incomingAccessKey);
-          setEnvValue('EI_IC_SECRET', response.data.attributes.incomingSecret);
-          setEnvValue('EI_CI_ACCESSKEY', response.data.attributes.outgoingToken);
-          setEnvValue('EI_CI_SECRET', response.data.attributes.outgoingSecret);
-          console.log(`updated external initiator environment vars`);
-        })
-        .then(() => true);
-    });
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(
+            `{ error: failed to create external initiator code: ${response.status} }`
+          );
+        }
+        return response
+          .json()
+          .then(response => response as NewExternalInitiator)
+          .then(response => {
+            console.log(`created new external initiator: "${response.data.attributes.name}"`);
+            setEnvValue('EI_IC_ACCESSKEY', response.data.attributes.incomingAccessKey);
+            setEnvValue('EI_IC_SECRET', response.data.attributes.incomingSecret);
+            setEnvValue('EI_CI_ACCESSKEY', response.data.attributes.outgoingToken);
+            setEnvValue('EI_CI_SECRET', response.data.attributes.outgoingSecret);
+            console.log(`updated external initiator environment vars`);
+          })
+          .then(() => true);
+      })
+      .catch(error => {
+        console.error(error);
+        return false;
+      });
   }
 }
 
@@ -166,16 +183,21 @@ export async function createBridge(cookie: string): Promise<boolean> {
         name: bridgeName,
         url: bridgeURL,
       }),
-    }).then(response => {
-      if (!response.ok || response.status !== 200) {
-        throw new Error('error: failed to create bridge');
-      }
-      return response
-        .json()
-        .then(response => response as NewBridge)
-        .then(response => console.log(`created new bridge: "${response.data.attributes.name}"`))
-        .then(() => true);
-    });
+    })
+      .then(response => {
+        if (!response.ok || response.status !== 200) {
+          throw new Error('error: failed to create bridge');
+        }
+        return response
+          .json()
+          .then(response => response as NewBridge)
+          .then(response => console.log(`created new bridge: "${response.data.attributes.name}"`))
+          .then(() => true);
+      })
+      .catch(error => {
+        console.error(error);
+        return false;
+      });
   }
 }
 
@@ -200,17 +222,24 @@ async function createJob(jobPayload: string, cookie: string, envVar: string): Pr
   })
     .then(response => {
       if (!response.ok || response.status !== 200) {
-        throw new Error(`{ error: failed to create job, errCode: ${response.status} }`);
+        response.json().then(response => {
+          throw new Error(`{ error: failed to create job, msg: ${JSON.stringify(response)} }`);
+        });
       }
       response
         .json()
         .then(response => response as NewBridge)
         .then(response => {
           console.log(`created new job with ID: ${response.data.id}`);
+          process.env[envVar] = response.data.id;
+          // console.log(`${envVar}: `, process.env[envVar]);
           setEnvValue(envVar, response.data.id);
-        });
+        })
+        .then(() => true);
     })
-    .catch(error => console.error(error));
+    .catch(error => {
+      console.error(error);
+    });
 }
 
 function setEnvValue(key: string, value: string) {

@@ -34,7 +34,7 @@ export async function executeChainlinkRequest(jobId: string, data: DirectRequest
     headers: createChainlinkRequestHeaders(),
     json: data,
   };
-  console.log('Chainlink Initiator Params:< ', options, ' >');
+  console.log(`Chainlink Initiator Params:< ${options}' >`);
 
   return new Promise((resolve, reject) => {
     request(options, (error: any, response: unknown, body: any) => {

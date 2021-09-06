@@ -40,7 +40,8 @@ export function startApiServer(): Server {
 }
 
 async function configureChainlink(): Promise<void> {
-  if ((Boolean(process.env.CONFIGURE_CHAINLINK) == false)) return;
+
+  if ((String(process.env.CONFIGURE_CHAINLINK) == "false")) return;
   const cookie = await getChainlinkClientSessionCookie();
   Promise.all([createExternalInitiator(cookie), createBridge(cookie)]).then(
     ([eiName, bridgeName]) => {

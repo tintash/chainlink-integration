@@ -23,7 +23,7 @@ export async function getChainlinkClientSessionCookie(): Promise<string> {
         }),
       }).then(response => String(response.headers.get('set-cookie')).replace(',', ';'));
     }
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`{ error: chainlink login credentials not provided, msg: ${error.message} }`);
   }
   return String(process.env.CHAINLINK_COOKIE);
@@ -44,7 +44,7 @@ export async function getJobSpecMinPayment(jobId: string, cookie: string): Promi
         else if(res.data.id == jobId && !res.data.attributes.minPayment) return 1
         return res.data.attributes.minPayment;
       });
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`{ error: Failed Fetching JobSpec MinPayment, msg ${error.message} }`);
   }
 }

@@ -103,7 +103,7 @@ export async function createOracleFulfillmentTx(
   const txRejected = broadcastResult as TxBroadcastResultRejected;
   const error = txRejected.error;
   if (error) {
-    throw new Error(error + ' with reason: ' + txRejected.reason);
+    throw new Error(`${error} with reason: ${txRejected.reason}`);
   }
   return transaction;
 }

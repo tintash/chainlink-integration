@@ -62,7 +62,7 @@ export async function executeChainlinkInitiator(encoded_data: string) {
     const oracleTopicData = parseOracleRequestValue(encoded_data);
     const jobSpecId = bufferCVToASCIIString(oracleTopicData.specId);
     const transferedAmount = oracleTopicData.payment.value;
-    console.log('Chainlink JOB_SPEC_ID:< ', jobSpecId, ' >');
+    console.log(`Chainlink JOB_SPEC_ID:< ${jobSpecId} >`);
     const cookie: string = await getChainlinkClientSessionCookie();
     if (!cookie) throw new Error('Unauthorized: Please use valid api credentials');
     const jobCost: bigint = await getJobSpecMinPayment(jobSpecId, cookie);
@@ -72,11 +72,10 @@ export async function executeChainlinkInitiator(encoded_data: string) {
     }
     const hex = oracleTopicData.data.buffer.toString();
     const data: DirectRequestParams = hexToDirectRequestParams(hex);
-    console.log('Chainlink JOB_DATA:< ', data, ' >');
     data.payload = encoded_data;
     const response = await executeChainlinkRequest(jobSpecId, data);
-    console.log('Chainlink Initiator Response:< ', response, ' >');
+    console.log(`Chainlink Initiator Response:< ${response}$ >`);
   } catch (err) {
-    console.log('Chainlink Initiator Error:< ', err, ' >');
+    console.log(`Chainlink Initiator Error:< ${err} >`);
   }
 }

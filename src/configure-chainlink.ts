@@ -103,7 +103,7 @@ async function hasExternalInitiator(name: string, cookie: string): Promise<boole
       undefined
     );
     return EIs.data.some(initiator => initiator.attributes.name === name);
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(error);
   }
 }
@@ -117,8 +117,7 @@ async function hasBridge(name: string, cookie: string): Promise<boolean> {
       undefined
     );
     return bridge.data.attributes.name === name;
-  } catch (error) {
-    console.log('error00: ', error.code);
+  } catch (error: any) {
     if (error.code === 404) return false;
     throw new Error(error);
   }
@@ -155,7 +154,7 @@ export async function createExternalInitiator(cookie: string): Promise<string> {
       console.log(`updated external initiator environment vars`);
       return ei.data.attributes.name;
     }
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(error);
   }
 }
@@ -182,7 +181,7 @@ export async function createBridge(cookie: string): Promise<string> {
       console.log(`created new bridge: "${bridge.data.attributes.name}"`);
       return bridge.data.attributes.name;
     }
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(error);
   }
 }
@@ -210,7 +209,7 @@ async function createJob(jobPayload: string, cookie: string, envVar: string): Pr
     process.env[envVar] = job.data.id;
     setEnvValue(envVar, job.data.id);
     return job.data.id;
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(error);
   }
 }

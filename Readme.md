@@ -1,5 +1,3 @@
-
-
 ## Instructions for running the stacks-chainlink integration (Direct request model)
 
 This document outlines the components required and contains all the instructions required for running the direct request model on your system.
@@ -18,21 +16,56 @@ First of all, we need to set up a chainlink node on our system.
 
 #### 1.1 Chainlink node setup
 
-Please follow all the instructions mentioned in [this](https://www.youtube.com/watch?v=jJOjyDpg1aA&t=1012s&ab_channel=LearnwithCoffee) video tutorial for setting up the chanlink node on your system.
+Please clone [this](https://github.com/zeeshanakram27/chainlink/tree/feat/stacks-chainlink-integration-ui-changes) repo and checkout to `stacks-chainlink-integration-ui-changes` branch, and refer to instructions to setup the chainlink node.
 
 In the configuration (`.env`) of chainlink node add the following flag to enable external-initiator feature.
 
 `FEATURE_EXTERNAL_INITIATORS=true`
 
+Also add your Stacks address, that will be used to create transaction by External Adapter(EA) and its `stx` balance will be visible on Chainlink node dashboard, and Stacks chain/node url to `.env` file.
+
+```.env
+STACKS_ACCOUNT_ADDRESS=ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+STACKS_NODE_URL=http://localhost:3999
+```
+
+#### 1.2 Setup POSTGRES database
+
+To run Chainlink node you would require a runnig instance of POSTGRES server with a database named `chainlink` already created in it.
+
+Install Postgres
+
+`brew install postgresql`
+
+Login to Postgres server
+
+`psql -U postgres -h localhost`
+
+Create database
+
+`create database chainlink;`
+
+Add `DATABASE_URL` to `.env` file
+
+`DATABASE_URL=postgresql://{USERNAME}:{PASSWORD}@localhost:5432/chainlink?sslmode=disable`
+
+#### 1.3 Running Chainlink node
+
+Build the application.
+
+`make install`
+
+Run the Chainlink node.
+
+`./chainlink local node --password password.txt --api apicredentials.txt`
+
 Once you have setup the chainlink node and tested it works fine, it's time to run the **stacks-blockchain-api** on our system.
-
-
 
 ### 2. Running stacks-blockchain-api on our system
 
 First clone the repository by using the following command.
 
-`git clone https://github.com/blockstack/stacks-blockchain-api` 
+`git clone https://github.com/blockstack/stacks-blockchain-api`
 
 and build the application.
 
@@ -69,172 +102,48 @@ Then run the server by using the following command.
 
 `npm run dev`
 
-
-
 ### 3. Setting up Event Observer Server
 
 Clone the following repository.
 
 https://bitbucket.org/tintash/chainlink-integration/src/master/
 
-#### 3.1 Creating an external initiator
+#### 3.1 Add Chainlink node related configuration
 
-Enter chainlink docker container's bash:
-
-`docker exec -it {CONTAINER_ID/CONTAINER_NAME} bash`
-
-You can extract `CONTAINER_ID/CONTAINER_NAME` using following command:
-
-`docker ps`
-
-Login chainlink using your email and password:
-
-`chainlink admin login`
-
-`chainlink initiators create {INITIATOR_NAME} http://{EVENT_OBSERVER_SERVER_IP}:3000`
-
-You can extract `EVENT_OBSERVER_SERVER_IP` using following command:
-
-`ipconfig getifaddr en0`
-
-This will give us  **External Initiator Credentials**. 
-
-In the `.env` file of Event Observer Server, add the credentials:
+Add following configuration flags in `.env` file.
 
 ```.env
-EI_IC_ACCESSKEY     = ce88170ece194bd3b9a093aef63bf6a7
-EI_IC_SECRET        = FubljWCvvmu1FJsh2ngdVeZFcpzd9M7oc5RIrfxEnCplzcz0Xw6py+24P9tOYmVa
-EI_CI_ACCESSKEY     = vFWJNHET9P1lGwulAXA+3sKew7Nby2byqV7i/WN3OYoohIrzpPd5IBqHKt0c8dfH
-EI_CI_SECRET        = mZqbzBhk0IPrQ378lai8G2RUR5a962yyRTfODwA6bKGkQPaSWxrHZN66mlLtA0BA
+CHAINLINK_EI_NAME = {EXTERNAL_INITIATOR_NAME}
+CHAINLINK_EI_URL = http://localhost:3000
+CHAINLINK_BRIDGE_NAME = {EXTERNAL_ADAPTER_NAME}
+CHAINLINK_BRIDGE_URL = http://localhost:3000/adapter
 ```
 
+Set `CONFIGURE_CHAINLINK` to `true` to automate the process of creating External Initiator(EI), and External Adapter(EA) of provided names if they don't exist already. Otherwise manually create them.
 
+Set `CREATE_SAMPLE_JOBS` to `true` to create sample Get and Post jobs
 
-### 4. Creating STX bridge in the chainlink node
-
-Open the chainlink node in the browser by following the `http://localhost:6688` url and open the **Bridges** section to create new bridge.
-
-Cretae External Adapter Bridge by providing `Bridge Name`, `Brige URL`, `Minimum Contract Payment`, and `Confirmations`.
-
-Brige URL:  `http://{EVENT_OBSERVER_SERVER_IP}:3000/adapter`
-
-Bridge Name: `Name of the bridge`
-
-Minimum Contract Payment: `For now you can use 0`
-
-Confirmations: `No of Confirmations for the Job to run`
-
-
-
-### 5. Creating jobs in the chainlink node
-
-Let's first setup a GET-request job in the chainlink node.
-
-#### 5.1 Creating a GET-request job in the chainlink node
-
-In the chainlink-integration directory named `chainlink-integration` that you cloned in the **Step 3**, there is a folder named `chainlink-jobs` containing job-specs for POST and GET requests. 
-
-Copy the content of these JSON files to create jobs.
-
-Open the chainlink node in the browser by following the `http://localhost:6688` url and open the **Jobs** section to create now Job.
-
-Copy the content of the `get-request.json` file and place it in the `JSON Blob` text-box.
-
-```json
-{
-    "name": "get-request",
-    "initiators": [
-        {
-            "type": "external",
-            "params": {
-                "name": "external-initiator",
-                "body": {}
-            }
-        }
-    ],
-    "tasks": [
-        {
-            "type": "httpget"
-        },
-        {
-            "type": "jsonparse"
-        },
-        {
-            "type": "external-adapter"
-        }
-    ]
-}
+```.env
+CONFIGURE_CHAINLINK = false
+CREATE_SAMPLE_JOBS = false
 ```
 
-Replace `"name": "external-initiator"` with `"name": "{INITIATOR_NAME}"` 
+Then add following credential env vars, these will be automatically replaced by the credentials of newly created EI.
 
-and also replace  `"type": "external-adapter"` with `"type": "{Bridge Name}"` .
-
-And create the Job.
-
-Once the job is created copy the **Job Spec Id** (e.g. `0c55d2044e3642c48918105095fe8dbe`), we have to convert this Key into `buffer type` .
-
-**NOTE:** Your event observer server must be running as chainlink-node operator verifies the external adapter while creating a job.
-
-
-
-##### 5.1.1 Converting the Job Spec Id into buff
-
-You can encode your `job-spec-id` into hex-buffer using this endpoint:
-
- `http://localhost:3000/key-to-buff` 
-
-Sample request body:
-
-```json
-{
-    "key": "0c55d2044e3642c48918105095fe8dbe"
-}
+```.env
+EI_IC_ACCESSKEY=""
+EI_IC_SECRET=""
+EI_CI_ACCESSKEY=""
+EI_CI_SECRET=""
 ```
 
-Sample response:
+#### 3.2 Running the server
 
-```json
-{
-  "key": "0c55d2044e3642c48918105095fe8dbe"
-  "buffer": "0x3063353564323034346533363432633438393138313035303935666538646265"
-}
-```
+Then run the server by using the following command.
 
+`npm run start`
 
-
-
-
-You can encode chainlink-job parameters using following end-points:
-
- `http://localhost:3000/create-buff` 
-
-Sample request body:
-
-```json
-{
-  "get": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD",
-  "path": "USD"
-}
-```
-
-Sample response:
-
-```json
-{
- 	"buffer": "0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d",
- "length": 86,
- "type": "bytes"
-}
-```
-
-
-
-You can pass the `jod-spec-id buffer` , and `data-buffer`  in the function of the `direct-request` contract.
-
-
-
-### 6. Deploying the smart contracts and running the server
+### 4. Deploying the smart contracts and running the server
 
 Once you've followed the above steps, we need to deploy the smart contracts by using the following instructions.
 
@@ -242,25 +151,22 @@ In the Event Observer Server navigate to `contracts/clarity` folder and deploy t
 
 `clarinet deploy --mocknet `
 
-Start the Event Observer Server: 
+Start the Event Observer Server:
 
 `npm run start`
 
 (you may need to run `npm install` before the above command).
 
+### 5. Making a contract-call to `request-api` of `direct-request.clar` contract
 
-
-### 7. Making a contract-call to `request-api` of  `direct-request.clar` contract
-
-You need to pass the `jod-spec-id buffer` , and `data-buffer`  in `request-api` function of the `direct-request` contract.
+You need to pass the `jod-spec-id buffer` , and `data-buffer` in `request-api` function of the `direct-request` contract.
 
 The `direct-request` contract will call the `oracle` contract. The event emitted by the oracle contract is captured by our Event Observer Server, which will initiate our chainlink-job. On successful run of the job, `request fulfillment` is created and the expected data is recieved back in the `direct-request` contract.
 
-### 8. Displaying the response recieved in the direct-request contract
+### 6. Displaying the response recieved in the direct-request contract
 
 Call the following contract function to get the response that we stored in the `data-value` variable in the `direct-request` contract.
 
-`stx -t call_read_only_contract_func ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC direct-request read-data-value {CALLE_PRINCIPAL}  -I http://localhost:20443`
+`stx -t call_read_only_contract_func ST248M2G9DF9G5CX42C31DG04B3H47VJK6W73JDNC direct-request read-data-value {CALLE_PRINCIPAL} -I http://localhost:20443`
 
 This command will give the response in the the form of `buff`. You can decode it in the `string` and verify that the value is the same.
-

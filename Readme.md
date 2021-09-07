@@ -149,7 +149,7 @@ Once you've followed the above steps, we need to deploy the smart contracts by u
 
 In the Event Observer Server navigate to `contracts/clarity` folder and deploy the contracts:
 
-`clarinet deploy --mocknet `
+`clarinet publish --devnet `
 
 Start the Event Observer Server:
 
@@ -157,11 +157,11 @@ Start the Event Observer Server:
 
 (you may need to run `npm install` before the above command).
 
-### 5. Making a contract-call to `request-api` of `direct-request.clar` contract
+### 5. Making a contract-call to `create-request` of `direct-request.clar` contract
 
-You need to pass the `jod-spec-id buffer` , and `data-buffer` in `request-api` function of the `direct-request` contract.
+You need to pass the `jod-spec-id buffer` , and `data-buffer` in `create-request` function of the `direct-request` contract.
 
-The `direct-request` contract will call the `oracle` contract. The event emitted by the oracle contract is captured by our Event Observer Server, which will initiate our chainlink-job. On successful run of the job, `request fulfillment` is created and the expected data is recieved back in the `direct-request` contract.
+The `direct-request` contract will make a `transfer-and-call` call to the `oracle` contract using the `stxlink-token`. The event emitted by the oracle contract is captured by our Event Observer Server, which will initiate our chainlink-job. On successful run of the job, `request fulfillment` is created and the expected data is recieved back in the `direct-request` contract.
 
 ### 6. Displaying the response recieved in the direct-request contract
 

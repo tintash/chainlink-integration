@@ -6,11 +6,10 @@ import {
 import { mockFunction } from '../jestHelpers';
 jest.mock('node-fetch');
 import fetch from 'node-fetch';
-// import { Headers } from 'node-fetch';
 const { Response, Headers } = jest.requireActual('node-fetch');
 const mockfetch = mockFunction(fetch);
 
-describe('Validate payment and jobcost comparison', () => {
+describe('Tests for validating payment and jobcost comparison', () => {
   test('Returns True on payment > jobcost', () => {
     const payment = BigInt(20);
     const jobcost = BigInt(10);
@@ -33,7 +32,7 @@ describe('Validate payment and jobcost comparison', () => {
   });
 });
 
-describe('Tests implementation for fetching session cookie', () => {
+describe('Tests for fetching session cookie', () => {
   beforeEach(() => {
     mockfetch.mockReset();
   });

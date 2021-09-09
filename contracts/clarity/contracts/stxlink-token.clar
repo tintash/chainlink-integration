@@ -6,10 +6,14 @@
 (impl-trait .restricted-token-trait.restricted-token-trait)
 (use-trait oracle-callback .oracle.oracle-callback)
 
+(use-trait stxlink-transfer-trait .stxlink-transfer-trait.stxlink-transfer-trait)
+
 ;; Error returned for permission denied - stolen from http 403
 (define-constant PERMISSION_DENIED_ERROR u403)
 ;; Minimum payment set for calling the oracle contract
 (define-constant MINIMUM_PAYMENT u1)
+;; Error Transferring STXLINK Token
+(define-constant ERROR_TRANSFER_STXLINK_TOKEN u301)
 
 ;; Data variables specific to the deployed token contract
 (define-data-var token-name (string-ascii 32) "")
@@ -203,25 +207,51 @@
       (ok "Unknown Error Code"))))
 
 ;; Transfer And Call
-(define-public (transfer-and-call 
+;; (define-public (transfer-and-call 
+;;                   (job-spec-id (buff 66)) 
+;;                   (sender-id-buff (buff 84)) 
+;;                   (data (buff 1024)) 
+;;                   (callback <oracle-callback>))
+;;   (begin
+;;     (try! (transfer MINIMUM_PAYMENT tx-sender .oracle none))
+;;     (contract-call?
+;;       .oracle                 ;; oracle name
+;;       oracle-request          ;; oracle method
+;;       tx-sender               ;; this contract's address
+;;       job-spec-id             ;; chainlink-job id
+;;       sender-id-buff          ;; transaction-sender-id encoded to buffer 
+;;       callback                ;; callback principal (addr) 
+;;       MINIMUM_PAYMENT         ;; payment
+;;       u0                      ;; nonce
+;;       u0                      ;; data version
+;;       data                    ;; data
+;;     )))
+
+(define-public (transfer-and-call
                   (job-spec-id (buff 66)) 
                   (sender-id-buff (buff 84)) 
                   (data (buff 1024)) 
+                  (contract-address principal)
+                  (transfer-callback <stxlink-transfer-trait>)
                   (callback <oracle-callback>))
   (begin
-    (try! (transfer MINIMUM_PAYMENT tx-sender .oracle none))
-    (contract-call?
-      .oracle                 ;; oracle name
-      oracle-request          ;; oracle method
-      tx-sender               ;; this contract's address
-      job-spec-id             ;; chainlink-job id
-      sender-id-buff          ;; transaction-sender-id encoded to buffer 
-      callback                ;; callback principal (addr) 
-      MINIMUM_PAYMENT         ;; payment
-      u0                      ;; nonce
-      u0                      ;; data version
-      data                    ;; data
-    )))
+    (if (is-ok (transfer MINIMUM_PAYMENT tx-sender contract-address none))
+      (match (contract-call?
+        transfer-callback                 
+        transfer-success
+        MINIMUM_PAYMENT          
+        job-spec-id              
+        sender-id-buff            
+        data          
+        callback)
+      success (ok true)
+      error   (ok false))
+      (match (contract-call?
+        transfer-callback
+        transfer-failure
+        ERROR_TRANSFER_STXLINK_TOKEN) 
+      success (ok true)
+      error (ok false)))))   
 
 ;; Initialization
 ;; --------------------------------------------------------------------------

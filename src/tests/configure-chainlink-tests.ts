@@ -43,7 +43,7 @@ describe('Tests implementation for createExternalInitiator', () => {
     });
   });
 
-  test('Creates and returns EI name when it does not already exist', async () => {
+  test('Creates EI and set access and secret keys env variables', async () => {
     const cookie = 'validCookie';
     const expected = {
       ok: true,
@@ -91,6 +91,10 @@ describe('Tests implementation for createExternalInitiator', () => {
       },
       body: body2,
     });
+    expect(process.env.EI_IC_ACCESSKEY).toBe('cf1de741a8094538a18c1700e9b6430a')
+    expect(process.env.EI_IC_SECRET).toBe('dU9ICdhLFnI2dru905zZv6MbsXwwI6qIP5pQRYmECZsI5bZTM1hXIEMCveVOoCHS')
+    expect(process.env.EI_CI_ACCESSKEY).toBe('D9ZWnEiRMWydufOk/VSPNeV3rRePviPmnyMpVj4dVmAJMdX1U5u/eF0tE+tIiysX')
+    expect(process.env.EI_CI_SECRET).toBe('B22mRjfC2lUX84p6wK3tITA2IZL30Ck3WOqET1D5Z3vU34cb9YOzAmajL6NEK6Cx')
   });
 
   test('Throws exception when cookie is invalid or session is expired', async () => {
@@ -109,7 +113,6 @@ describe('Tests implementation for createExternalInitiator', () => {
     try {
       await createExternalInitiator(cookie);
     } catch (err) {
-      console.log(err);
       expect(err).toEqual(
         new Error('Error: {"ok":false,"status":401,"errors":[{"detail":"Session has expired"}]}')
       );
@@ -230,7 +233,6 @@ describe('Tests implementation for createBridge', () => {
     try {
       await createBridge(cookie);
     } catch (err) {
-      console.log(err);
       expect(err).toEqual(
         new Error('Error: {"ok":false,"status":401,"errors":[{"detail":"Session has expired"}]}')
       );

@@ -17,9 +17,8 @@
 (define-map contract-owners principal bool)
 (define-private (is-valid-owner?) (is-some (map-get? contract-owners tx-sender)))
 
-;; Traits
-(define-trait oracle-callback
-    ((oracle-callback-handler ((optional (buff 128))) (response uint uint))))
+;; Oracle callback trait
+(use-trait oracle-callback .oracle-callback-trait.oracle-callback)
 
 ;; Map of all the requests
 (define-map request-ids { request-id:  (buff 32) } { expiration: uint })
@@ -102,6 +101,7 @@
 ;; expiration The expiration that the node should respond by before the requester can cancel
 ;; data The data to return to the consuming contract
 ;; Status if the external call was successful
+ 
 (define-public (fullfill-oracle-request (request-id (buff 32))
                                         (callback <oracle-callback>)
                                         (expiration uint)

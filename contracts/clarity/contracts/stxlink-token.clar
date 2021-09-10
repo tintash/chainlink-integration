@@ -4,9 +4,13 @@
 
 ;; ;; Implement the token restriction trait
 (impl-trait .restricted-token-trait.restricted-token-trait)
-(use-trait oracle-callback .oracle.oracle-callback)
 
+;; Oracle callback trait
+(use-trait oracle-callback .oracle-callback-trait.oracle-callback)
+;; Stx transfer trait callbacks
 (use-trait stxlink-transfer-trait .stxlink-transfer-trait.stxlink-transfer-trait)
+
+
 
 ;; Error returned for permission denied - stolen from http 403
 (define-constant PERMISSION_DENIED_ERROR u403)

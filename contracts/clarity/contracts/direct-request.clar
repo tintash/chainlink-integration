@@ -2,14 +2,11 @@
 
 (define-data-var data-value (optional (buff 128)) none)
 
-(impl-trait .oracle.oracle-callback)
-(use-trait oracle-callback .oracle.oracle-callback)
-
+(impl-trait .oracle-callback-trait.oracle-callback)
+(use-trait oracle-callback .oracle-callback-trait.oracle-callback)
 
 (impl-trait .stxlink-transfer-trait.stxlink-transfer-trait)
 (use-trait stxlink-transfer-trait .stxlink-transfer-trait.stxlink-transfer-trait)
-
-
 
 (define-public (oracle-callback-handler (value  (optional (buff 128))))
   (begin

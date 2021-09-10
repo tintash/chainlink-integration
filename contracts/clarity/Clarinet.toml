@@ -11,7 +11,7 @@ depends_on = ["oracle", "stxlink-token", "stxlink-transfer-trait", "oracle-callb
 
 [contracts.oracle]
 path = "contracts/oracle.clar"
-depends_on = ["oracle-trait", "oracle-callback-trait"]
+depends_on = ["oracle-trait", "oracle-callback-trait", "stxlink-token"]
 
 [contracts.stxlink-token]
 depends_on = ["ft-trait", "restricted-token-trait", "stxlink-transfer-trait", "oracle-callback-trait"]

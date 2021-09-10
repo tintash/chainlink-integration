@@ -16,7 +16,9 @@ Clarinet.test({
     async fn(chain: Chain, accounts: Map<string, Account>) {
         const deployer = accounts.get("deployer")!;
         const wallet_1 = accounts.get("wallet_1")!;
+        const wallet_2 = accounts.get("wallet_2")!;
         const wallet1Address = wallet_1.address;
+        const wallet2Address = wallet_2.address;
 
         // const directRequestParams = [
         //     "0x3334346664393436386561363437623838633530336461633830383263306134",
@@ -80,10 +82,13 @@ Clarinet.test({
         ];
 
         let block = chain.mineBlock([
-            //Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
+            Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
             Tx.contractCall("stxlink-token", "get-balance", [types.principal(deployer.address+".oracle")], deployer.address),
             Tx.contractCall("direct-request", "create-request", params, wallet1Address),
-            Tx.contractCall("stxlink-token", "get-balance", [types.principal(deployer.address+".oracle")], deployer.address), 
+            Tx.contractCall("stxlink-token", "get-balance", [types.principal(deployer.address+".oracle")], deployer.address),
+            Tx.contractCall("oracle", "withdraw-token", [types.principal(wallet2Address), types.uint(1)], deployer.address), 
+            Tx.contractCall("stxlink-token", "get-balance", [types.principal(wallet2Address)], deployer.address),
+        
         ]);
 
         console.log('Receipts ', block.receipts);

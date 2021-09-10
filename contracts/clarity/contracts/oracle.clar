@@ -9,6 +9,9 @@
 (define-constant err-reconstructed-id-not-equal (err u14))
 (define-constant err-request-expired (err u15))
 (define-constant err-invalid-tx-sender (err u16))
+(define-constant err-fetching-balance (err u17))
+(define-constant err-not-enough-funds (err u18))
+(define-constant err-unable-to-withdraw (err u19))
 
 ;; Exipiration limit
 (define-constant expiration-limit u1000)
@@ -118,14 +121,35 @@
                                 sucess (ok true)
                                 err (ok false))
                         err-request-expired)) err-request-not-found) err-invalid-tx-sender) err-reconstructed-id-not-equal)))
-    ;; (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
-    ;; (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
-    ;; (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map
-    ;; (map-delete request-ids { request-id: reconstructed-request-id })                                                                               ;; remove request-id from map
-    ;; (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                                 ;; block-height exceeded the limit and request-id expired
-    ;; (match (contract-call? callback oracle-callback-handler data)
-    ;;     sucess (ok true)
-    ;;     err (ok false))))
+
+(define-private (has-enough-funds (amount uint))
+   (let ((balance 
+            (unwrap! (as-contract 
+                     (contract-call? 
+                        .stxlink-token
+                        get-balance
+                        tx-sender
+                    )) 
+            err-fetching-balance)))
+        (if (>= balance amount) (ok true) (ok false))
+   )
+)
+
+(define-public (withdraw-token (receiver principal) (amount uint))
+    (begin
+        (asserts! (is-valid-owner?) err-invalid-tx-sender)
+        (let ((can-withdraw (unwrap! (has-enough-funds amount) err-not-enough-funds) ))
+        (asserts! (is-eq can-withdraw true) err-unable-to-withdraw))
+        (as-contract (contract-call? 
+            .stxlink-token
+            transfer
+            amount
+            tx-sender
+            receiver
+            none))
+        
+    )
+)  
 
 (map-set contract-owners tx-sender true)
 

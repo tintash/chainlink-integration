@@ -210,27 +210,6 @@
       (ok "Sender or recipient is on the blacklist and prevented from transacting")
       (ok "Unknown Error Code"))))
 
-;; Transfer And Call
-;; (define-public (transfer-and-call 
-;;                   (job-spec-id (buff 66)) 
-;;                   (sender-id-buff (buff 84)) 
-;;                   (data (buff 1024)) 
-;;                   (callback <oracle-callback>))
-;;   (begin
-;;     (try! (transfer MINIMUM_PAYMENT tx-sender .oracle none))
-;;     (contract-call?
-;;       .oracle                 ;; oracle name
-;;       oracle-request          ;; oracle method
-;;       tx-sender               ;; this contract's address
-;;       job-spec-id             ;; chainlink-job id
-;;       sender-id-buff          ;; transaction-sender-id encoded to buffer 
-;;       callback                ;; callback principal (addr) 
-;;       MINIMUM_PAYMENT         ;; payment
-;;       u0                      ;; nonce
-;;       u0                      ;; data version
-;;       data                    ;; data
-;;     )))
-
 (define-public (transfer-and-call
                   (job-spec-id (buff 66)) 
                   (sender-id-buff (buff 84)) 

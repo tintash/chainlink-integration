@@ -49,12 +49,11 @@
 
 
 (define-public (transfer-success
-               (payment uint)
-               (job-spec-id (buff 66)) 
-               (sender-id-buff (buff 84)) 
-               (data (buff 1024))
-               (callback <oracle-callback>))              
- 
+                (payment uint)
+                (job-spec-id (buff 66)) 
+                (sender-id-buff (buff 84)) 
+                (data (buff 1024))
+                (callback <oracle-callback>))              
   (contract-call?
     .oracle                 ;; oracle name
     oracle-request          ;; oracle method
@@ -70,4 +69,3 @@
 
 (define-public (transfer-failure (error uint))
   (ok error))
-

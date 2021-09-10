@@ -1,4 +1,8 @@
-;; Traits
+;; Oracle callback trait
 (define-trait oracle-callback
-    ((oracle-callback-handler ((optional (buff 128))) (response uint uint))))
+    (
+        ;; Called when oracle request is fulfilled
+        (oracle-callback-handler ((optional (buff 128))) (response uint uint))
+    )
+)
 

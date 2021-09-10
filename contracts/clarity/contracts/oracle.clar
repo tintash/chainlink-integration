@@ -104,7 +104,6 @@
 ;; expiration The expiration that the node should respond by before the requester can cancel
 ;; data The data to return to the consuming contract
 ;; Status if the external call was successful
- 
 (define-public (fullfill-oracle-request (request-id (buff 32))
                                         (callback <oracle-callback>)
                                         (expiration uint)
@@ -122,19 +121,14 @@
                                 err (ok false))
                         err-request-expired)) err-request-not-found) err-invalid-tx-sender) err-reconstructed-id-not-equal)))
 
+;; function to check the if funds are greater than amount.
 (define-private (has-enough-funds (amount uint))
-   (let ((balance 
-            (unwrap! (as-contract 
-                     (contract-call? 
-                        .stxlink-token
-                        get-balance
-                        tx-sender
-                    )) 
+    (let ((balance 
+            (unwrap! (as-contract (contract-call? .stxlink-token get-balance tx-sender)) 
             err-fetching-balance)))
-        (if (>= balance amount) (ok true) (ok false))
-   )
-)
+    (if (>= balance amount) (ok true) (ok false))))
 
+;; function to withdraw stxlink token from contract.
 (define-public (withdraw-token (receiver principal) (amount uint))
     (begin
         (asserts! (is-valid-owner?) err-invalid-tx-sender)
@@ -146,10 +140,7 @@
             amount
             tx-sender
             receiver
-            none))
-        
-    )
-)  
+            none))))  
 
 (map-set contract-owners tx-sender true)
 

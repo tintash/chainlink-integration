@@ -123,24 +123,27 @@
 
 ;; function to check the if funds are greater than amount.
 (define-private (has-enough-funds (amount uint))
-    (let ((balance 
-            (unwrap! (as-contract (contract-call? .stxlink-token get-balance tx-sender)) 
-            err-fetching-balance)))
-    (if (>= balance amount) (ok true) (ok false))))
+    (let ((balance (unwrap-panic (as-contract (contract-call? .stxlink-token get-balance tx-sender))) ))
+        (print { amount: amount, balance: balance, fn-name: "has-enough-funds" })
+        (>= balance amount)
+    ))
 
 ;; function to withdraw stxlink token from contract.
 (define-public (withdraw-token (receiver principal) (amount uint))
     (begin
+        (print { amount: amount, receiver: receiver, fn-name: "withdraw-token" })
         (asserts! (is-valid-owner?) err-invalid-tx-sender)
-        (let ((can-withdraw (unwrap! (has-enough-funds amount) err-not-enough-funds) ))
-        (asserts! (is-eq can-withdraw true) err-unable-to-withdraw))
-        (as-contract (contract-call? 
-            .stxlink-token
-            transfer
-            amount
-            tx-sender
-            receiver
-            none))))  
+        (let ((can-withdraw (has-enough-funds amount) ))
+            (print { can-withdraw: can-withdraw, amount: amount, receiver: receiver, fn-name: "withdraw-token" })
+            (asserts! (is-eq can-withdraw true) err-not-enough-funds))
+            (print { assert-passed: true, amount: amount, receiver: receiver, fn-name: "withdraw-token" })
+            (as-contract (contract-call? 
+                .stxlink-token
+                transfer
+                amount
+                tx-sender
+                receiver
+                none))))  
 
 (map-set contract-owners tx-sender true)
 

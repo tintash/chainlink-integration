@@ -16,20 +16,6 @@
 (define-read-only (read-data-value)
   (ok (var-get data-value)))
 
-
-;; (define-public (create-request                    
-;;                     (job-spec-id (buff 66)) 
-;;                     (sender-id-buff (buff 84)) 
-;;                     (data (buff 1024)) 
-;;                     (callback <oracle-callback>))                  
-;;   (contract-call? 
-;;     .stxlink-token 
-;;     transfer-and-call
-;;     job-spec-id
-;;     sender-id-buff
-;;     data
-;;     callback ))
-
 (define-public (create-request                    
                     (job-spec-id (buff 66)) 
                     (sender-id-buff (buff 84)) 

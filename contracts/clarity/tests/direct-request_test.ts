@@ -1,5 +1,6 @@
 
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.13.0/index.ts';
+import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
 function getEventElements(event: String){
     const splittedParams = event.split(',');
@@ -19,34 +20,6 @@ Clarinet.test({
         const wallet_2 = accounts.get("wallet_2")!;
         const wallet1Address = wallet_1.address;
         const wallet2Address = wallet_2.address;
-
-        // const directRequestParams = [
-        //     "0x3334346664393436386561363437623838633530336461633830383263306134",
-        //     "0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145",
-        //     "0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d",
-        //     types.principal(deployer.address+".direct-request"),
-        // ];
-
-        // let block = chain.mineBlock([
-        //     Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
-        //     //Successful request
-        //     Tx.contractCall("direct-request", "create-request", directRequestParams, wallet1Address),
-        //     //Initial data should be none
-        //     Tx.contractCall("direct-request", "read-data-value", [],  wallet1Address),      
-        // ]);
-
-        // block.receipts[1].result 
-        // .expectOk()
-        // .expectBool(true);
-
-        // block.receipts[2].result //initially no value present in the data-value variable
-        // .expectOk()
-        // .expectNone();
-
-        // let event = block.receipts[1].events[1];
-        // let {contract_event} = event;
-        // let {value} = contract_event;
-        // let elements = getEventElements(value);
 
         // const fulfillmentRequestParams = [
         //     elements.request_id,
@@ -72,25 +45,60 @@ Clarinet.test({
         // .expectOk()
         // .expectSome();
 
-        const params = [
+        const oracleContractAddress = types.principal(deployer.address+".oracle");
+        const directRequestContractAddress =  types.principal(deployer.address+".direct-request");
+
+        const createRequestParams = [
             "0x3334346664393436386561363437623838633530336461633830383263306134",
             "0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145",
             "0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d",
-            types.principal(deployer.address+".oracle"),
-            types.principal(deployer.address+".direct-request"),
-            types.principal(deployer.address+".direct-request"),
+            oracleContractAddress,
+            directRequestContractAddress,
+            directRequestContractAddress,
         ];
 
+        // TODO: Update the logic here :  it should get some error as wallet1 principal doesn't have any stxlink token
         let block = chain.mineBlock([
-            Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
-            Tx.contractCall("stxlink-token", "get-balance", [types.principal(deployer.address+".oracle")], deployer.address),
-            Tx.contractCall("direct-request", "create-request", params, wallet1Address),
-            Tx.contractCall("stxlink-token", "get-balance", [types.principal(deployer.address+".oracle")], deployer.address),
-            Tx.contractCall("oracle", "withdraw-token", [types.principal(wallet2Address), types.uint(1)], deployer.address), 
-            Tx.contractCall("stxlink-token", "get-balance", [types.principal(wallet2Address)], deployer.address),
-        
+            Tx.contractCall("direct-request", "create-request", createRequestParams, wallet1Address),
+            Tx.contractCall("stxlink-token", "get-balance", [types.principal(wallet1Address)], deployer.address),        
         ]);
 
-        console.log('Receipts ', block.receipts);
+        console.log('Receipts', block.receipts);
+
+        block = chain.mineBlock([
+            Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
+            Tx.contractCall("direct-request", "read-data-value", [],  wallet1Address),
+            Tx.contractCall("direct-request", "create-request", createRequestParams, wallet1Address),
+        ]);
+        const { receipts } = block;
+
+        // Success:  mint tokens
+        receipts[0].result
+        .expectOk()
+        .expectBool(true);
+        
+        // Success: Initial data should be none
+        receipts[1].result
+        .expectOk()
+        .expectNone();
+
+        // Success: Direct Request initiate
+        receipts[2].result
+        .expectOk()
+        .expectBool(true);
+
+        const events = receipts[2].events;
+        assertEquals(events.length, 2);
+
+        const [ftTransferEvent, contractEvent] = events;
+        const {sender, recipient, amount} = ftTransferEvent.ft_transfer_event;
+        sender.expectPrincipal("ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5");
+        recipient.expectPrincipal("ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle");
+        amount.expectInt(1);
+        
+        const {topic, contract_identifier} = contractEvent.contract_event;
+        assertEquals(topic, "print");
+        assertEquals(contract_identifier, "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle");
+
     },
 });

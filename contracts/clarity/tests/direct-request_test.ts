@@ -47,6 +47,8 @@ Clarinet.test({
 
         const oracleContractAddress = types.principal(deployer.address+".oracle");
         const directRequestContractAddress =  types.principal(deployer.address+".direct-request");
+        const transferFailureError = 20;
+        const data = '0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d';
 
         const createRequestParams = [
             "0x3334346664393436386561363437623838633530336461633830383263306134",
@@ -65,22 +67,25 @@ Clarinet.test({
 
         console.log('Receipts', block.receipts);
 
+       
+
         block = chain.mineBlock([
             Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
             Tx.contractCall("direct-request", "read-data-value", [],  wallet1Address),
             Tx.contractCall("direct-request", "create-request", createRequestParams, wallet1Address),
+            Tx.contractCall("direct-request", "transfer-failure", [types.uint(transferFailureError)], wallet1Address),    
         ]);
         const { receipts } = block;
 
         // Success:  mint tokens
-        receipts[0].result
-        .expectOk()
-        .expectBool(true);
+       receipts[0].result
+       .expectOk()
+       .expectBool(true);
         
         // Success: Initial data should be none
-        receipts[1].result
-        .expectOk()
-        .expectNone();
+       receipts[1].result
+       .expectOk()
+       .expectNone();
 
         // Success: Direct Request initiate
         receipts[2].result
@@ -99,6 +104,10 @@ Clarinet.test({
         const {topic, contract_identifier} = contractEvent.contract_event;
         assertEquals(topic, "print");
         assertEquals(contract_identifier, "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle");
+
+        receipts[3].result
+        .expectOk()
+        .expectUint(transferFailureError);
 
     },
 });

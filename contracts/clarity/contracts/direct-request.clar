@@ -9,9 +9,7 @@
 (use-trait stxlink-transfer-trait .stxlink-transfer-trait.stxlink-transfer-trait)
 
 (define-public (oracle-callback-handler (value  (optional (buff 128))))
-  (begin
-    (var-set data-value value)
-    (ok u200)))
+  (ok (var-set data-value value)))
 
 (define-read-only (read-data-value)
   (ok (var-get data-value)))

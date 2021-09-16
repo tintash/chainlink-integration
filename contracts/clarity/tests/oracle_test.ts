@@ -89,8 +89,6 @@ Clarinet.test({
 
         ]);
 
-        console.log(block.receipts);
-
         block.receipts[0].result //request count is u1
         .expectUint(1);
 

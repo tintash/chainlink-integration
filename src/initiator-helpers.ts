@@ -12,7 +12,7 @@ export async function getChainlinkClientSessionCookie(): Promise<string> {
       process.env.CHAINLINK_COOKIE === '' ||
       cookie_expires_at.getTime() < Date.now()
     ) {
-      return fetch('http://localhost:6688/sessions', {
+      return fetch(`http://${String(process.env.CHAINLINK_HOST)}:6688/sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ export async function getChainlinkClientSessionCookie(): Promise<string> {
 
 export async function getJobSpecMinPayment(jobId: string, cookie: string): Promise<bigint> {
   try {
-    return fetch(`http://localhost:6688/v2/specs/${jobId}`, {
+    return fetch(`http://${String(process.env.CHAINLINK_HOST)}:6688/v2/specs/${jobId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -40,8 +40,9 @@ export async function getJobSpecMinPayment(jobId: string, cookie: string): Promi
     })
       .then(response => response.json())
       .then(res => {
-        if(!res.data) throw new Error('Invalid Job ID or Cookie While Fetching JobSpec MinPayment')
-        else if(res.data.id == jobId && !res.data.attributes.minPayment) return 1
+        if (!res.data)
+          throw new Error('Invalid Job ID or Cookie While Fetching JobSpec MinPayment');
+        else if (res.data.id == jobId && !res.data.attributes.minPayment) return 1;
         return res.data.attributes.minPayment;
       });
   } catch (error: any) {

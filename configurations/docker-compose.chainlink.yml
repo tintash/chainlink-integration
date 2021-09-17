@@ -1,0 +1,33 @@
+version: '3'
+services:
+  pg_chainlink:
+    image: 'postgres'
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      # POSTGRES_DB: chainlink
+    volumes:
+      - /usr/local/var/postgres/:/var/lib/postgressql/data/
+      - ./chainlink/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
+  chainlink:
+    build:
+      context: '${CHAINLINK_DIR_PATH}'
+      dockerfile: core/chainlink.Dockerfile
+    restart: on-failure
+    env_file: ./chainlink/.env
+    environment:
+      STACKS_NODE_URL: http://stacks-blockchain-api:3999
+    depends_on:
+      - pg_chainlink
+      - stacks-blockchain-api
+    ports:
+      - '6688:6688'
+    volumes:
+      - ./chainlink/chainlink-volume/:/chainlink/
+    command: node start --password /chainlink/password.txt --api /chainlink/apicredentials.txt
+    networks:
+      - backend

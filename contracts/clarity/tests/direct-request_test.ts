@@ -56,7 +56,6 @@ Clarinet.test({
         
         // Success: Initial data should be none
         receipts[1].result
-        .expectOk()
         .expectNone();
 
         // Success: Direct Request initiate
@@ -102,8 +101,8 @@ Clarinet.test({
         .expectOk()
         .expectBool(true);
 
-        block.receipts[1].result //now a value should be present
-        .expectOk()
+        // Success: Data present after fullfillment
+        block.receipts[1].result 
         .expectSome();
 
     },

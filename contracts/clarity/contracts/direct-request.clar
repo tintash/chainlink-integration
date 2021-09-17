@@ -12,7 +12,7 @@
   (ok (var-set data-value value)))
 
 (define-read-only (read-data-value)
-  (ok (var-get data-value)))
+  (var-get data-value))
 
 (define-public (create-request                    
                     (job-spec-id (buff 66)) 

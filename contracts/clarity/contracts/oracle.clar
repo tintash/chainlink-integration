@@ -9,6 +9,9 @@
 (define-constant err-reconstructed-id-not-equal (err u14))
 (define-constant err-request-expired (err u15))
 (define-constant err-invalid-tx-sender (err u16))
+(define-constant err-fetching-balance (err u17))
+(define-constant err-not-enough-funds (err u18))
+(define-constant err-unable-to-withdraw (err u19))
 
 ;; Exipiration limit
 (define-constant expiration-limit u1000)
@@ -17,9 +20,8 @@
 (define-map contract-owners principal bool)
 (define-private (is-valid-owner?) (is-some (map-get? contract-owners tx-sender)))
 
-;; Traits
-(define-trait oracle-callback
-    ((oracle-callback-handler ((optional (buff 128))) (response uint uint))))
+;; Oracle callback trait
+(use-trait oracle-callback .oracle-callback-trait.oracle-callback)
 
 ;; Map of all the requests
 (define-map request-ids { request-id:  (buff 32) } { expiration: uint })
@@ -28,32 +30,28 @@
 (define-data-var request-count uint u0)
 
 ;; getting updated request counts
-(define-public (get-request-count)
-    (ok (var-get request-count)))
+(define-read-only (get-request-count)
+    (var-get request-count))
 
 ;; function to calculate request id using certain parameters
-(define-public (create-request-id (expiration uint) (sender-id-buff (buff 84)))
-    (begin
-        (ok (keccak256 (concat (concat (keccak256 expiration) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))))
+(define-private (create-request-id (expiration uint) (sender-id-buff (buff 84)))
+    (keccak256 (concat (concat (keccak256 expiration) (keccak256 (var-get request-count))) (keccak256 sender-id-buff))))
 
 ;; function to calculate request id using certain parameters
-(define-public (reconstruct-request-id (expiration uint) (req-count uint) (sender-id-buff (buff 84)))
-    (begin
-        (ok (keccak256 (concat (concat (keccak256 expiration) (keccak256 req-count)) (keccak256 sender-id-buff))))))
+(define-private (reconstruct-request-id (expiration uint) (req-count uint) (sender-id-buff (buff 84)))
+    (keccak256 (concat (concat (keccak256 expiration) (keccak256 req-count)) (keccak256 sender-id-buff))))
 
 ;; function to remove request-id from map if we want to cancel the request
 (define-public (cancel-request (hashed-request-id (buff 32)) )
-    (begin
-        (if (unwrap! (is-request-present hashed-request-id) err-request-not-found)
-            (ok (map-delete request-ids { request-id: hashed-request-id })) ;; request-id was present and deleted from map
-            (ok false) ;; request-id not present
-        )))
+    (if (is-request-present hashed-request-id)
+        (ok (map-delete request-ids { request-id: hashed-request-id })) ;; request-id was present and deleted from map
+        (ok false) ;; request-id not present
+    ))
 
 ;; function to check the presence of request-id.
-(define-public (is-request-present (hashed-request-id (buff 32)) )
-    (if (is-none (map-get? request-ids { request-id: hashed-request-id }))
-        (ok false)
-        (ok true)))
+(define-read-only (is-request-present (hashed-request-id (buff 32)) )
+    (is-some (map-get? request-ids { request-id: hashed-request-id })))
+
 
 ;; Creates the Chainlink request
 ;; Stores the hash of the params as the on-chain commitment for the request.
@@ -76,7 +74,7 @@
 
         (begin
             (var-set request-count (+ u1 (var-get request-count)))
-            (let ((hashed-val (unwrap! (create-request-id block-height sender-id-buff) err-request-id-creation-failed)))
+            (let ((hashed-val (create-request-id block-height sender-id-buff)))
                 (map-set request-ids { request-id: hashed-val } { expiration: block-height })
                 (print {
                     request_id: hashed-val,
@@ -108,24 +106,39 @@
                                         (req-count uint)
                                         (sender-id-buff (buff 84))
                                         (data (optional (buff 128))))
-    (let ((reconstructed-request-id (unwrap! (reconstruct-request-id expiration req-count sender-id-buff) err-reconstructed-id-construction-failed)))
-        (if (is-eq reconstructed-request-id request-id)
-            (if (is-valid-owner?)
-                (if (is-some (map-get? request-ids { request-id: reconstructed-request-id }))
-                    (begin (map-delete request-ids { request-id: reconstructed-request-id })
-                        (if (< block-height (+ expiration expiration-limit))
-                            (match (contract-call? callback oracle-callback-handler data)
-                                sucess (ok true)
-                                err (ok false))
-                        err-request-expired)) err-request-not-found) err-invalid-tx-sender) err-reconstructed-id-not-equal)))
-    ;; (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)                                                           ;; reconstructed-request-id and request-id not equal
-    ;; (asserts! (is-valid-owner?) err-invalid-tx-sender)                                                                                              ;; check tx-sender validity
-    ;; (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)                                      ;; reconstructed-request-id not present in the map
-    ;; (map-delete request-ids { request-id: reconstructed-request-id })                                                                               ;; remove request-id from map
-    ;; (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)                                                                 ;; block-height exceeded the limit and request-id expired
-    ;; (match (contract-call? callback oracle-callback-handler data)
-    ;;     sucess (ok true)
-    ;;     err (ok false))))
+    (let ((reconstructed-request-id (reconstruct-request-id expiration req-count sender-id-buff)))
+        (asserts! (is-eq reconstructed-request-id request-id) err-reconstructed-id-not-equal)
+        (asserts! (is-valid-owner?) err-invalid-tx-sender)
+        (asserts! (is-some (map-get? request-ids { request-id: reconstructed-request-id })) err-request-not-found)
+        (map-delete request-ids { request-id: reconstructed-request-id })
+        (asserts! (< block-height (+ expiration expiration-limit)) err-request-expired)
+        (match (contract-call? callback oracle-callback-handler data)
+            sucess (ok true)
+            err (ok false))))
+
+;; function to check the if funds are greater than amount.
+(define-private (has-enough-funds (amount uint))
+    (let ((balance (unwrap-panic (as-contract (contract-call? .stxlink-token get-balance tx-sender))) ))
+        (print { amount: amount, balance: balance, fn-name: "has-enough-funds" })
+        (>= balance amount)
+    ))
+
+;; function to withdraw stxlink token from contract.
+(define-public (withdraw-token (receiver principal) (amount uint))
+    (begin
+        (print { amount: amount, receiver: receiver, fn-name: "withdraw-token" })
+        (asserts! (is-valid-owner?) err-invalid-tx-sender)
+        (let ((can-withdraw (has-enough-funds amount) ))
+            (print { can-withdraw: can-withdraw, amount: amount, receiver: receiver, fn-name: "withdraw-token" })
+            (asserts! (is-eq can-withdraw true) err-not-enough-funds))
+            (print { assert-passed: true, amount: amount, receiver: receiver, fn-name: "withdraw-token" })
+            (as-contract (contract-call? 
+                .stxlink-token
+                transfer
+                amount
+                tx-sender
+                receiver
+                none))))  
 
 (map-set contract-owners tx-sender true)
 

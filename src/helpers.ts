@@ -167,6 +167,7 @@ export function createDirectRequestTxOptions(network: StacksNetwork, id: number)
   const senderPrincipalBuff = bufferToHexPrefixString(
     Buffer.from(String(process.env.TEST_ACC_STX))
   );
+  const oracle = getOracleContract(ChainID.Testnet)
   const txOptions = {
     contractAddress: consumerAddress,
     contractName: 'direct-request',
@@ -175,6 +176,8 @@ export function createDirectRequestTxOptions(network: StacksNetwork, id: number)
       bufferCVFromString(jobIdBuff),
       bufferCVFromString(senderPrincipalBuff),
       bufferCVFromString(paramBuff),
+      contractPrincipalCV(oracle.address, oracle.name),
+      contractPrincipalCV(String(process.env.STX_ADDR), 'direct-request'),
       contractPrincipalCV(String(process.env.STX_ADDR), 'direct-request'),
     ],
     senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),

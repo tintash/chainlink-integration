@@ -41,18 +41,15 @@ Clarinet.test({
             //Checking that request count is still u1 after only one successful request.
             Tx.contractCall("oracle", "get-request-count", [], deployer.address),
         ]);
-        // assertEquals(block.receipts.length, 0);
-        // assertEquals(block.height, 3);
+        
         block.receipts[0].result // correct oracle-request
         .expectOk()
         .expectBool(true);
 
         block.receipts[1].result //checking request count 
-        .expectOk()
         .expectUint(1);
 
         block.receipts[2].result //checking request count (should be u1) after only one successful request
-        .expectOk()
         .expectUint(1);
 
         // This code is used to get the response values of first request in order to fulfill that request in the oracle
@@ -93,7 +90,6 @@ Clarinet.test({
         ]);
 
         block.receipts[0].result //request count is u1
-        .expectOk()
         .expectUint(1);
 
         block.receipts[1].result // err-reconstructed-id-not-equal (err u14))

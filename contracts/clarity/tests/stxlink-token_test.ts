@@ -2,6 +2,7 @@
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.13.0/index.ts';
 // @ts-ignore
 import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
+
 // Test Contract Initialization State
 Clarinet.test({
   name: 'stxlink-token: returns the correct values for read only fns at initialization',
@@ -9,30 +10,38 @@ Clarinet.test({
     const deployer = accounts.get('deployer')!;
     let wallet_2 = accounts.get('wallet_2')!;
     let wallet_3 = accounts.get('wallet_3')!;
-    // Test total supply of stx-link initially minted = 2000
     var call = await chain.callReadOnlyFn(
       'stxlink-token',
       'get-total-supply',
       [],
       deployer.address
     );
+
+    // Success: Total supply should be equal to initially minted tokens = 2000
     call.result.expectOk().expectUint(2000);
-    // Test balance of account 2000 tokens are minted to
+
     call = await chain.callReadOnlyFn(
       'stxlink-token',
       'get-balance',
       [types.principal('STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6')],
       wallet_2.address
     );
+    // Success: Balance of initial minter address should be = 2000
     call.result.expectOk().expectUint(2000);
-    // Test name symbol decimals
+
     call = await chain.callReadOnlyFn('stxlink-token', 'get-name', [], wallet_2.address);
+
+    // Success: name = STXLINK
     call.result.expectOk().expectAscii('STXLINK');
 
     call = await chain.callReadOnlyFn('stxlink-token', 'get-symbol', [], wallet_2.address);
+
+    // Success: symbol = SL
     call.result.expectOk().expectAscii('SL');
 
     call = await chain.callReadOnlyFn('stxlink-token', 'get-decimals', [], deployer.address);
+
+    // Success: decimal = 1
     call.result.expectOk().expectUint(1);
     // Test owner and minter roles assigned at initialization
     call = await chain.callReadOnlyFn(
@@ -41,6 +50,7 @@ Clarinet.test({
       [types.uint(0), types.principal(deployer.address)],
       deployer.address
     );
+    // Success: owner role assigned to deployer at initialization
     call.result.expectBool(true);
 
     call = await chain.callReadOnlyFn(
@@ -49,13 +59,8 @@ Clarinet.test({
       [types.uint(1), types.principal(deployer.address)],
       deployer.address
     );
+    // Success: minter role assigned to deployer at initialization
     call.result.expectBool(true);
-
-    /** Test remaining read only functions
-     * is-blacklisted => Test if an account is blacklisted
-     * detect-transfer-restriction => Test if sender or receipent is blacklisted
-     * message-for-restriction => Test message to show for restricted account.
-     */
     call = await chain.callReadOnlyFn(
       'stxlink-token',
       'is-blacklisted',
@@ -99,15 +104,6 @@ Clarinet.test({
     call.result.expectOk().expectAscii('Unknown Error Code');
   },
 });
-/** Testing Capabilities in following order
- *  Blacklisting
- *  detect-transfer-restriction
- *  Transfer tokens
- *  Mint and Burn tokens
- *  Revoke tokens
- *  adding and removing roles
- *  get and set token uri
- * */
 
 // Test Blacklisting
 Clarinet.test({
@@ -120,7 +116,6 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        // Test before adding role - Error case u403
         'stxlink-token',
         'update-blacklisted',
         [types.principal(wallet1Address), types.bool(true)],
@@ -129,44 +124,48 @@ Clarinet.test({
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role', // add BlackLister role without owner account - Error case u403
+        'add-principal-to-role', 
         [types.uint(4), types.principal(wallet1Address)],
         wallet1Address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role', // Add Blacklister roles  with owner account - success case
+        'add-principal-to-role', 
         [types.uint(4), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'update-blacklisted', // Test after adding role - success case
+        'update-blacklisted', 
         [types.principal(wallet_2.address), types.bool(true)],
         wallet1Address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'is-blacklisted', // Test account successfully blacklisted
+        'is-blacklisted', 
         [types.principal(wallet_2.address)],
         wallet1Address
       ),
-      //   Tx.contractCall('stxlink-token'),
     ]);
 
+    // Error: Forbidden account cannot update blacklist if it is not assigned blacklister role
     block.receipts[0].result.expectErr().expectUint(403);
 
+    // Error: Forbidden account cannot assign blacklister role if it is not assigned owner role
     block.receipts[1].result.expectErr().expectUint(403);
 
+    // Success: owner account assigns wallet1Address blacklister role
     block.receipts[2].result.expectOk().expectBool(true);
     assertEquals(block.receipts[2].events.length, 1);
 
+    // Success: wallet1Address blacklists wallet_2 address
     block.receipts[3].result.expectOk().expectBool(true);
     assertEquals(block.receipts[3].events.length, 1);
 
+    // Success: wallet_2 is blacklisted
     block.receipts[4].result.expectBool(true);
   },
 });
@@ -183,41 +182,45 @@ Clarinet.test({
     let block = chain.mineBlock([
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role', // Add Blacklister roles
+        'add-principal-to-role', 
         [types.uint(4), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'update-blacklisted', // Blacklist wallet_2 address
+        'update-blacklisted', 
         [types.principal(wallet_2.address), types.bool(true)],
         wallet1Address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'detect-transfer-restriction', // detect transfer restriction with wallet_2 (blacklisted) receiver
+        'detect-transfer-restriction', 
         [types.uint(20), types.principal(wallet_1.address), types.principal(wallet_2.address)],
         wallet1Address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'detect-transfer-restriction', // detect transfer restriction with both sender and receiver not blacklisted
+        'detect-transfer-restriction', 
         [types.uint(20), types.principal(deployer.address), types.principal(wallet_1.address)],
         wallet1Address
       ),
     ]);
 
+    // Success: owner account assigns wallet1Address blacklister role
     block.receipts[0].result.expectOk().expectBool(true);
     assertEquals(block.receipts[0].events.length, 1);
 
+    // Success: wallet1Address blacklists wallet_2 address
     block.receipts[1].result.expectOk().expectBool(true);
     assertEquals(block.receipts[1].events.length, 1);
 
+    // Error: detect-transfer-restriction returns u1 = RESTRICTION_BLACKLIST when receiver is wallet_2
     block.receipts[2].result.expectErr().expectUint(1);
 
+    // Success: detect-transfer-restriction returns u0 = RESTRICTION_BLACKLIST when sender and receiver are not blacklisted
     block.receipts[3].result.expectOk().expectUint(0);
   },
 });
@@ -230,32 +233,32 @@ Clarinet.test({
     const wallet_1 = accounts.get('wallet_1')!;
     const wallet_2 = accounts.get('wallet_2')!;
     const wallet1Address = wallet_1.address;
-    const minted2kAddress = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6'; // account to which 2k coins are minted initially
+    const minted2kAddress = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6'; // address to which 2k coins are minted initially
     let block = chain.mineBlock([
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role', // assign wallet_1 blacklister role
+        'add-principal-to-role', 
         [types.uint(4), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'update-blacklisted', // blacklist wallet_2
+        'update-blacklisted', 
         [types.principal(wallet_2.address), types.bool(true)],
         wallet1Address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'get-balance', // Check balance of minted2kAccount before transfer
+        'get-balance', 
         [types.principal(minted2kAddress)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'transfer', // Test transfer when receiver is blacklisted (wallet_2) - error case
+        'transfer', 
         [
           types.uint(20),
           types.principal(minted2kAddress),
@@ -267,7 +270,7 @@ Clarinet.test({
 
       Tx.contractCall(
         'stxlink-token',
-        'transfer', // Test transfer with account having no balance and none is blacklisted - error case 2
+        'transfer', 
         [
           types.uint(20),
           types.principal(minted2kAddress),
@@ -279,7 +282,7 @@ Clarinet.test({
 
       Tx.contractCall(
         'stxlink-token',
-        'transfer', // Test transfer when both accounts are not blacklisted and sender has balance - success case
+        'transfer', 
         [
           types.uint(100),
           types.principal(minted2kAddress),
@@ -288,7 +291,6 @@ Clarinet.test({
         ],
         minted2kAddress
       ),
-      // Test balances after transfer
       Tx.contractCall(
         'stxlink-token',
         'get-balance',
@@ -304,22 +306,31 @@ Clarinet.test({
       ),
     ]);
 
+    // Success: owner account assigns wallet1Address blacklister role
     block.receipts[0].result.expectOk().expectBool(true);
     assertEquals(block.receipts[0].events.length, 1);
 
+    // Success: wallet1Address blacklists wallet_2 address
     block.receipts[1].result.expectOk().expectBool(true);
     assertEquals(block.receipts[1].events.length, 1);
 
+    // balance of minted2kAccount before transfer = 2000
     block.receipts[2].result.expectOk().expectUint(2000);
 
+    // Error: fail transfer receiver is blacklisted (wallet_2) 
     block.receipts[3].result.expectErr().expectUint(1);
 
+    // Error: fail transfer originator is not the sender principal
     block.receipts[4].result.expectErr().expectUint(4);
 
+    //Success: Transfer 100 token from minted2kAddress to wallet1Address when all checks passed
     block.receipts[5].result.expectOk().expectBool(true);
     assertEquals(block.receipts[5].events.length, 1);
-
+    
+    // Expect: Balance of minted2kAddress = 1900
     block.receipts[6].result.expectOk().expectUint(1900);
+
+    // Expect: Balance of wallet1Address = 1900
     block.receipts[7].result.expectOk().expectUint(100);
   },
 });
@@ -336,59 +347,65 @@ Clarinet.test({
     let block = chain.mineBlock([
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role', // Assign minter role to wallet_1
+        'add-principal-to-role', 
         [types.uint(1), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role', // Assign burner role to wallet_1
+        'add-principal-to-role', 
         [types.uint(2), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'mint-tokens', // mint tokens
+        'mint-tokens', 
         [types.uint(2000), types.principal(wallet1Address)],
         wallet1Address
       ),
       Tx.contractCall(
         'stxlink-token',
-        'get-balance', // get balance after mint = minted tokens
+        'get-balance', 
         [types.principal(wallet1Address)],
         wallet1Address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'burn-tokens', // burn all minted tokens
+        'burn-tokens', 
         [types.uint(2000), types.principal(wallet1Address)],
         wallet1Address
       ),
       Tx.contractCall(
         'stxlink-token',
-        'get-balance', // test balance after burning all minted coins = 0
+        'get-balance', 
         [types.principal(wallet1Address)],
         wallet1Address
       ),
     ]);
-
+    
+    // Success: owner account assigns wallet1Address minter role
     block.receipts[0].result.expectOk().expectBool(true);
     assertEquals(block.receipts[0].events.length, 1);
 
+    // Success: owner account assigns wallet1Address burner role
     block.receipts[1].result.expectOk().expectBool(true);
     assertEquals(block.receipts[1].events.length, 1);
 
+    // Success: wallet1Address mint 2000 token to wallet1Address
     block.receipts[2].result.expectOk().expectBool(true);
     assertEquals(block.receipts[2].events.length, 2);
 
+    // Expect: Wallet1Address balance = 2000
     block.receipts[3].result.expectOk().expectUint(2000);
 
+    // Success: wallet1Address burn 2000 token from wallet1Address
     block.receipts[4].result.expectOk().expectBool(true);
     assertEquals(block.receipts[4].events.length, 2);
 
+    // Expect: Wallet1Address balance = 0
     block.receipts[5].result.expectOk().expectUint(0);
   },
 });
@@ -404,7 +421,7 @@ Clarinet.test({
     const minted2kAddress = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6';
     let block = chain.mineBlock([
       Tx.contractCall(
-        'stxlink-token', // Assign revoker role to deployer
+        'stxlink-token', 
         'add-principal-to-role',
         [types.uint(3), types.principal(deployer.address)],
         deployer.address
@@ -412,32 +429,31 @@ Clarinet.test({
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role', // Assign revoker role to wallet_1
+        'add-principal-to-role', 
         [types.uint(1), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'mint-tokens', // mint
+        'mint-tokens', 
         [types.uint(2000), types.principal(wallet1Address)],
         wallet1Address
       ),
       Tx.contractCall(
         'stxlink-token',
-        'get-balance', // Test balance after mint
+        'get-balance', 
         [types.principal(wallet1Address)],
         wallet1Address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'revoke-tokens', // revoke from wallet_1 to minted2kAddress
+        'revoke-tokens', 
         [types.uint(2000), types.principal(wallet1Address), types.principal(minted2kAddress)],
         deployer.address
       ),
 
-      // Test balances of both revoke-from and revoke-to accounts after revoke
       Tx.contractCall(
         'stxlink-token',
         'get-balance',
@@ -453,22 +469,29 @@ Clarinet.test({
       ),
     ]);
 
+    // Success: owner account assigns deployer address revoker role
     block.receipts[0].result.expectOk().expectBool(true);
     assertEquals(block.receipts[0].events.length, 1);
 
+    // Success: owner account assigns wallet1Address minter role
     block.receipts[1].result.expectOk().expectBool(true);
     assertEquals(block.receipts[1].events.length, 1);
 
+    // Success: wallet1Address mint 2000 token to wallet1Address
     block.receipts[2].result.expectOk().expectBool(true);
     assertEquals(block.receipts[2].events.length, 2);
 
+    // Expect: Wallet1Address balance = 2000
     block.receipts[3].result.expectOk().expectUint(2000);
 
+    // Success deployer (revoker) revokes 2000 tokens from wallet1Address to minted2kAddress
     block.receipts[4].result.expectOk().expectBool(true);
     assertEquals(block.receipts[4].events.length, 2);
 
+    // Expect: Wallet1Address balance = 0
     block.receipts[5].result.expectOk().expectUint(0);
 
+    // Expect: minted2kAddress balance = 2000
     block.receipts[6].result.expectOk().expectUint(4000);
   },
 });
@@ -483,48 +506,47 @@ Clarinet.test({
     const wallet1Address = wallet_1.address;
     const wallet2Address = wallet_2.address;
     let block = chain.mineBlock([
-    
-    // Assign all roles 1 by 1
-    
-        Tx.contractCall(
+      // Assign all roles 1 by 1
+
+      Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role',        // owner = deployer
-        [types.uint(0), types.principal(deployer.address)], 
+        'add-principal-to-role', 
+        [types.uint(0), types.principal(deployer.address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role',        // minter = wallet_1
+        'add-principal-to-role', 
         [types.uint(1), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role',        // burner = wallet_1
+        'add-principal-to-role', 
         [types.uint(2), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role',        // revoker = wallet_2
+        'add-principal-to-role', 
         [types.uint(3), types.principal(wallet2Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'add-principal-to-role',        // blacklister = wallet_2
+        'add-principal-to-role', 
         [types.uint(4), types.principal(wallet2Address)],
         deployer.address
       ),
-      
+
       // Test all roles are succesfully assigned
       Tx.contractCall(
         'stxlink-token',
-        'has-role',        
+        'has-role',
         [types.uint(0), types.principal(wallet2Address)],
         deployer.address
       ),
@@ -563,35 +585,37 @@ Clarinet.test({
         [types.uint(4), types.principal(wallet2Address)],
         deployer.address
       ),
-        // Remove all assigned roles 1 by 1 except owner
+      // Remove all assigned roles
       Tx.contractCall(
         'stxlink-token',
-        'remove-principal-from-role',       //remove wallet_1 from minter
+        'remove-principal-from-role',
         [types.uint(1), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'remove-principal-from-role',       //remove wallet_1 from burner
+        'remove-principal-from-role',
         [types.uint(2), types.principal(wallet1Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'remove-principal-from-role',       //remove wallet_2 from revoker
+        'remove-principal-from-role', 
         [types.uint(3), types.principal(wallet2Address)],
         deployer.address
       ),
 
       Tx.contractCall(
         'stxlink-token',
-        'remove-principal-from-role',       //remove wallet_2 from blacklister
+        'remove-principal-from-role', 
         [types.uint(4), types.principal(wallet2Address)],
         deployer.address
       ),
+      // Test all roles are removed
     // Test all roles are removed 
+      // Test all roles are removed
       Tx.contractCall(
         'stxlink-token',
         'has-role',
@@ -620,52 +644,70 @@ Clarinet.test({
         deployer.address
       ),
     ]);
-
+    // Success: owner account assigns deployer address owner role
     block.receipts[0].result.expectOk().expectBool(true);
     assertEquals(block.receipts[0].events.length, 1);
 
+    // Success: owner account assigns wallet1Address minter role
     block.receipts[1].result.expectOk().expectBool(true);
     assertEquals(block.receipts[1].events.length, 1);
 
+    // Success: owner account assigns wallet1Address burner role
     block.receipts[2].result.expectOk().expectBool(true);
     assertEquals(block.receipts[2].events.length, 1);
 
+    // Success: owner account assigns wallet2Address revoker role
     block.receipts[3].result.expectOk().expectBool(true);
     assertEquals(block.receipts[3].events.length, 1);
 
+    // Success: owner account assigns wallet2Address blacklister role
     block.receipts[4].result.expectOk().expectBool(true);
     assertEquals(block.receipts[4].events.length, 1);
 
+    // Error : expect wallet1Address to be owner
     block.receipts[5].result.expectBool(false);
-
+    
+    // Expect : deployer has owner-role
     block.receipts[6].result.expectBool(true);
-
+    
+    // Expect : wallet1Address has minter-role
     block.receipts[7].result.expectBool(true);
 
+    // Expect : wallet1Address has burner-role
     block.receipts[8].result.expectBool(true);
 
+    // Expect : wallet2Address has revoker-role
     block.receipts[9].result.expectBool(true);
 
+    // Expect : wallet2Address has blacklister-role
     block.receipts[10].result.expectBool(true);
 
+    // Success: owner account removes wallet1Address from minter role
     block.receipts[11].result.expectOk().expectBool(true);
     assertEquals(block.receipts[11].events.length, 1);
 
+    // Success: owner account removes wallet1Address from burner role
     block.receipts[12].result.expectOk().expectBool(true);
     assertEquals(block.receipts[12].events.length, 1);
 
+    // Success: owner account removes wallet2Address from revoker role
     block.receipts[13].result.expectOk().expectBool(true);
     assertEquals(block.receipts[13].events.length, 1);
 
+    // Success: owner account removes wallet2Address from blacklister role
     block.receipts[14].result.expectOk().expectBool(true);
     assertEquals(block.receipts[14].events.length, 1);
 
+    // Expect : wallet1Address not to have minter-role
     block.receipts[15].result.expectBool(false);
 
+    // Expect : wallet1Address not to have burner-role
     block.receipts[16].result.expectBool(false);
 
+    // Expect : wallet2Address not to have revoker-role
     block.receipts[17].result.expectBool(false);
 
+    // Expect : wallet2Address not to have blacklister-role
     block.receipts[18].result.expectBool(false);
   },
 });
@@ -680,21 +722,23 @@ Clarinet.test({
     let block = chain.mineBlock([
       Tx.contractCall(
         'stxlink-token',
-        'set-token-uri', // set
+        'set-token-uri',
         [types.utf8('Testing URI')],
         deployer.address
       ),
       Tx.contractCall(
         'stxlink-token',
-        'get-token-uri', // get
+        'get-token-uri',
         [],
         wallet1Address
       ),
     ]);
 
+    // Success: Set Token URI
     block.receipts[0].result.expectOk().expectBool(true);
     assertEquals(block.receipts[0].events.length, 1);
 
+    // Success: Get Token URI
     block.receipts[1].result.expectOk();
   },
 });
@@ -706,7 +750,7 @@ Clarinet.test({
     const wallet_1 = accounts.get('wallet_1')!;
     const wallet_2 = accounts.get('wallet_2')!;
 
-    const wallet1Address = wallet_1.address; // Initial Owner
+    const wallet1Address = wallet_1.address;
     const directRequestParams = [
       '0x3334346664393436386561363437623838633530336461633830383263306134',
       '0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145',
@@ -751,19 +795,25 @@ Clarinet.test({
       ),
     ]);
 
+    // Success: owner account assigns wallet1Address minter role
     block.receipts[0].result.expectOk().expectBool(true);
     assertEquals(block.receipts[0].events.length, 1);
-
+    
+    // Success: wallet1Address mint 2000 token to wallet1Address
     block.receipts[1].result.expectOk().expectBool(true);
     assertEquals(block.receipts[1].events.length, 2);
 
+    // Expect: Wallet1Address balance = 2000
     block.receipts[2].result.expectOk().expectUint(2000);
-
+    
+    // Success: initiate direct request and emit events (cost 1 stx-link) 
     block.receipts[3].result.expectOk().expectBool(true);
     assertEquals(block.receipts[3].events.length, 2);
 
+    // Expect: oracle to have balance 1 stx-link (for serving previous request)
     block.receipts[4].result.expectOk().expectUint(1);
 
+    // Expect: requester account wallet1Address to have balance = 1999 (1 stx-link paid for request)
     block.receipts[5].result.expectOk().expectUint(1999);
   },
 });

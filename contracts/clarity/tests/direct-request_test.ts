@@ -41,6 +41,9 @@ Clarinet.test({
             Tx.contractCall("stxlink-token", "get-balance", [types.principal(wallet1Address)], deployer.address),        
         ]);
 
+        // TODO: This should return some error
+        console.log('Receipts' , block.receipts);
+
         block = chain.mineBlock([
             Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
             Tx.contractCall("direct-request", "read-data-value", [],  wallet1Address),

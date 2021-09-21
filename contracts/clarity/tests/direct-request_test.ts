@@ -41,9 +41,11 @@ Clarinet.test({
             Tx.contractCall("direct-request", "create-request", createRequestParams, wallet1Address),
             Tx.contractCall("stxlink-token", "get-balance", [types.principal(wallet1Address)], deployer.address),        
         ]);
-
-        // TODO: This should return some error
-        console.log('Receipts' , block.receipts);
+        
+        // Success: ran trasfer-failure succesfully called in error case
+        block.receipts[0].result.expectOk();
+        // Expect: wallet1Address stx-link balance = 0
+        block.receipts[1].result.expectOk().expectUint(0);
 
         block = chain.mineBlock([
             Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),

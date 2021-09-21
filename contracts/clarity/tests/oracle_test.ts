@@ -1,4 +1,5 @@
 
+// @ts-ignore
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.13.0/index.ts';
 
 function getEventElements(event: String){

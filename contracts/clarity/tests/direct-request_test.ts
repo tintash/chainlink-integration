@@ -1,5 +1,6 @@
-
+// @ts-ignore
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.13.0/index.ts';
+// @ts-ignore
 import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
 function getEventElements(event: String){

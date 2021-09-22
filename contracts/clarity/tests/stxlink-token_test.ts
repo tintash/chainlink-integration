@@ -744,7 +744,7 @@ Clarinet.test({
 });
 
 Clarinet.test({
-  name: 'Ensure that <...>',
+  name: 'Ensure requests charge minnimum payment to orignator',
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get('deployer')!;
     const wallet_1 = accounts.get('wallet_1')!;

@@ -13,7 +13,7 @@ function getEventElements(event: String){
 }
 
 Clarinet.test({
-    name: "Ensure that oracle <...>",
+    name: "Ensure that oracle create chainlink request updates count and fulfill request succesfully",
     async fn(chain: Chain, accounts: Map<string, Account>) {
         const deployer = accounts.get("deployer")!;
         const wallet_1 = accounts.get("wallet_1")!;

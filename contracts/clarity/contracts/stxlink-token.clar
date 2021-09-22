@@ -1,10 +1,13 @@
 ;; Implement the `ft-trait` trait defined in the `ft-trait` contract - SIP 10
 ;; This can use sugared syntax in real deployment (unit tests do not allow)
 (impl-trait .ft-trait.ft-trait)
+;; (impl-trait 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.ft-trait.ft-trait)
 
 ;; ;; Implement the token restriction trait
 (impl-trait .restricted-token-trait.restricted-token-trait)
 (use-trait oracle-callback .oracle.oracle-callback)
+;; (impl-trait 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.restricted-token-trait.restricted-token-trait)
+;; (use-trait oracle-callback 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle.oracle-callback)
 
 ;; Error returned for permission denied - stolen from http 403
 (define-constant PERMISSION_DENIED_ERROR u403)
@@ -209,8 +212,10 @@
                   (data (buff 1024)) 
                   (callback <oracle-callback>))
   (begin
+    ;; (try! (transfer MINIMUM_PAYMENT tx-sender 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle none))
     (try! (transfer MINIMUM_PAYMENT tx-sender .oracle none))
     (contract-call?
+      ;; 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle                 ;; oracle name
       .oracle                 ;; oracle name
       oracle-request          ;; oracle method
       tx-sender               ;; this contract's address

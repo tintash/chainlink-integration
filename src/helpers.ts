@@ -1,4 +1,4 @@
-import { StacksMocknet, StacksNetwork } from '@stacks/network';
+import { StacksNetwork } from '@stacks/network';
 import {
   BufferCV,
   bufferCVFromString,
@@ -6,13 +6,11 @@ import {
   contractPrincipalCV,
   createAssetInfo,
   createFungiblePostCondition,
-  createSTXPostCondition,
   FungibleConditionCode,
 } from '@stacks/transactions';
 import request from 'request';
 import { getOracleContract } from './event-helpers';
 import BigNum from 'bn.js';
-import { MockRequests } from './mock/direct-requests';
 
 export interface PriceFeedRequestFulfillment {
   result: number;
@@ -34,7 +32,7 @@ export async function executeChainlinkRequest(jobId: string, data: DirectRequest
     headers: createChainlinkRequestHeaders(),
     json: data,
   };
-  console.log(`Chainlink Initiator Params:< ${options}' >`);
+  console.log(`Chainlink Initiator Params:< ${options} >`);
 
   return new Promise((resolve, reject) => {
     request(options, (error: any, response: unknown, body: any) => {
@@ -152,8 +150,7 @@ export interface DirectRequestBuffer {
 
 export const printTopic = 'print';
 
-export function createDirectRequestTxOptions(network: StacksNetwork, id: number) {
-  const mockRequest = MockRequests[id];
+export function createDirectRequestTxOptions(network: StacksNetwork, mockRequest: any) {
   const consumerAddress = getOracleContract(ChainID.Testnet).address;
   const assetInfo = createAssetInfo(String(process.env.STX_ADDR), 'stxlink-token', 'stxlink-token');
   const postCondition = createFungiblePostCondition(

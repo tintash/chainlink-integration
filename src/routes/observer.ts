@@ -14,8 +14,7 @@ import {
   hexToDirectRequestParams,
   paramsToHexPrefixString,
 } from '../helpers';
-
-import { getJobSpecMinPayment, getChainlinkClientSessionCookie } from '../initiator-helpers';
+import { MockRequests } from '../mock/direct-requests';
 
 export function createObserverRouter() {
   const router = express.Router();
@@ -44,7 +43,7 @@ export function createObserverRouter() {
     const network = new StacksMocknet();
     network.coreApiUrl = String(process.env.STACKS_CORE_API_URL);
     const id = req.query.id === undefined ? 0 : parseInt(String(req.query.id));
-    const txOptions = createDirectRequestTxOptions(network, id);
+    const txOptions = createDirectRequestTxOptions(network, MockRequests[id]);
     try {
       const transaction = await makeContractCall(txOptions);
       const broadcastResult = await broadcastTransaction(transaction, network);
@@ -111,7 +110,6 @@ export function createObserverRouter() {
   router.use((req, res, next) => {
     const ei_ci_acckey = req.headers['x-chainlink-ea-accesskey'];
     const ei_ci_secret = req.headers['x-chainlink-ea-secret'];
-    console.log('Line 129', ei_ci_acckey, ei_ci_secret);
     if (typeof ei_ci_acckey !== undefined && typeof ei_ci_secret !== undefined) {
       if (
         ei_ci_acckey === String(process.env.EI_CI_ACCESSKEY) &&

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import {
   makeContractDeploy,
+  makeContractCall,
   broadcastTransaction,
   AnchorMode,
   StacksTransaction,
@@ -13,24 +14,64 @@ import { StacksNetwork } from '@stacks/network';
 import { StacksMocknet } from '@stacks/network';
 import { getChainlinkClientSessionCookie } from '../initiator-helpers';
 import { connectWebSocketClient, StacksApiWebSocketClient } from '@stacks/blockchain-api-client';
+import { createDirectRequestTxOptions } from '../helpers';
+import dotenv from 'dotenv';
+import { MockRequests } from '../mock/direct-requests';
 
 const CLARITY_CONTRACTS_PATH = '../../contracts/clarity/contracts';
 const CONTRACT_NAMES = [
+  'oracle',
   'ft-trait',
-  // 'restricted-token-trait',
-  // 'stxlink-token',
-  // 'oracle',
-  // 'direct-request',
+  'restricted-token-trait',
+  'stxlink-token',
+  'direct-request',
 ];
 
-const txStatusMap: Map<string, { unsubscribe(): Promise<void> }> = new Map();
+export interface JobRun {
+  data: Data;
+}
+
+export interface JobRuns {
+  data: Data[];
+}
+
+export interface Data {
+  attributes: Attributes;
+}
+
+export interface Attributes {
+  id: string;
+  jobId: string;
+  result: Result;
+  status: string;
+}
+
+export interface Result {
+  data: ResultData;
+  error: any;
+}
+
+export interface ResultData {
+  get: string;
+  post: string;
+  path: string;
+  result: any;
+  body: string;
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function pingStacksBlockchainApi(): Promise<number> {
-  let status: number = 0;
-  while (status !== 200) {
-    status = await fetch('http://localhost:3999').then(response => response.status);
+  try {
+    const status = await fetch('http://localhost:3999').then(response => response.status);
+    return status;
+  } catch (error: any) {
+    if (error.code === 'ECONNRESET' || error.code === 'ECONNREFUSED') {
+      return await pingStacksBlockchainApi();
+    } else throw error;
   }
-  return status;
 }
 
 async function deployContracts(
@@ -38,11 +79,8 @@ async function deployContracts(
   contractsPath: string,
   client: StacksApiWebSocketClient
 ): Promise<string[]> {
-  console.log('Line 82');
   const network = new StacksMocknet();
-  console.log('Line 84');
   const nonce = await getNonce(String(process.env.STX_ADDR), network);
-  console.log('Line 86');
 
   try {
     const txs = await Promise.all(
@@ -50,8 +88,6 @@ async function deployContracts(
         deployContract(name, contractsPath, network, nonce + BigInt(index), client)
       )
     );
-
-    console.log('maps1: ', txStatusMap, txStatusMap.size);
     return txs.map(tx => tx.txid());
   } catch (error) {
     throw error;
@@ -65,14 +101,13 @@ async function deployContract(
   nonce: bigint,
   client: StacksApiWebSocketClient
 ): Promise<StacksTransaction> {
-  console.log('Line 42');
   const tx = await makeContractDeploy({
     contractName: contract.toString(),
     codeBody: fs.readFileSync(path.join(__dirname, `${contractsPath}/${contract}.clar`)).toString(),
     senderKey: String(process.env.STX_ADDR_PRIVATE_KEY),
     network,
     anchorMode: AnchorMode.Any,
-    nonce: nonce,
+    nonce,
   });
   const broadcastResult = await broadcastTransaction(tx, network);
   const txRejected = broadcastResult as TxBroadcastResultRejected;
@@ -80,102 +115,155 @@ async function deployContract(
   if (error) {
     throw new Error(`${error} with reason: ${txRejected.reason}`);
   }
-  // const sub = await client.subscribeTxUpdates(tx.txid(), async event => {
-  //   console.log('event: ', event);
-  //   if (event.tx_status !== 'pending') {
-  //     const subscription = txStatusMap.get(event.tx_id);
-  //     if (subscription) {
-  //       await subscription.unsubscribe();
-  //       console.log('event.tx_status: ', event.tx_status);
-  //       txStatusMap.delete(event.tx_id);
-  //     }
-  //   }
-  // });
-  // console.log('Line 75');
-  // txStatusMap.set(tx.txid(), sub);
-  // console.log('maps0: ', txStatusMap);
   return tx;
+}
+
+async function subscribeTxStatusChange(
+  txId: string,
+  client: StacksApiWebSocketClient
+): Promise<void> {
+  return new Promise(async (resolve, reject) => {
+    await client.subscribeTxUpdates(txId, event => {
+      if (event.tx_status === 'success') {
+        resolve();
+      } else if (event.tx_status !== 'pending') {
+        reject();
+      }
+    });
+  });
+}
+
+async function callConsumerContract(mockRequest: any) {
+  try {
+    const network = new StacksMocknet();
+    const txOptions = createDirectRequestTxOptions(network, mockRequest);
+    const transaction = await makeContractCall(txOptions);
+    const broadcastResult = await broadcastTransaction(transaction, network);
+    const txRejected = broadcastResult as TxBroadcastResultRejected;
+    const error = txRejected.error;
+    if (error) {
+      throw new Error(`${error} with reason: ${txRejected.reason}`);
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function isJobIdValid(jobId: string, cookie: string): Promise<boolean> {
+  try {
+    return await fetch(`http://${String(process.env.CHAINLINK_HOST)}:6688/v2/specs/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: cookie,
+      },
+    })
+      .then(response => response.json())
+      .then(res => res.data.id == jobId);
+  } catch (error) {
+    throw error;
+  }
+}
+async function completedJobRun(
+  jobId: string,
+  jobRunIndex: number,
+  chainlinkCookie: string
+): Promise<JobRun> {
+  try {
+    await isJobIdValid(jobId, chainlinkCookie);
+
+    let jobRunStatus: string = '';
+    let run = {} as JobRun;
+    while (jobRunStatus !== 'completed') {
+      const response = await fetch(`http://localhost:6688/v2/runs`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: chainlinkCookie,
+        },
+      });
+      const jsonResponse: JobRuns = await response.json();
+      if (jsonResponse.data.length > jobRunIndex) {
+        jobRunStatus = jsonResponse.data[jobRunIndex].attributes.status;
+        run.data = jsonResponse.data[jobRunIndex];
+        if (jobRunStatus === 'errored') {
+          throw new Error(run.data.attributes.result.error);
+        }
+      }
+      await sleep(500);
+    }
+    return run;
+  } catch (error) {
+    throw error;
+  }
 }
 
 describe('Integration testing', () => {
   let chainlinkCookie: string = '';
+  let jobRunIndex = 0;
   beforeAll(async () => {
     try {
+      console.log('Waiting for stacks-blockchian-api at localhost:3999');
+      await pingStacksBlockchainApi();
+      console.log(`stacks-blockchian-api is up. Listening at localhost:3999`);
+
       const client = await connectWebSocketClient(`ws://localhost:3999`);
 
-      console.log('Waiting for stacks-blockchian-api at localhost:3999');
-      let stxApiStatus = await pingStacksBlockchainApi();
-      console.log(`stacks-blockchian-api status is ${stxApiStatus}. Listening at localhost:3999`);
+      console.log('Deploying smart contracts');
+      const deployTxs = await deployContracts(CONTRACT_NAMES, CLARITY_CONTRACTS_PATH, client);
+      await Promise.all(deployTxs.map(async txId => subscribeTxStatusChange(txId, client)));
+      client.webSocket.close();
+      console.log(`Successfully deployed all contracts, txids:`, deployTxs);
 
-      // console.log('Deploying smart contracts');
-      // const deployTxs = await deployContracts(CONTRACT_NAMES, CLARITY_CONTRACTS_PATH, client);
-      // console.log(`Successfully deployed all contracts, txids:`, deployTxs);
-
-      await client.subscribeAddressTransactions(String(process.env.STX_ADDR), event => {
-        console.log('event.tx_id', event.tx_id + ': ' + event.tx_status);
-      });
-
-      while (true) {
-        const tx = await makeContractDeploy({
-          contractName: 'ft-trait',
-          codeBody: fs
-            .readFileSync(path.join(__dirname, `${CLARITY_CONTRACTS_PATH}/ft-trait.clar`))
-            .toString(),
-          senderKey: String(process.env.STX_ADDR_PRIVATE_KEY),
-          network: new StacksMocknet(),
-          anchorMode: AnchorMode.Any,
-        });
-        const broadcastResult = await broadcastTransaction(tx, new StacksMocknet());
-        const txRejected = broadcastResult as TxBroadcastResultRejected;
-        const error = txRejected.error;
-        if (error) {
-          throw new Error(`${error} with reason: ${txRejected.reason}`);
-        }
-        break;
-      }
-
-      // while (true) {
-
-      // while (true) {}
-      // }
-      // console.log('Getting Chainlink session cookie');
-      // chainlinkCookie = await getChainlinkClientSessionCookie();
+      console.log('Getting Chainlink session cookie');
+      chainlinkCookie = await getChainlinkClientSessionCookie();
     } catch (error) {
       throw error;
     }
+
+    console.log('Loading envionment variables');
+    const envFile = fs.readFileSync(path.join(__dirname, '../../.env'));
+    const envConfig = dotenv.parse(envFile);
+    for (const key in envConfig) {
+      process.env[key] = envConfig[key];
+    }
   });
 
-  test('dummy test', () => {});
-  // test('testing direct-request sample resuest 1', async () => {
-  //   try {
-  //     console.log('mapSize: ', txStatusMap.size);
+  test('Success: direct-request sample resuest 0', async () => {
+    await callConsumerContract(MockRequests[0]);
+    const jobRun = await completedJobRun(MockRequests[0]['job-id'](), jobRunIndex, chainlinkCookie);
+    const { data } = jobRun.data.attributes.result;
+    console.log('result: ', data.result);
+    expect(data.result).toEqual(expect.anything());
+  });
 
-  //     // while (txStatusMap.size > 0) {
-  //     //   console.log('mapSize: ', txStatusMap.size);
-  //     //   console.log('map: ', txStatusMap);
-  //     // }
-  //     const txid = await fetch('http://localhost:3000/consumer-test?id=0')
-  //       .then(response => response.json())
-  //       .then(response => response)
-  //       .catch(error => {
-  //         throw error;
-  //       });
-  //     let jobRunStatus: string = '';
-  //     console.log('txid', txid);
+  test('Error: direct-request wrong url', async () => {
+    jobRunIndex++;
+    const mockRequest = {
+      'job-id': () => String(process.env.CHAINLINK_GET_JOB_ID),
+      params: {
+        get: 'https://examplewebsite.com',
+        path: 'USD',
+      },
+    };
+    await callConsumerContract(mockRequest);
+    await expect(
+      completedJobRun(mockRequest['job-id'](), jobRunIndex, chainlinkCookie)
+    ).rejects.toThrow();
+  });
 
-  //     // while (jobRunStatus !== 'completed')
-  //     jobRunStatus = await fetch(`http://localhost:6688/v2/runs?id=${txid}`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         cookie: chainlinkCookie,
-  //       },
-  //     })
-  //       .then(response => response.json())
-  //       .then(response => response);
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  //   console.log('Job has completed successfully');
-  // });
+  test('Error: direct-request wrong job-id', async () => {
+    jobRunIndex++;
+    const mockRequest = {
+      'job-id': () => '1234',
+      params: {
+        get: 'https://examplewebsite.com',
+        path: 'USD',
+      },
+    };
+    await callConsumerContract(mockRequest);
+    await expect(
+      completedJobRun(mockRequest['job-id'](), jobRunIndex, chainlinkCookie)
+    ).rejects.toThrow();
+  });
 });

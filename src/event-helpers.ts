@@ -74,7 +74,7 @@ export async function executeChainlinkInitiator(encoded_data: string) {
     const data: DirectRequestParams = hexToDirectRequestParams(hex);
     data.payload = encoded_data;
     const response = await executeChainlinkRequest(jobSpecId, data);
-    console.log(`Chainlink Initiator Response:< ${response}$ >`);
+    console.log(`Chainlink Initiator Response:< ${response} >`);
   } catch (err) {
     console.log(`Chainlink Initiator Error:< ${err} >`);
   }

@@ -7,8 +7,8 @@ module.exports = {
     collectCoverageFrom: ['<rootDir>/**/*.ts'],
     coveragePathIgnorePatterns: [''],
     coverageDirectory: '../coverage',
-    globalSetup: '<rootDir>/tests/setup.ts',
-    globalTeardown: '<rootDir>/tests/teardown.ts',
-    testTimeout: 20000,
+    globalSetup: '<rootDir>/integration-tests/setup.ts',
+    globalTeardown: '<rootDir>/integration-tests/teardown.ts',
+    testTimeout: 200000,
   }
   

@@ -4,6 +4,8 @@
 
 (impl-trait .oracle.oracle-callback)
 (use-trait oracle-callback .oracle.oracle-callback)
+;; (impl-trait 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle.oracle-callback)
+;; (use-trait oracle-callback 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle.oracle-callback)
 
 (define-public (oracle-callback-handler (value  (optional (buff 128))))
   (begin
@@ -20,6 +22,7 @@
                     (data (buff 1024)) 
                     (callback <oracle-callback>))                  
   (contract-call? 
+    ;; 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stxlink-token 
     .stxlink-token 
     transfer-and-call
     job-spec-id

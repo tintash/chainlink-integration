@@ -9,6 +9,8 @@ import {
   StacksTransaction,
   TxBroadcastResultRejected,
   getNonce,
+  callReadOnlyFunction,
+  ClarityType,
 } from '@stacks/transactions';
 import { StacksNetwork } from '@stacks/network';
 import { StacksMocknet } from '@stacks/network';
@@ -68,7 +70,11 @@ async function pingStacksBlockchainApi(): Promise<number> {
     const status = await fetch('http://localhost:3999').then(response => response.status);
     return status;
   } catch (error: any) {
-    if (error.code === 'ECONNRESET' || error.code === 'ECONNREFUSED') {
+    if (
+      error.code === 'ECONNRESET' ||
+      error.code === 'ECONNREFUSED' ||
+      error.code === 'ENOTFOUND'
+    ) {
       return await pingStacksBlockchainApi();
     } else throw error;
   }
@@ -133,7 +139,22 @@ async function subscribeTxStatusChange(
   });
 }
 
-async function callConsumerContract(mockRequest: any) {
+async function subscribeAddressTransactions(
+  address: string,
+  client: StacksApiWebSocketClient
+): Promise<void> {
+  return new Promise(async (resolve, reject) => {
+    await client.subscribeAddressTransactions(address, event => {
+      if (event.tx_status === 'success') {
+        resolve();
+      } else if (event.tx_status !== 'pending') {
+        reject();
+      }
+    });
+  });
+}
+
+async function callConsumerContract(mockRequest: any): Promise<StacksTransaction> {
   try {
     const network = new StacksMocknet();
     const txOptions = createDirectRequestTxOptions(network, mockRequest);
@@ -144,9 +165,29 @@ async function callConsumerContract(mockRequest: any) {
     if (error) {
       throw new Error(`${error} with reason: ${txRejected.reason}`);
     }
+    return transaction;
   } catch (error) {
     throw error;
   }
+}
+
+async function callContractReadOnlyFunction(
+  contractAddress: string,
+  contractName: string,
+  functionName: string,
+  network: StacksNetwork,
+  senderAddress: string
+) {
+  // const buffer = bufferCVFromString('');
+  const options = {
+    contractAddress,
+    contractName,
+    functionName,
+    functionArgs: [],
+    network,
+    senderAddress,
+  };
+  return await callReadOnlyFunction(options);
 }
 
 async function isJobIdValid(jobId: string, cookie: string): Promise<boolean> {
@@ -164,6 +205,7 @@ async function isJobIdValid(jobId: string, cookie: string): Promise<boolean> {
     throw error;
   }
 }
+
 async function completedJobRun(
   jobId: string,
   jobRunIndex: number,
@@ -200,19 +242,18 @@ async function completedJobRun(
 
 describe('Integration testing', () => {
   let chainlinkCookie: string = '';
-  let jobRunIndex = 0;
+  let client = {} as StacksApiWebSocketClient;
   beforeAll(async () => {
     try {
       console.log('Waiting for stacks-blockchian-api at localhost:3999');
       await pingStacksBlockchainApi();
       console.log(`stacks-blockchian-api is up. Listening at localhost:3999`);
 
-      const client = await connectWebSocketClient(`ws://localhost:3999`);
+      client = await connectWebSocketClient(`ws://localhost:3999`);
 
       console.log('Deploying smart contracts');
       const deployTxs = await deployContracts(CONTRACT_NAMES, CLARITY_CONTRACTS_PATH, client);
       await Promise.all(deployTxs.map(async txId => subscribeTxStatusChange(txId, client)));
-      client.webSocket.close();
       console.log(`Successfully deployed all contracts, txids:`, deployTxs);
 
       console.log('Getting Chainlink session cookie');
@@ -229,16 +270,28 @@ describe('Integration testing', () => {
     }
   });
 
-  test('Success: direct-request sample resuest 0', async () => {
+  afterAll(async () => {
+    client.webSocket.close();
+  });
+
+  test('Success: check consumer request value', async () => {
     await callConsumerContract(MockRequests[0]);
-    const jobRun = await completedJobRun(MockRequests[0]['job-id'](), jobRunIndex, chainlinkCookie);
-    const { data } = jobRun.data.attributes.result;
-    console.log('result: ', data.result);
-    expect(data.result).toEqual(expect.anything());
+    await subscribeAddressTransactions('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM', client);
+    const result = await callContractReadOnlyFunction(
+      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+      'direct-request',
+      'read-data-value',
+      new StacksMocknet(),
+      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM'
+    );
+    expect(result.type).toBe(ClarityType.ResponseOk);
+    expect(result.type === ClarityType.ResponseOk ? result.value.type : undefined).toBe(
+      ClarityType.OptionalSome
+    );
   });
 
   test('Error: direct-request wrong url', async () => {
-    jobRunIndex++;
+    const jobRunIndex = 1;
     const mockRequest = {
       'job-id': () => String(process.env.CHAINLINK_GET_JOB_ID),
       params: {
@@ -253,7 +306,7 @@ describe('Integration testing', () => {
   });
 
   test('Error: direct-request wrong job-id', async () => {
-    jobRunIndex++;
+    const jobRunIndex = 0;
     const mockRequest = {
       'job-id': () => '1234',
       params: {

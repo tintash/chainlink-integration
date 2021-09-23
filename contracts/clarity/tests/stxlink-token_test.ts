@@ -10,6 +10,7 @@ Clarinet.test({
         const wallet_2 = accounts.get("wallet_2")!;
 
         const wallet1Address = wallet_1.address; // Initial Owner
+        const wallet2Address = wallet_2.address;
         const directRequestParams = [
             "0x3334346664393436386561363437623838633530336461633830383263306134",
             "0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145",
@@ -55,5 +56,90 @@ Clarinet.test({
         block.receipts[5].result 
         .expectOk()
         .expectUint(1999);
+
+        let call = await chain.callReadOnlyFn(
+            "stxlink-token",
+            "get-name",
+            [],
+            wallet_1.address,
+          );
+        
+        call.result.expectOk().expectAscii('STXLINK');
+
+        call = await chain.callReadOnlyFn(
+            "stxlink-token",
+            "get-symbol",
+            [],
+            wallet_1.address,
+          );
+
+        call.result.expectOk().expectAscii('SL');
+
+        call = await chain.callReadOnlyFn(
+            "stxlink-token",
+            "get-decimals",
+            [],
+            wallet_1.address,
+          );
+        call.result.expectOk().expectUint(1);
+        
+
+        call = await chain.callReadOnlyFn(
+            "stxlink-token",
+            "get-total-supply",
+            [],
+            wallet_1.address,
+          );
+        call.result.expectOk().expectUint(4000);
+
+
+        call = await chain.callReadOnlyFn(
+            "stxlink-token",
+            "get-deployer",
+            [],
+            wallet_1.address,
+          );
+        call.result.expectOk().expectPrincipal(deployer.address);
+        
+        block = chain.mineBlock([
+            Tx.contractCall("stxlink-token", "add-principal-to-role", [types.uint(2), types.principal(wallet2Address)], deployer.address),
+            Tx.contractCall("stxlink-token", "remove-principal-from-role", [types.uint(2), types.principal(wallet2Address)], deployer.address),
+            Tx.contractCall("stxlink-token", "remove-principal-from-role", [types.uint(2), types.principal(wallet1Address)], wallet1Address),
+        ]);
+
+        block.receipts[0].result.expectOk().expectBool(true);
+        block.receipts[1].result.expectOk().expectBool(true);
+        block.receipts[2].result.expectErr().expectUint(403);
+
+        block = chain.mineBlock([
+            Tx.contractCall("stxlink-token", "set-token-uri",[types.utf8('dummy-uri')], deployer.address),
+        ]);
+        block.receipts[0].result.expectOk().expectBool(true);
+
+                
+        call = await chain.callReadOnlyFn(
+            "stxlink-token",
+            "get-token-uri",
+            [],
+            wallet_1.address,
+          );
+        call.result.expectOk().expectSome().expectUtf8('dummy-uri');
+
+        block = chain.mineBlock([
+            Tx.contractCall("stxlink-token", "add-principal-to-role", [types.uint(2), types.principal(wallet2Address)], deployer.address),
+            Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(300), types.principal(wallet2Address)], deployer.address),
+            Tx.contractCall("stxlink-token", "burn-tokens", [types.uint(300), types.principal(wallet2Address)], wallet2Address),
+            Tx.contractCall("stxlink-token", "burn-tokens", [types.uint(300), types.principal(wallet2Address)], deployer.address),
+        ]);
+
+        block.receipts[0].result.expectOk().expectBool(true);
+        block.receipts[1].result.expectOk().expectBool(true);
+        block.receipts[2].result.expectOk().expectBool(true);
+        block.receipts[3].result.expectErr().expectUint(403);
+       
+       
+       
     },
+
+    
 });

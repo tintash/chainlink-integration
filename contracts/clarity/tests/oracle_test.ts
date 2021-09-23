@@ -40,6 +40,7 @@ Clarinet.test({
 
             //Checking that request count is still u1 after only one successful request.
             Tx.contractCall("oracle", "get-request-count", [], deployer.address),
+
         ]);
         
         block.receipts[0].result // correct oracle-request
@@ -58,6 +59,20 @@ Clarinet.test({
         let {value} = contract_event;
         let elements = getEventElements(value); //getting response elements of first oracle request
 
+        // Creating the invalid request ID
+        const invalidRequestId = elements.request_id.split('x');
+        invalidRequestId[1] = invalidRequestId[1].split('').reverse().join('');
+        
+        block = chain.mineBlock([
+            Tx.contractCall("oracle", "is-request-present", [elements.request_id], deployer.address),
+            Tx.contractCall("oracle", "is-request-present", [invalidRequestId[0]+'x'+invalidRequestId[1]], deployer.address),
+        ]);
+
+        // Contract has the request ID
+        const [receiptSuccess, receiptFailure] = block.receipts;
+        receiptSuccess.result.expectBool(true);
+        receiptFailure.result.expectBool(false);
+
         let fulfillmentRequestParams = [
             elements.request_id,
             types.principal(deployer.address+".direct-request"),
@@ -66,6 +81,18 @@ Clarinet.test({
             "0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145",
             types.some('0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d'),
         ];
+
+        // const invalidCallbackHandlerFullfillmentRequestParams = [
+        //     elements.request_id,
+        //     types.principal(deployer.address+".direct-request"),
+        //     elements.expiration,
+        //     elements.request_count,
+        //     "0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145",
+        //     types.some('')
+        // ];
+
+       // invalidCallbackHandlerFullfillmentRequestParams[1] =  types.principal(deployer.address+".oracle")
+           
 
         const wrongRequestIdFulfillmentRequestParams = [...fulfillmentRequestParams];
         wrongRequestIdFulfillmentRequestParams[0] = "0x3026caace813773adf1069e4bcd5431e510be93a88c317a646c36d6d50c7f580";
@@ -87,8 +114,12 @@ Clarinet.test({
             //Using Wallet-2 that is listed in oracle as initiator (expecting (ok true)). We have set the public address of Wallet-2 as initiator in oracle.clar for testing the contract owner functionality
             Tx.contractCall("oracle", "fullfill-oracle-request", fulfillmentRequestParams, deployer.address),
 
+
+          //  Tx.contractCall("oracle", "fullfill-oracle-request", invalidCallbackHandlerFullfillmentRequestParams, deployer.address),
+
         ]);
 
+        console.log('Request ID', elements.request_id);
         block.receipts[0].result //request count is u1
         .expectUint(1);
 
@@ -103,5 +134,57 @@ Clarinet.test({
         block.receipts[3].result //correct fulfillemnt request using wallet_2(initiator address)
         .expectOk()
         .expectBool(true);
+
+       // console.log('Callback error', block.receipts[4]);
+
+        // Cancel Request Flow
+        block = chain.mineBlock([
+            // trying to cancel request with invalidate request id (already consumed)
+            Tx.contractCall("oracle", "cancel-request", [elements.request_id], deployer.address),
+            // generating the new request id 
+            Tx.contractCall("oracle", "oracle-request", oraclerequestParams, deployer.address)
+
+        ]);
+
+        const [cancelRequestFailure, oracleRequest]  = block.receipts;
+        event = oracleRequest.events[0];
+        elements = getEventElements(event.contract_event.value);
+
+        // Success: returning false on invalidate request id
+        cancelRequestFailure.result.expectOk().expectBool(false);
+
+
+        block = chain.mineBlock([
+            Tx.contractCall("oracle", "cancel-request", [elements.request_id], deployer.address)
+        ]);
+
+        // Success: returning true with valid request ID
+        block.receipts[0].result.expectOk().expectBool(true);
+
+        const oracleContractAddress = types.principal(deployer.address+".oracle");
+        const directRequestContractAddress =  types.principal(deployer.address+".direct-request");
+
+        const createRequestParams = [
+            "0x3334346664393436386561363437623838633530336461633830383263306134",
+            "0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145",
+            "0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d",
+            oracleContractAddress,
+            directRequestContractAddress,
+            directRequestContractAddress,
+        ];
+
+        block = chain.mineBlock([
+            Tx.contractCall("stxlink-token", "mint-tokens", [types.uint(2000), types.principal(wallet1Address)],  deployer.address),
+            Tx.contractCall("direct-request", "read-data-value", [],  wallet1Address),
+            Tx.contractCall("direct-request", "create-request", createRequestParams, wallet1Address),
+            Tx.contractCall("oracle", "withdraw-token", [types.principal(deployer.address), types.uint(4)], deployer.address),
+            Tx.contractCall("oracle", "withdraw-token", [types.principal(deployer.address), types.uint(1)], deployer.address),     
+        ]);
+
+        block.receipts[3].result.expectErr().expectUint(18);
+
+        block.receipts[4].result.expectOk().expectBool(true);
+       // TODO: check for events 
+
     },
 });

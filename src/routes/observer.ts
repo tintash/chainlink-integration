@@ -14,8 +14,7 @@ import {
   hexToDirectRequestParams,
   paramsToHexPrefixString,
 } from '../helpers';
-
-import { getJobSpecMinPayment, getChainlinkClientSessionCookie } from '../initiator-helpers';
+import { MockRequests } from '../mock/direct-requests';
 
 export function createObserverRouter() {
   const router = express.Router();
@@ -42,8 +41,9 @@ export function createObserverRouter() {
   // For testing purposes only, to be removed
   router.get('/consumer-test', async (req, res) => {
     const network = new StacksMocknet();
+    network.coreApiUrl = String(process.env.STACKS_CORE_API_URL);
     const id = req.query.id === undefined ? 0 : parseInt(String(req.query.id));
-    const txOptions = createDirectRequestTxOptions(network, id);
+    const txOptions = createDirectRequestTxOptions(network, MockRequests[id]);
     try {
       const transaction = await makeContractCall(txOptions);
       const broadcastResult = await broadcastTransaction(transaction, network);
@@ -92,21 +92,6 @@ export function createObserverRouter() {
     }
   });
 
-  router.get('/job-min-payment', async (req, res) => {
-    const { jobId } = req.body;
-    if (jobId === 'undefined' || typeof jobId != 'string')
-      res.status(400).json({ msg: 'bad request body' });
-    try {
-      const cookie: string = await getChainlinkClientSessionCookie();
-      const minPayment = await getJobSpecMinPayment(jobId, cookie);
-      res.status(200).json({
-        minPayment,
-      });
-    } catch (err: any) {
-      res.status(400).json(err.message);
-    }
-  });
-
   router.post('/key-to-buff', (req, res) => {
     const key = req.body.key;
     if (key === 'undefined' || typeof key != 'string')
@@ -125,22 +110,28 @@ export function createObserverRouter() {
   router.use((req, res, next) => {
     const ei_ci_acckey = req.headers['x-chainlink-ea-accesskey'];
     const ei_ci_secret = req.headers['x-chainlink-ea-secret'];
-    if (typeof ei_ci_acckey !== 'undefined' && typeof ei_ci_secret !== 'undefined') {
+    if (typeof ei_ci_acckey !== undefined && typeof ei_ci_secret !== undefined) {
       if (
         ei_ci_acckey === String(process.env.EI_CI_ACCESSKEY) &&
         ei_ci_secret === String(process.env.EI_CI_SECRET)
       ) {
-        res.status(200).json({
-          status: 200,
-          message: 'Success',
-        });
+        res
+          .status(200)
+          .json({
+            status: 200,
+            message: 'Success',
+          })
+          .end();
         return;
       }
     }
-    res.status(404).json({
-      status: 404,
-      message: 'Not Found',
-    });
+    res
+      .status(404)
+      .json({
+        status: 404,
+        message: 'Not Found',
+      })
+      .end();
   });
 
   return router;

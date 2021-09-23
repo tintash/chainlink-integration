@@ -1,0 +1,26 @@
+version: '3'
+services:
+  event_observer:
+    build:
+      context: ../
+      dockerfile: configurations/event-observer/Dockerfile
+    restart: on-failure
+    depends_on:
+      - chainlink
+      - stacks-blockchain
+      # - stacks-blockchain-api
+    ports:
+      - '3000:3000'
+    environment:
+      CHAINLINK_HOST: chainlink
+      CHAINLINK_PORT: 6688
+      STACKS_BLOCKCHAIN_HOST: stacks-blockchain
+      # STACKS_BLOCKCHAIN_API_HOST: stacks-blockchain-api
+      STACKS_CORE_API_URL: http://host.docker.internal:3999
+      CHAINLINK_EI_URL: http://host.docker.internal:3000
+      CHAINLINK_BRIDGE_URL: http://host.docker.internal:3000/adapter
+      EI_CHAINLINKURL: http://host.docker.internal:6688
+    volumes:
+      - ../.env:/event-obserber/.env
+    networks:
+      - backend

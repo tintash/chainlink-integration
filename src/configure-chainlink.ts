@@ -99,7 +99,7 @@ export interface Attributes {
 async function hasExternalInitiator(name: string, cookie: string): Promise<boolean> {
   try {
     const EIs = await chainlinkfetch<ExternalInitiators>(
-      'http://localhost:6688/v2/external_initiators',
+      `http://${String(process.env.CHAINLINK_HOST)}:6688/v2/external_initiators`,
       'GET',
       cookie,
       undefined
@@ -113,7 +113,7 @@ async function hasExternalInitiator(name: string, cookie: string): Promise<boole
 async function hasBridge(name: string, cookie: string): Promise<boolean> {
   try {
     const bridge = await chainlinkfetch<Bridge>(
-      `http://localhost:6688/v2/bridge_types/${name}`,
+      `http://${String(process.env.CHAINLINK_HOST)}:6688/v2/bridge_types/${name}`,
       'GET',
       cookie,
       undefined
@@ -138,7 +138,7 @@ export async function createExternalInitiator(cookie: string): Promise<string> {
       return eiName;
     } else {
       const ei = await chainlinkfetch<NewExternalInitiator>(
-        'http://localhost:6688/v2/external_initiators',
+        `http://${String(process.env.CHAINLINK_HOST)}:6688/v2/external_initiators`,
         'POST',
         cookie,
         body
@@ -174,7 +174,7 @@ export async function createBridge(cookie: string): Promise<string> {
       return bridgeName;
     } else {
       const bridge = await chainlinkfetch<NewBridge>(
-        'http://localhost:6688/v2/bridge_types',
+        `http://${String(process.env.CHAINLINK_HOST)}:6688/v2/bridge_types`,
         'POST',
         cookie,
         body
@@ -202,7 +202,7 @@ export async function createJobs(cookie: string): Promise<void> {
 async function createJob(jobPayload: string, cookie: string, envVar: string): Promise<string> {
   try {
     const job = await chainlinkfetch<NewJob>(
-      'http://localhost:6688/v2/specs',
+      `http://${String(process.env.CHAINLINK_HOST)}:6688/v2/specs`,
       'POST',
       cookie,
       jobPayload

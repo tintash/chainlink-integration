@@ -7,7 +7,10 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node -r dotenv/config .",
+    "docker:start": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml up",
+    "docker:stop": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml down -v -t 0",
     "test": "jest --setupFiles dotenv/config --config ./jest.config.js --coverage --runInBand --detectOpenHandles",
+    "test:integration": "npm run docker:start -- -d && cross-env NODE_ENV=test jest --config ./jest.config.integration.js --coverage --no-cache --runInBand --detectOpenHandles; npm run docker:stop",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:eslint": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe",
     "lint:prettier": "prettier --check src/**/*.{ts,json}",
@@ -28,6 +31,7 @@
     "@types/request": "^2.48.5",
     "@types/supertest": "^2.0.11",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-winston": "^4.1.0",
@@ -40,6 +44,7 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
+    "@stacks/blockchain-api-client": "^0.67.0",
     "@types/cors": "^2.8.10",
     "@types/debug": "^4.1.5",
     "@types/express": "^4.17.12",

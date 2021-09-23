@@ -79,6 +79,7 @@ export async function createOracleFulfillmentTx(
   const oracleFulfillmentFunction = 'fullfill-oracle-request';
   const oraclePaymentKey = String(process.env.STX_ADDR_PRIVATE_KEY);
   const network = new StacksMocknet();
+  network.coreApiUrl = String(process.env.STACKS_CORE_API_URL);
   const fulfillment = linkFulfillment.fulfillment;
   const txOptions: SignedContractCallOptions = {
     contractAddress: oracle.address,

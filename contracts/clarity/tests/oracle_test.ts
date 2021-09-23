@@ -82,11 +82,11 @@ Clarinet.test({
             types.some('0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d'),
         ];
 
-        const wrongRequestIdFulfillmentRequestParams = [...fulfillmentRequestParams];
-        wrongRequestIdFulfillmentRequestParams[0] = "0x3026caace813773adf1069e4bcd5431e510be93a88c317a646c36d6d50c7f580";
+        const invalidRequestIdFulfillmentRequestParams = [...fulfillmentRequestParams];
+        invalidRequestIdFulfillmentRequestParams[0] = "0x3026caace813773adf1069e4bcd5431e510be93a88c317a646c36d6d50c7f580";
         
-        const wrongExpirationFulfillmentRequestParams = [...fulfillmentRequestParams];
-        wrongExpirationFulfillmentRequestParams[3] = types.uint(5);
+        const invalidExpirationFulfillmentRequestParams = [...fulfillmentRequestParams];
+        invalidExpirationFulfillmentRequestParams[3] = types.uint(5);
 
         block = chain.mineBlock([
 
@@ -94,10 +94,10 @@ Clarinet.test({
             Tx.contractCall("oracle", "get-request-count", [], deployer.address),
 
             //Expecting request err-reconstructed-id-not-equal error. //(here request-id sent is incorrect) err-reconstructed-id-not-equal (err u14))
-            Tx.contractCall("oracle", "fullfill-oracle-request", wrongRequestIdFulfillmentRequestParams, deployer.address),
+            Tx.contractCall("oracle", "fullfill-oracle-request", invalidRequestIdFulfillmentRequestParams, deployer.address),
 
             //Expecting request id does not match error. //(here reconstructed-request-id does not match beacuse expiration sent is incorrect) err-reconstructed-id-not-equal (err u14))
-            Tx.contractCall("oracle", "fullfill-oracle-request", wrongExpirationFulfillmentRequestParams, deployer.address),
+            Tx.contractCall("oracle", "fullfill-oracle-request", invalidExpirationFulfillmentRequestParams, deployer.address),
 
             //Using Wallet-2 that is listed in oracle as initiator (expecting (ok true)). We have set the public address of Wallet-2 as initiator in oracle.clar for testing the contract owner functionality
             Tx.contractCall("oracle", "fullfill-oracle-request", fulfillmentRequestParams, deployer.address),

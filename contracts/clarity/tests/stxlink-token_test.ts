@@ -340,6 +340,33 @@ Clarinet.test({
   },
 });
 
+Clarinet.test({
+  name: 'Ensure it runs transfer-update successfuly',
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    const deployer = accounts.get('deployer')!;
+    const wallet_1 = accounts.get('wallet_1')!;
+    const wallet_2 = accounts.get('wallet_2')!;
+    const wallet1Address = wallet_1.address;
+    const minted2kAddress = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6'; // address to which 2k coins are minted initially
+    let block = chain.mineBlock([
+      Tx.contractCall(
+        'stxlink-token',
+        'transfer-update',
+        [
+          types.uint(100),
+          types.principal(minted2kAddress),
+          types.principal(wallet1Address),
+          types.some('0x54657374696e67204d656d6f'),
+        ],
+        minted2kAddress
+      ),
+    ]);
+
+    //Success: Transfer-update
+    block.receipts[0].result.expectOk().expectAscii("sender");
+  },
+});
+
 // Testing minting and burning
 Clarinet.test({
   name: 'Ensure it mint and burn tokens successfully with roles',
@@ -815,5 +842,141 @@ Clarinet.test({
 
     // Expect: requester account wallet1Address to have balance = 1999 (1 stx-link paid for request)
     block.receipts[5].result.expectOk().expectUint(1999);
+  },
+});
+Clarinet.test({
+  name: 'Ensure transfer-and-call success flow',
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    const deployer = accounts.get('deployer')!;
+    const wallet_1 = accounts.get('wallet_1')!;
+    const wallet_2 = accounts.get('wallet_2')!;
+    const minted2kAddress = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6';
+    const wallet1Address = wallet_1.address;
+
+    const oracleContractAddress = types.principal(deployer.address + '.oracle');
+    const directRequestContractAddress = types.principal(deployer.address + '.direct-request');
+    const transfer_and_call_params = [
+      '0x3334346664393436386561363437623838633530336461633830383263306134',
+      '0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145',
+      '0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d',
+      oracleContractAddress,
+      directRequestContractAddress,
+      directRequestContractAddress,
+    ];
+
+    let block = chain.mineBlock([
+      Tx.contractCall(
+        'stxlink-token',
+        'get-balance',
+        [types.principal(minted2kAddress)],
+        minted2kAddress
+      ),
+      Tx.contractCall(
+        'stxlink-token',
+        'transfer-and-call',
+        transfer_and_call_params,
+        minted2kAddress
+      ),
+      Tx.contractCall(
+        'stxlink-token',
+        'get-balance',
+        [types.principal(deployer.address + '.oracle')],
+        wallet1Address
+      ),
+      Tx.contractCall(
+        'stxlink-token',
+        'get-balance',
+        [types.principal(minted2kAddress)],
+        deployer.address
+      ),
+    ]);
+
+    // Expect minted2kAddress to have 2000 balance  initially before job request
+    block.receipts[0].result.expectOk().expectUint(2000);
+
+    // Success: minted2kAddress transfer-and-call function and emit 2 events ftTransferEvent and contractEvent
+    block.receipts[1].result.expectOk();
+    assertEquals(block.receipts[1].events.length, 2);
+
+    const events = block.receipts[1].events;
+    const [ftTransferEvent, contractEvent] = events;
+    const { sender, recipient, amount, asset_identifier } = ftTransferEvent.ft_transfer_event;
+    const { topic, contract_identifier } = contractEvent.contract_event;
+
+    asset_identifier.expectPrincipal(
+      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stxlink-token::stxlink-token'
+    );
+    sender.expectPrincipal('STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6');
+    recipient.expectPrincipal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle');
+    amount.expectInt(1);
+    assertEquals(topic, 'print');
+    assertEquals(contract_identifier, 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oracle');
+
+    // Expect: Oracle balance to be  = 1 after fulfilling a job request
+    block.receipts[2].result.expectOk().expectUint(1);
+
+    // Expect: requester account minted2kAddress to have balance = 1999 (1 stx-link paid for request)
+    block.receipts[3].result.expectOk().expectUint(1999);
+  },
+});
+Clarinet.test({
+  name: 'Ensure transfer-and-call failure when not enough balance',
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    const deployer = accounts.get('deployer')!;
+    const wallet_1 = accounts.get('wallet_1')!;
+    const wallet_2 = accounts.get('wallet_2')!;
+    const minted2kAddress = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6';
+    const wallet1Address = wallet_1.address;
+
+    const oracleContractAddress = types.principal(deployer.address + '.oracle');
+    const directRequestContractAddress = types.principal(deployer.address + '.direct-request');
+    const transfer_and_call_params = [
+      '0x3334346664393436386561363437623838633530336461633830383263306134',
+      '0x5354314854425644334a47394330354a3748424a5448475230474757374b585732384d354a53385145',
+      '0x7b22676574223a2268747470733a2f2f6d696e2d6170692e63727970746f636f6d706172652e636f6d2f646174612f70726963653f6673796d3d455448267473796d733d555344222c2270617468223a22555344227d',
+      oracleContractAddress,
+      directRequestContractAddress,
+      directRequestContractAddress,
+    ];
+
+    let block = chain.mineBlock([
+      Tx.contractCall(
+        'stxlink-token',
+        'get-balance',
+        [types.principal(wallet1Address)],
+        wallet1Address
+      ),
+      Tx.contractCall(
+        'stxlink-token',
+        'transfer-and-call',
+        transfer_and_call_params,
+        wallet1Address
+      ),
+      Tx.contractCall(
+        'stxlink-token',
+        'get-balance',
+        [types.principal(deployer.address + '.oracle')],
+        wallet1Address
+      ),
+      Tx.contractCall(
+        'stxlink-token',
+        'get-balance',
+        [types.principal(wallet1Address)],
+        deployer.address
+      ),
+    ]);
+
+    // Expect wallet1Address to have 0 balance  initially before job request
+    block.receipts[0].result.expectOk().expectUint(0);
+
+    // Failure: Return ok for succesfully running transfer-fail and emit no ftTransfer or contract event
+    block.receipts[1].result.expectOk();
+    assertEquals(block.receipts[1].events.length, 0);
+
+    // Expect: Oracle balance to be  = 0 since request was not a success
+    block.receipts[2].result.expectOk().expectUint(0);
+
+    // Expect: requester account wallet1Address to have balance = 0 unchanged after unsuccessful request
+    block.receipts[3].result.expectOk().expectUint(0);
   },
 });

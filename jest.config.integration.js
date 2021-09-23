@@ -3,7 +3,7 @@ module.exports = {
     testEnvironment: 'node',
     rootDir: 'src',
     testMatch: ['<rootDir>/integration-tests/**/*.ts'],
-    testPathIgnorePatterns: ['<rootDir>/integration-tests/setup.ts', '<rootDir>/integration-tests/teardown.ts'],
+    testPathIgnorePatterns: ['<rootDir>/integration-tests/setup.ts', '<rootDir>/integration-tests/teardown.ts','<rootDir>/integration-tests/helpers.ts'],
     collectCoverageFrom: ['<rootDir>/**/*.ts'],
     coveragePathIgnorePatterns: [''],
     coverageDirectory: '../coverage',

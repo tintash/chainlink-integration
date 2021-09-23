@@ -20,45 +20,38 @@ import {
 
 const CLARITY_CONTRACTS_PATH = '../../contracts/clarity/contracts';
 const CONTRACT_NAMES = [
-  'oracle',
+  'oracle-callback-trait',
+  'oracle-trait',
   'ft-trait',
   'restricted-token-trait',
+  'stxlink-transfer-trait',
   'stxlink-token',
+  'oracle',
   'direct-request',
 ];
+const STACKS_CORE_API_WS_URL = 'ws://localhost:3999';
+const ENV_FILE_PATH = '../../.env';
 
 describe('Integration testing', () => {
   let chainlinkCookie: string = '';
   let client = {} as StacksApiWebSocketClient;
   beforeAll(async () => {
     try {
-      console.log('Waiting for stacks-blockchian-api at localhost:3999');
-      const status = await pingStacksBlockchainApi();
-      console.log(`stacks-blockchian-api is up. Listening at localhost:3999`);
+      await pingStacksBlockchainApi();
+      chainlinkCookie = await getChainlinkClientSessionCookie();
+      client = await connectWebSocketClient(STACKS_CORE_API_WS_URL);
 
-      client = await connectWebSocketClient(`ws://localhost:3999`);
-
-      console.log('Deploying smart contracts');
       const deployTxs = await deployContracts(CONTRACT_NAMES, CLARITY_CONTRACTS_PATH);
       await Promise.all(deployTxs.map(async txId => subscribeTxStatusChange(txId, client)));
-      console.log(`Successfully deployed all contracts, txids:`, deployTxs);
 
-      console.log('Getting Chainlink session cookie');
-      chainlinkCookie = await getChainlinkClientSessionCookie();
+      const envFile = fs.readFileSync(path.join(__dirname, ENV_FILE_PATH));
+      const envConfig = dotenv.parse(envFile);
+      for (const key in envConfig) {
+        process.env[key] = envConfig[key];
+      }
     } catch (error) {
       throw error;
     }
-
-    console.log('Loading envionment variables');
-    const envFile = fs.readFileSync(path.join(__dirname, '../../.env'));
-    const envConfig = dotenv.parse(envFile);
-    for (const key in envConfig) {
-      process.env[key] = envConfig[key];
-    }
-  });
-
-  afterAll(async () => {
-    client.webSocket.close();
   });
 
   test(`Success: get consumer's requested value`, async () => {
@@ -67,19 +60,20 @@ describe('Integration testing', () => {
     // ckeck for valid job-id
     expect(await isJobIdValid(MockRequests[0]['job-id'](), chainlinkCookie)).toBe(true);
     // wait for transaction status to be complete
-    await subscribeAddressTransactions('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM', client);
+    await subscribeAddressTransactions(String(process.env.STX_ADDR), client);
     // read fulfilled value by call read-only function
     const result = await callContractReadOnlyFunction(
-      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+      String(process.env.STX_ADDR),
       'direct-request',
       'read-data-value',
       new StacksMocknet(),
-      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM'
+      String(process.env.STX_ADDR)
     );
-    // contarct read-data-value result should be ok
-    expect(result.type).toBe(ClarityType.ResponseOk);
-    expect(result.type === ClarityType.ResponseOk ? result.value.type : undefined).toBe(
-      ClarityType.OptionalSome
+    // contarct read-data-value result type should not be None
+    expect(result.type).toBe(ClarityType.OptionalSome);
+    // contarct read-data-value result value should be of Buffer type
+    expect(result.type === ClarityType.OptionalSome ? result.value.type : undefined).toBe(
+      ClarityType.Buffer
     );
   });
 
@@ -89,19 +83,20 @@ describe('Integration testing', () => {
     // ckeck for valid job-id
     expect(await isJobIdValid(MockRequests[2]['job-id'](), chainlinkCookie)).toBe(true);
     // wait for transaction status to be complete
-    await subscribeAddressTransactions('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM', client);
+    await subscribeAddressTransactions(String(process.env.STX_ADDR), client);
     // read fulfilled value by call read-only function
     const result = await callContractReadOnlyFunction(
-      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+      String(process.env.STX_ADDR),
       'direct-request',
       'read-data-value',
       new StacksMocknet(),
-      'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM'
+      String(process.env.STX_ADDR)
     );
-    // contarct read-data-value result should be ok
-    expect(result.type).toBe(ClarityType.ResponseOk);
-    expect(result.type === ClarityType.ResponseOk ? result.value.type : undefined).toBe(
-      ClarityType.OptionalSome
+    // contarct read-data-value result type should not be None
+    expect(result.type).toBe(ClarityType.OptionalSome);
+    // contarct read-data-value result value should be of Buffer type
+    expect(result.type === ClarityType.OptionalSome ? result.value.type : undefined).toBe(
+      ClarityType.Buffer
     );
   });
 
@@ -121,6 +116,10 @@ describe('Integration testing', () => {
     // call consumer contract to initiate request
     await callConsumerContract(mockRequest);
     // ckeck for valid job-id
-    await expect(await isJobIdValid(jobId(), chainlinkCookie)).toBe(false);
+    expect(await isJobIdValid(jobId(), chainlinkCookie)).toBe(false);
+  });
+
+  afterAll(() => {
+    client.webSocket.close();
   });
 });

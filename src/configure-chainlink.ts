@@ -1,6 +1,8 @@
 import { response } from 'express';
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
+import fetch from 'node-fetch';
 import { getRequestJob } from './chainlink-jobs/get-request';
 import { postRequestJob } from './chainlink-jobs/post-request';
 // ----------------------------------------------------------------
@@ -241,7 +243,8 @@ async function chainlinkfetch<T>(
 
 function setEnvValue(key: string, value: string) {
   // read file from hdd & split if from a linebreak to a array
-  const ENV_VARS: string[] = fs.readFileSync('./.env', 'utf8').split(os.EOL);
+  const envPath = process.env.NODE_ENV == 'test' ? './tests/.env.test' : '../.env';
+  const ENV_VARS: string[] = fs.readFileSync(path.join(__dirname, envPath), 'utf8').split(os.EOL);
 
   // find the env we want based on the key
   const target = ENV_VARS.indexOf(
@@ -255,5 +258,5 @@ function setEnvValue(key: string, value: string) {
   ENV_VARS.splice(target, 1, `${key}=${value}`);
 
   // write everything back to the file system
-  fs.writeFileSync('./.env', ENV_VARS.join(os.EOL));
+  fs.writeFileSync(path.join(__dirname, envPath), ENV_VARS.join(os.EOL));
 }

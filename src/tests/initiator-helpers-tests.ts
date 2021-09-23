@@ -81,6 +81,16 @@ describe('Tests for fetching session cookie', () => {
       }),
     });
   });
+
+  test('Returns cookie from env variables if it is already defined', async () => {
+    process.env.CHAINLINK_COOKIE =
+      'explorer=%7B%22status%22%3A%22disconnected%22%2C%22url%22%3A%22%22%7D; Path=/; SameSite=Strict; clsession=MTYzMDg3MDMxN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJ2LUNBQUVHYzNSeWFXNW5EQTRBREdOc2MyVnpjMmx2Ymw5cFpBWnpkSEpwYm1jTUlnQWdZVFZqTXpjM1kyTTJOamRqTkRJNU9UZzJabVV3TURWaVl6Smlaamt5WWpNPXxtVt1qY7sE0BIbuS8rX6x9eDjdY1VjIYfSR1bSb7Hv9A==; Expires=Tue, 05 Oct 2021 19:31:57 GMT; Max-Age=2592000; HttpOnly';
+
+    expect.assertions(1);
+    await expect(getChainlinkClientSessionCookie()).resolves.toBe(
+      'explorer=%7B%22status%22%3A%22disconnected%22%2C%22url%22%3A%22%22%7D; Path=/; SameSite=Strict; clsession=MTYzMDg3MDMxN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJ2LUNBQUVHYzNSeWFXNW5EQTRBREdOc2MyVnpjMmx2Ymw5cFpBWnpkSEpwYm1jTUlnQWdZVFZqTXpjM1kyTTJOamRqTkRJNU9UZzJabVV3TURWaVl6Smlaamt5WWpNPXxtVt1qY7sE0BIbuS8rX6x9eDjdY1VjIYfSR1bSb7Hv9A==; Expires=Tue, 05 Oct 2021 19:31:57 GMT; Max-Age=2592000; HttpOnly'
+    );
+  });
 });
 
 describe('Tests for min job spec payment', () => {

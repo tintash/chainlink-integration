@@ -14,9 +14,7 @@ services:
     networks:
       - backend
   chainlink:
-    build:
-      context: '${CHAINLINK_DIR_PATH}'
-      dockerfile: core/chainlink.Dockerfile
+    image: "smartcontract/chainlink:0.10.11"
     restart: on-failure
     env_file: ./chainlink/.env
     environment:

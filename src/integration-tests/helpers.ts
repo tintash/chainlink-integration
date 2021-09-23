@@ -182,7 +182,7 @@ export async function isJobIdValid(jobId: string, cookie: string): Promise<boole
       },
     })
       .then(response => response.json())
-      .then(res => res.data.id == jobId);
+      .then(res => (res.data ? res.data.id == jobId : false));
   } catch (error) {
     throw error;
   }

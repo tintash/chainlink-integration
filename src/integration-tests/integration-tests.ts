@@ -64,6 +64,8 @@ describe('Integration testing', () => {
   test(`Success: get consumer's requested value`, async () => {
     // call consumer contract to initiate request
     await callConsumerContract(MockRequests[0]);
+    // ckeck for valid job-id
+    expect(await isJobIdValid(MockRequests[0]['job-id'](), chainlinkCookie)).toBe(true);
     // wait for transaction status to be complete
     await subscribeAddressTransactions('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM', client);
     // read fulfilled value by call read-only function
@@ -84,6 +86,8 @@ describe('Integration testing', () => {
   test(`Success: post consumer's requested value`, async () => {
     // call consumer contract to initiate request
     await callConsumerContract(MockRequests[2]);
+    // ckeck for valid job-id
+    expect(await isJobIdValid(MockRequests[2]['job-id'](), chainlinkCookie)).toBe(true);
     // wait for transaction status to be complete
     await subscribeAddressTransactions('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM', client);
     // read fulfilled value by call read-only function
@@ -106,7 +110,6 @@ describe('Integration testing', () => {
     const mockRequest = { ...MockRequests[0], params: { get: 'https://examplewebsite.com' } };
     // call consumer contract to initiate request
     await callConsumerContract(mockRequest);
-    // const isvalid = isJobIdValid(mockRequest['job-id'](), chainlinkCookie);
     // ckeck for valid job-id
     expect(await isJobIdValid(mockRequest['job-id'](), chainlinkCookie)).toBe(true);
     await expect(completedJobRun(chainlinkCookie, jobRunIndex)).rejects.toThrow();
@@ -118,6 +121,6 @@ describe('Integration testing', () => {
     // call consumer contract to initiate request
     await callConsumerContract(mockRequest);
     // ckeck for valid job-id
-    await expect(isJobIdValid(jobId(), chainlinkCookie)).rejects.toThrow();
+    await expect(await isJobIdValid(jobId(), chainlinkCookie)).toBe(false);
   });
 });

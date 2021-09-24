@@ -1,4 +1,4 @@
-import { StacksNetwork } from '@stacks/network';
+import { StacksMainnet, StacksMocknet, StacksNetwork, StacksTestnet } from '@stacks/network';
 import {
   BufferCV,
   bufferCVFromString,
@@ -184,4 +184,18 @@ export function createDirectRequestTxOptions(network: StacksNetwork, mockRequest
     anchorMode: 1,
   };
   return txOptions;
+}
+
+export function getStacksNetwork(): StacksNetwork {
+  var network: StacksNetwork;
+  const chainID = String(process.env.STACKS_NETWORK);
+  switch (chainID) {
+    case '0':
+      return new StacksMocknet();
+    case '1':      
+      return new StacksTestnet();
+    case '2':  
+      return new StacksMainnet();
+  }
+  throw new Error('STACKS_CHAIN_ID not set in environment variables');
 }

@@ -1,4 +1,3 @@
-import { StacksMocknet } from '@stacks/network';
 import {
   UIntCV,
   StandardPrincipalCV,
@@ -17,7 +16,7 @@ import {
 } from '@stacks/transactions';
 import { optionalCVOf } from '@stacks/transactions/dist/clarity/types/optionalCV';
 import { getOracleContract } from './event-helpers';
-import { hexToBuffer } from './helpers';
+import { getStacksNetwork, hexToBuffer } from './helpers';
 
 export interface OracleFulfillment {
   requestId: BufferCV;
@@ -78,8 +77,7 @@ export async function createOracleFulfillmentTx(
   const oracle = getOracleContract(chainId);
   const oracleFulfillmentFunction = 'fullfill-oracle-request';
   const oraclePaymentKey = String(process.env.STX_ADDR_PRIVATE_KEY);
-  const network = new StacksMocknet();
-  network.coreApiUrl = String(process.env.STACKS_CORE_API_URL);
+  const network = getStacksNetwork();
   const fulfillment = linkFulfillment.fulfillment;
   const txOptions: SignedContractCallOptions = {
     contractAddress: oracle.address,

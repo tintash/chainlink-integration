@@ -31,6 +31,7 @@ services:
   stacks-blockchain-api:
     image: "blockstack/stacks-blockchain-api"
     restart: on-failure
+    env_file: ../.env
     environment:
       PG_HOST: postgres
       PG_PORT: 5432
@@ -45,7 +46,6 @@ services:
       STACKS_CORE_RPC_HOST: stacks-blockchain
       STACKS_CORE_RPC_PORT: 20443
       NODE_ENV: development
-      STACKS_CHAIN_ID: 0x80000000
     ports:
       - "3999:3999"
       - "9153:9153"

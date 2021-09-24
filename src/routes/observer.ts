@@ -7,10 +7,10 @@ import {
   makeContractCall,
   TxBroadcastResultRejected,
 } from '@stacks/transactions';
-import { StacksMocknet } from '@stacks/network';
 import {
   bufferToHexPrefixString,
   createDirectRequestTxOptions,
+  getStacksNetwork,
   hexToDirectRequestParams,
   paramsToHexPrefixString,
 } from '../helpers';
@@ -40,8 +40,7 @@ export function createObserverRouter() {
 
   // For testing purposes only, to be removed
   router.get('/consumer-test', async (req, res) => {
-    const network = new StacksMocknet();
-    network.coreApiUrl = String(process.env.STACKS_CORE_API_URL);
+    const network = getStacksNetwork();
     const id = req.query.id === undefined ? 0 : parseInt(String(req.query.id));
     const txOptions = createDirectRequestTxOptions(network, MockRequests[id]);
     try {

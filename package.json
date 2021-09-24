@@ -11,7 +11,7 @@
     "docker:stop": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml stop",
     "docker:clean": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml down -v -t 0",
     "test": "jest --setupFiles dotenv/config --config ./jest.config.js --coverage --runInBand --detectOpenHandles",
-    "test:integration": "npm run docker:start -- -d && cross-env NODE_ENV=test jest --config ./jest.config.integration.js --coverage --no-cache --runInBand --detectOpenHandles; npm run docker:stop",
+    "test:integration": "npm run docker:start -- -d && cross-env NODE_ENV=test jest --config ./jest.config.integration.js --coverage --no-cache --runInBand --detectOpenHandles; npm run docker:clean",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:eslint": "eslint . --ext .js,.jsx,.ts,.tsx -f codeframe",
     "lint:prettier": "prettier --check src/**/*.{ts,json}",

@@ -22,9 +22,9 @@ const CLARITY_CONTRACTS_PATH = '../../contracts/clarity/contracts';
 const CONTRACT_NAMES = [
   'oracle-callback-trait',
   'oracle-trait',
+  'stxlink-transfer-trait',
   'ft-trait',
   'restricted-token-trait',
-  'stxlink-transfer-trait',
   'stxlink-token',
   'oracle',
   'direct-request',
@@ -38,8 +38,8 @@ describe('Integration testing', () => {
   beforeAll(async () => {
     try {
       await pingStacksBlockchainApi();
-      chainlinkCookie = await getChainlinkClientSessionCookie();
       client = await connectWebSocketClient(STACKS_CORE_API_WS_URL);
+      chainlinkCookie = await getChainlinkClientSessionCookie();
 
       const deployTxs = await deployContracts(CONTRACT_NAMES, CLARITY_CONTRACTS_PATH);
       await Promise.all(deployTxs.map(async txId => subscribeTxStatusChange(txId, client)));

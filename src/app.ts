@@ -21,7 +21,7 @@ export function startApiServer(): Server {
   app.use('/adapter', createAdapterRouter());
   app.use('/', createObserverRouter());
 
-  const port = parseInt(String(process.env.PORT)) || 3000;
+  const port = parseInt(String(process.env.PORT)) || 3501;
   app.set('port', port);
   const server = http.createServer(app);
   server.listen(port, '0.0.0.0');

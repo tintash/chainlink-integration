@@ -21,7 +21,7 @@ describe('Tests implementation for createExternalInitiator', () => {
           id: '1',
           attributes: {
             name: 'stx-cl-ei',
-            url: 'http://localhost:3000',
+            url: 'http://localhost:3501',
             accessKey: '8241df945ba94ca29b6778540cf39028',
             outgoingToken: 'VlwmXbx48Dwxl68QjjW8T6qDJhP29OK/LcmSIVN4vtno7ojQASCuGSgrpy9MC4gD',
             createdAt: '2021-09-03T16:45:52.950552+05:00',
@@ -58,7 +58,7 @@ describe('Tests implementation for createExternalInitiator', () => {
         id: 'stx-cl-ei',
         attributes: {
           name: 'stx-cl-ei',
-          url: 'http://localhost:3000',
+          url: 'http://localhost:3501',
           incomingAccessKey: 'cf1de741a8094538a18c1700e9b6430a',
           incomingSecret: 'dU9ICdhLFnI2dru905zZv6MbsXwwI6qIP5pQRYmECZsI5bZTM1hXIEMCveVOoCHS',
           outgoingToken: 'D9ZWnEiRMWydufOk/VSPNeV3rRePviPmnyMpVj4dVmAJMdX1U5u/eF0tE+tIiysX',
@@ -68,7 +68,7 @@ describe('Tests implementation for createExternalInitiator', () => {
     };
     const body2 = JSON.stringify({
       name: 'stx-cl-ei',
-      url: 'http://localhost:3000',
+      url: 'http://localhost:3501',
     });
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected)));
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected2)));
@@ -145,7 +145,7 @@ describe('Tests implementation for createBridge', () => {
         id: 'stx-cl-bridge',
         attributes: {
           name: 'stx-cl-bridge',
-          url: 'http://localhost:3000/adapter',
+          url: 'http://localhost:3501/adapter',
           confirmations: 0,
           outgoingToken: 'MoMyMPLOxhJnehul/Va4a3Oar4Rc8yDJ',
           minimumContractPayment: null,

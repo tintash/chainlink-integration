@@ -3,7 +3,7 @@ services:
   pg_chainlink:
     image: 'postgres'
     ports:
-      - '5432:5432'
+      - '5491:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
@@ -17,11 +17,11 @@ services:
     image: "smartcontract/chainlink:0.10.11"
     restart: on-failure
     env_file: ./chainlink/.env
-    environment:
-      STACKS_NODE_URL: http://stacks-blockchain-api:3999
+    # environment:
+    #   STACKS_NODE_URL: http://stacks-blockchain-api:3999
     depends_on:
       - pg_chainlink
-      - stacks-blockchain-api
+      # - stacks-blockchain-api
     ports:
       - '6688:6688'
     volumes:
@@ -29,3 +29,5 @@ services:
     command: node start --password /chainlink/password.txt --api /chainlink/apicredentials.txt
     networks:
       - backend
+    extra_hosts:
+    - "host.docker.internal:host-gateway"

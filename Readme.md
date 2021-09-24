@@ -83,7 +83,7 @@ amount = 10000000000000000
 # mnemonic = "elevator pulse copper license toilet kid city render can useful below toward collect employ credit nice carpet hello family wool bicycle unique fire spider"
 
 [[events_observer]]
-endpoint = "host.docker.internal:3000"
+endpoint = "host.docker.internal:3501"
 retry_count = 255
 events_keys = ["*"]
 ```
@@ -114,9 +114,9 @@ Add following configuration flags in `.env` file.
 
 ```.env
 CHAINLINK_EI_NAME = {EXTERNAL_INITIATOR_NAME}
-CHAINLINK_EI_URL = http://localhost:3000
+CHAINLINK_EI_URL = http://localhost:3501
 CHAINLINK_BRIDGE_NAME = {EXTERNAL_ADAPTER_NAME}
-CHAINLINK_BRIDGE_URL = http://localhost:3000/adapter
+CHAINLINK_BRIDGE_URL = http://localhost:3501/adapter
 ```
 
 Set `CONFIGURE_CHAINLINK` to `true` to automate the process of creating External Initiator(EI), and External Adapter(EA) of provided names if they don't exist already. Otherwise manually create them.

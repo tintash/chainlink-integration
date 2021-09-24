@@ -1,3 +1,5 @@
+(use-trait oracle-callback .oracle-callback-trait.oracle-callback)
+(use-trait stxlink-transfer-trait .stxlink-transfer-trait.stxlink-transfer-trait)
 
 (define-trait ft-trait
   (
@@ -21,5 +23,10 @@
 
     ;; an optional URI that represents metadata of this token
     (get-token-uri () (response (optional (string-utf8 256)) uint))
+
+    ;; transfer and call implementation similar to ERC-677 
+    (transfer-and-call 
+      ((buff 66) (buff 84) (buff 1024) principal <stxlink-transfer-trait> <oracle-callback>) 
+        (response bool bool))
   )
 )

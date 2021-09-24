@@ -166,56 +166,6 @@ describe('Tests implementation for createBridge', () => {
     });
   });
 
-  xit('Creates and returns bridge name when it does not already exist', async () => {
-    const cookie = 'validCookie';
-    const response = {
-      ok: undefined,
-      status: 404,
-    };
-    const expected2 = {
-      ok: true,
-      status: 201,
-      data: {
-        type: 'bridges',
-        id: 'stx-cl-bridge',
-        attributes: {
-          name: 'stx-cl-bridge',
-          url: 'http: //localhost:3000/adapter',
-          confirmations: 0,
-          incomingToken: '8R/TWk/GI+nV+bqzdcmt3HnfvMIzdMzH',
-          outgoingToken: '3EsNQZbgWk3wFB9eWZYdiAUTeeBHrV0u',
-          minimumContractPayment: null,
-          createdAt: '2021-09-08T01:15:06.450299+05:00',
-        },
-      },
-    };
-    const body2 = JSON.stringify({
-      name: 'stx-cl-bridge',
-      url: 'http://localhost:3000/adapter',
-    });
-    mockfetch.mockImplementationOnce(() => Promise.resolve(new Response(JSON.stringify(response))));
-    mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected2)));
-
-    await expect(createBridge(cookie)).resolves.toBe('stx-cl-bridge');
-    expect(mockfetch).toHaveBeenCalledTimes(2);
-    expect(mockfetch).toHaveBeenNthCalledWith(1, 'http://localhost:6688/v2/bridge_types', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        cookie: cookie,
-      },
-      body: undefined,
-    });
-    expect(mockfetch).toHaveBeenNthCalledWith(2, 'http://localhost:6688/v2/bridge_types', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        cookie: cookie,
-      },
-      body: body2,
-    });
-  });
-
   test('Throws exception when cookie is invalid or session is expired', async () => {
     const bridge = 'stx-cl-bridge';
     const cookie = 'invalidCookie';

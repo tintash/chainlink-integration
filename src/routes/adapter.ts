@@ -12,7 +12,6 @@ export function createAdapterRouter() {
 
   router.post('/', async (req, res) => {
     try {
-      console.log(`Chainlink Callback Body:< ${req.body} >`);
       const result = String(req.body.data.result);
       const fulfillment = parseOracleRequestValue(req.body.data.payload);
       const linkFulfillment: ChainlinkFulfillmentResponse = {
@@ -21,7 +20,6 @@ export function createAdapterRouter() {
       };
       const response = await createOracleFulfillmentTx(linkFulfillment, ChainID.Testnet);
       const txid = response.txid();
-      console.log(`Chainlink Adapter Callback Tx:< 0x${txid} >`);
       res.status(200).json({
         value: result,
         data: req.body.data,

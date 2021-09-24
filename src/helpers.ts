@@ -32,7 +32,6 @@ export async function executeChainlinkRequest(jobId: string, data: DirectRequest
     headers: createChainlinkRequestHeaders(),
     json: data,
   };
-  console.log(`Chainlink Initiator Params:< ${options} >`);
 
   return new Promise((resolve, reject) => {
     request(options, (error: any, response: unknown, body: any) => {
@@ -164,7 +163,7 @@ export function createDirectRequestTxOptions(network: StacksNetwork, mockRequest
   const senderPrincipalBuff = bufferToHexPrefixString(
     Buffer.from(String(process.env.TEST_ACC_STX))
   );
-  const oracle = getOracleContract(ChainID.Testnet)
+  const oracle = getOracleContract(ChainID.Testnet);
   const txOptions = {
     contractAddress: consumerAddress,
     contractName: 'direct-request',
@@ -187,14 +186,13 @@ export function createDirectRequestTxOptions(network: StacksNetwork, mockRequest
 }
 
 export function getStacksNetwork(): StacksNetwork {
-  var network: StacksNetwork;
   const chainID = String(process.env.STACKS_NETWORK);
   switch (chainID) {
     case '0':
       return new StacksMocknet();
-    case '1':      
+    case '1':
       return new StacksTestnet();
-    case '2':  
+    case '2':
       return new StacksMainnet();
   }
   throw new Error('STACKS_CHAIN_ID not set in environment variables');

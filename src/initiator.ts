@@ -12,8 +12,7 @@ export async function processNewBlock(chainId: ChainID, msg: CoreNodeBlockMessag
         isOracleContract(event.contract_event.contract_identifier) &&
         event.contract_event.topic === printTopic
       ) {
-        const result = await executeChainlinkInitiator(event.contract_event.raw_value);
-        return result;
+        return await executeChainlinkInitiator(event.contract_event.raw_value);
       }
     }
   }

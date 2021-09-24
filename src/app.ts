@@ -18,11 +18,8 @@ export function startApiServer(): Server {
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(logger);
 
-  const adapterRouter = createAdapterRouter();
-  const observerRouter = createObserverRouter();
-
-  app.use('/adapter', adapterRouter);
-  app.use('/', observerRouter);
+  app.use('/adapter', createAdapterRouter());
+  app.use('/', createObserverRouter());
 
   const port = parseInt(String(process.env.PORT)) || 3000;
   app.set('port', port);
@@ -40,8 +37,7 @@ export function startApiServer(): Server {
 }
 
 async function configureChainlink(): Promise<void> {
-
-  if ((String(process.env.CONFIGURE_CHAINLINK) == "false")) return;
+  if (String(process.env.CONFIGURE_CHAINLINK) == 'false') return;
   const cookie = await getChainlinkClientSessionCookie();
   Promise.all([createExternalInitiator(cookie), createBridge(cookie)]).then(
     ([eiName, bridgeName]) => {
@@ -51,6 +47,7 @@ async function configureChainlink(): Promise<void> {
     }
   );
 }
+
 configureChainlink();
 export const App = startApiServer();
 console.log('Server initiated!');

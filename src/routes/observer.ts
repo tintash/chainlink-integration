@@ -22,7 +22,7 @@ export function createObserverRouter() {
 
   router.post('/new_block', (req, res) => {
     const core_message: CoreNodeBlockMessage = req.body;
-    const _ = processNewBlock(ChainID.Testnet, core_message);
+    processNewBlock(ChainID.Testnet, core_message);
     res.sendStatus(200).end();
   });
 
@@ -68,9 +68,9 @@ export function createObserverRouter() {
       const value = req.body[key].toString();
       if (value && value !== 'undefined') elements[key] = value;
     });
-
-    if (Object.keys(elements).length === 0) res.status(400).json({ msg: 'bad request body' });
-
+    if (Object.keys(elements).length === 0) {
+      res.status(400).json({ msg: 'bad request body' });
+    }
     try {
       const result = paramsToHexPrefixString(elements);
       res.status(200).json(result);

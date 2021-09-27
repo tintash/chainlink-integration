@@ -1,4 +1,4 @@
-;; consumer
+;; consumer-contract
 
 (define-data-var data-value (optional (buff 128)) none)
 

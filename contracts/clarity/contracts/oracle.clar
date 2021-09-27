@@ -141,7 +141,3 @@
                 none))))  
 
 (map-set contract-owners tx-sender true)
-
-;; Following are for clarinet testings
-;; TODO: remove for testnet
-(map-set contract-owners 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM true) 

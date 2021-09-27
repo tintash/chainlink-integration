@@ -74,11 +74,6 @@
     (asserts! (is-eq tx-sender sender) (err u4)) ;; Ensure the originator is the sender principal
     (ft-transfer? stxlink-token amount sender recipient) ) ) ;; Transfer
 
-(define-public (transfer-update (amount uint) (sender principal) (recipient principal ) (memo (optional (buff 34) )))
-  (ok "sender")
-) ;; Transfer
-
-
 ;; Role Based Access Control
 ;; --------------------------------------------------------------------------
 (define-constant OWNER_ROLE u0) ;; Can manage RBAC
@@ -257,7 +252,4 @@
 
 ;; Initialize at deployment
 (initialize "STXLINK" "SL" u1 tx-sender)
-;; Add MINTER_ROLE to deployer
-(add-principal-to-role MINTER_ROLE tx-sender)
-;; Mint 2000 stx-link to test address
-(mint-tokens u2000 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6)
+

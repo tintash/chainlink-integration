@@ -340,33 +340,6 @@ Clarinet.test({
   },
 });
 
-Clarinet.test({
-  name: 'Ensure it runs transfer-update successfuly',
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const deployer = accounts.get('deployer')!;
-    const wallet_1 = accounts.get('wallet_1')!;
-    const wallet_2 = accounts.get('wallet_2')!;
-    const wallet1Address = wallet_1.address;
-    const minted2kAddress = 'STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6'; // address to which 2k coins are minted initially
-    let block = chain.mineBlock([
-      Tx.contractCall(
-        'stxlink-token',
-        'transfer-update',
-        [
-          types.uint(100),
-          types.principal(minted2kAddress),
-          types.principal(wallet1Address),
-          types.some('0x54657374696e67204d656d6f'),
-        ],
-        minted2kAddress
-      ),
-    ]);
-
-    //Success: Transfer-update
-    block.receipts[0].result.expectOk().expectAscii("sender");
-  },
-});
-
 // Testing minting and burning
 Clarinet.test({
   name: 'Ensure it mint and burn tokens successfully with roles',

@@ -16,6 +16,8 @@ import {
   subscribeAddressTransactions,
   subscribeTxStatusChange,
   callContractReadOnlyFunction,
+  addMinterRole,
+  mintStxLink,
 } from './helpers';
 
 const CLARITY_CONTRACTS_PATH = '../../contracts/clarity/contracts';
@@ -49,6 +51,8 @@ describe('Integration testing', () => {
       for (const key in envConfig) {
         process.env[key] = envConfig[key];
       }
+      await addMinterRole();
+      await mintStxLink();
     } catch (error) {
       throw error;
     }

@@ -4,8 +4,6 @@ import { StacksApiWebSocketClient } from '@stacks/blockchain-api-client';
 import { StacksMocknet, StacksNetwork } from '@stacks/network';
 import {
   AnchorMode,
-  standardPrincipalCVFromAddress,
-  UIntCV,
   broadcastTransaction,
   callReadOnlyFunction,
   getNonce,
@@ -157,10 +155,12 @@ export async function callConsumerContract(mockRequest: any): Promise<StacksTran
   }
 }
 
-export async function addMinterRole(): Promise<StacksTransaction> {
+export async function addMinterRole(
+  network: StacksNetwork,
+  nonce: bigint
+): Promise<StacksTransaction> {
   try {
-    const network = new StacksMocknet();
-    const txOptions = addMinterRoleTxOptions(network);
+    const txOptions = addMinterRoleTxOptions(network, nonce);
     const transaction = await makeContractCall(txOptions);
     const broadcastResult = await broadcastTransaction(transaction, network);
     const txRejected = broadcastResult as TxBroadcastResultRejected;
@@ -174,10 +174,12 @@ export async function addMinterRole(): Promise<StacksTransaction> {
   }
 }
 
-export async function mintStxLink(): Promise<StacksTransaction> {
+export async function mintStxLink(
+  network: StacksNetwork,
+  nonce: bigint
+): Promise<StacksTransaction> {
   try {
-    const network = new StacksMocknet();
-    const txOptions = mintTxOptions(network);
+    const txOptions = mintTxOptions(network, nonce);
     const transaction = await makeContractCall(txOptions);
     const broadcastResult = await broadcastTransaction(transaction, network);
     const txRejected = broadcastResult as TxBroadcastResultRejected;
@@ -191,42 +193,36 @@ export async function mintStxLink(): Promise<StacksTransaction> {
   }
 }
 
-function addMinterRoleTxOptions(network: StacksNetwork) {
+function addMinterRoleTxOptions(network: StacksNetwork, nonce: bigint) {
   const stxLinkTokenAddress = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
 
- 
   const txOptions = {
     contractAddress: stxLinkTokenAddress,
     contractName: 'stxlink-token',
     functionName: 'add-principal-to-role',
-    functionArgs: [
-      uintCV(4),
-      standardPrincipalCV(stxLinkTokenAddress),
-    ],
+    functionArgs: [uintCV(1), standardPrincipalCV(stxLinkTokenAddress)],
     senderKey: String(process.env.STX_ADDR_PRIVATE_KEY),
     validateWithAbi: true,
     network,
-    anchorMode: 1,
+    nonce,
+    anchorMode: AnchorMode.Any,
   };
   return txOptions;
 }
 
-function mintTxOptions(network: StacksNetwork) {
+function mintTxOptions(network: StacksNetwork, nonce: bigint) {
   const stxLinkTokenAddress = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
 
- 
   const txOptions = {
     contractAddress: stxLinkTokenAddress,
     contractName: 'stxlink-token',
     functionName: 'mint-tokens',
-    functionArgs: [
-      uintCV(2000),
-      standardPrincipalCV('STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6'),
-    ],
+    functionArgs: [uintCV(2000), standardPrincipalCV('STB44HYPYAT2BB2QE513NSP81HTMYWBJP02HPGK6')],
     senderKey: String(process.env.STX_ADDR_PRIVATE_KEY),
     validateWithAbi: true,
     network,
-    anchorMode: 1,
+    nonce,
+    anchorMode: AnchorMode.Any,
   };
   return txOptions;
 }
@@ -238,7 +234,6 @@ export async function callContractReadOnlyFunction(
   network: StacksNetwork,
   senderAddress: string
 ) {
-  // const buffer = bufferCVFromString('');
   const options = {
     contractAddress,
     contractName,

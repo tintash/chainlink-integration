@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ClarityType } from '@stacks/transactions';
+import { ClarityType, getNonce } from '@stacks/transactions';
 import { StacksMocknet } from '@stacks/network';
 import { getChainlinkClientSessionCookie } from '../initiator-helpers';
 import { connectWebSocketClient, StacksApiWebSocketClient } from '@stacks/blockchain-api-client';
@@ -42,7 +42,6 @@ describe('Integration testing', () => {
       await pingStacksBlockchainApi();
       client = await connectWebSocketClient(STACKS_CORE_API_WS_URL);
       chainlinkCookie = await getChainlinkClientSessionCookie();
-
       const deployTxs = await deployContracts(CONTRACT_NAMES, CLARITY_CONTRACTS_PATH);
       await Promise.all(deployTxs.map(async txId => subscribeTxStatusChange(txId, client)));
 
@@ -51,8 +50,13 @@ describe('Integration testing', () => {
       for (const key in envConfig) {
         process.env[key] = envConfig[key];
       }
-      await addMinterRole();
-      await mintStxLink();
+
+      const network = new StacksMocknet();
+      const nonce = await getNonce(String(process.env.STX_ADDR), network);
+      const addMinterRoleTx = await addMinterRole(network, nonce);
+      await subscribeTxStatusChange(addMinterRoleTx.txid(), client);
+      const mintStxLinkTx = await mintStxLink(network, nonce + BigInt(1));
+      await subscribeTxStatusChange(mintStxLinkTx.txid(), client);
     } catch (error) {
       throw error;
     }
@@ -61,9 +65,13 @@ describe('Integration testing', () => {
   test(`Success: get consumer's requested value`, async () => {
     // call consumer contract to initiate request
     await callConsumerContract(MockRequests[0]);
+    // check for consumer contract transaction to be complete.
+    await expect(
+      subscribeAddressTransactions(String(process.env.TEST_ACC_STX), client)
+    ).resolves.not.toThrow();
     // ckeck for valid job-id
     expect(await isJobIdValid(MockRequests[0]['job-id'](), chainlinkCookie)).toBe(true);
-    // wait for transaction status to be complete
+    // wait for fulfillment transaction status to be complete
     await subscribeAddressTransactions(String(process.env.STX_ADDR), client);
     // read fulfilled value by call read-only function
     const result = await callContractReadOnlyFunction(
@@ -84,6 +92,10 @@ describe('Integration testing', () => {
   test(`Success: post consumer's requested value`, async () => {
     // call consumer contract to initiate request
     await callConsumerContract(MockRequests[2]);
+    // check for consumer contract transaction to be complete.
+    await expect(
+      subscribeAddressTransactions(String(process.env.TEST_ACC_STX), client)
+    ).resolves.not.toThrow();
     // ckeck for valid job-id
     expect(await isJobIdValid(MockRequests[2]['job-id'](), chainlinkCookie)).toBe(true);
     // wait for transaction status to be complete
@@ -109,6 +121,10 @@ describe('Integration testing', () => {
     const mockRequest = { ...MockRequests[0], params: { get: 'https://examplewebsite.com' } };
     // call consumer contract to initiate request
     await callConsumerContract(mockRequest);
+    // check for consumer contract transaction to be complete.
+    await expect(
+      subscribeAddressTransactions(String(process.env.TEST_ACC_STX), client)
+    ).resolves.not.toThrow();
     // ckeck for valid job-id
     expect(await isJobIdValid(mockRequest['job-id'](), chainlinkCookie)).toBe(true);
     await expect(completedJobRun(chainlinkCookie, jobRunIndex)).rejects.toThrow();
@@ -119,6 +135,10 @@ describe('Integration testing', () => {
     const mockRequest = { ...MockRequests[0], 'job-id': jobId };
     // call consumer contract to initiate request
     await callConsumerContract(mockRequest);
+    // check for consumer contract transaction to be complete.
+    await expect(
+      subscribeAddressTransactions(String(process.env.TEST_ACC_STX), client)
+    ).resolves.not.toThrow();
     // ckeck for valid job-id
     expect(await isJobIdValid(jobId(), chainlinkCookie)).toBe(false);
   });

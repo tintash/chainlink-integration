@@ -179,6 +179,7 @@ export function createDirectRequestTxOptions(network: StacksNetwork, mockRequest
     senderKey: String(process.env.TEST_ACC_PAYMENT_KEY),
     validateWithAbi: true,
     network,
+    fee: new BigNum(100000),
     postConditions: [postCondition],
     anchorMode: 1,
   };
@@ -196,4 +197,71 @@ export function getStacksNetwork(): StacksNetwork {
       return new StacksMainnet();
   }
   throw new Error('STACKS_CHAIN_ID not set in environment variables');
+}
+
+export async function getTxParamsAndEvents(txId: string): Promise<any> {
+  return fetch(`https://stacks-node-api.testnet.stacks.co/extended/v1/tx/${txId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+    .then(response => response.json())
+    .then(res => {
+      if (!res) throw new Error('TxID does not exist');
+      else if (res.tx_id == txId && res.contract_call.function_args.length == 0) {
+        throw new Error('No function args');
+      }
+      const txParams = res.contract_call.function_args;
+      const txEvents = res.events;
+      return { txParams, txEvents };
+    });
+}
+//
+export async function formatParams(paramArray: any) {
+  const paramNames: any[] = [];
+  const paramValues: any[] = [];
+
+  paramArray.forEach((e: any) => {
+    const { repr, type, name } = e;
+    if (repr && name) {
+      paramNames.push(name);
+      if (type.includes('buff')) {
+        paramValues.push(bufferCVFromString(hexToString(repr.replace('0x', ''))));
+      } else paramValues.push(contractPrincipalCV(repr.substring(0, 41), repr.substring(42)));
+    }
+  });
+
+  return { paramNames, paramValues };
+}
+export function hexToString(hex: string) {
+  var string = '';
+  for (var i = 0; i < hex.length; i += 2) {
+    string += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+  }
+  return string;
+}
+
+export function extractTransferredAmount(events: any) {
+  var amount = '';
+  for (var i = 0; i < events.length; i++) {
+    const { event_type, asset } = events[i];
+    if (event_type == 'fungible_token_asset' && asset.asset_event_type == 'transfer') {
+      amount = asset.amount;
+      break;
+    }
+  }
+  return amount;
+}
+
+export function extractData(events: any) {
+  var data = '';
+  for (var i = 0; i < events.length; i++) {
+    const { event_type, contract_log } = events[i];
+    if (event_type == 'smart_contract_log' && contract_log.topic == 'print') {
+      data = contract_log.value.hex;
+      break;
+    }
+  }
+  return data;
 }

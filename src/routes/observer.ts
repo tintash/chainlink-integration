@@ -22,7 +22,10 @@ export function createObserverRouter() {
 
   router.post('/new_block', (req, res) => {
     const core_message: CoreNodeBlockMessage = req.body;
-    processNewBlock(ChainID.Testnet, core_message);
+    if (String(process.env.ENABLE_ORACLE_LISTENER) !== 'true') {
+      // only run if oracle listener is not enabled
+      processNewBlock(ChainID.Testnet, core_message);
+    }
     res.sendStatus(200).end();
   });
 
@@ -35,6 +38,14 @@ export function createObserverRouter() {
   });
 
   router.post('/drop_mempool_tx', (req, res) => {
+    res.sendStatus(200);
+  });
+
+  router.post('/new_microblocks', (req, res) => {
+    res.sendStatus(200);
+  });
+
+  router.post('/attachments/new', (req, res) => {
     res.sendStatus(200);
   });
 

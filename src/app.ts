@@ -6,9 +6,13 @@ import { addAsync } from '@awaitjs/express';
 import { createAdapterRouter } from './routes/adapter';
 import { createObserverRouter } from './routes/observer';
 import morgan from 'morgan';
+import { ChainID } from '@stacks/transactions';
 import * as bodyParser from 'body-parser';
 import { createExternalInitiator, createBridge, createJobs } from './configure-chainlink';
 import { getChainlinkClientSessionCookie } from './initiator-helpers';
+import { executeChainlinkInitiatorFromObserver, getOracleContractPrincipal } from './event-helpers';
+import { io } from 'socket.io-client';
+
 
 export function startApiServer(): Server {
   const app = addAsync(express());
@@ -48,6 +52,30 @@ async function configureChainlink(): Promise<void> {
   );
 }
 
+async function oracleContractListner() {
+  if (String(process.env.ENABLE_ORACLE_LISTENER) == 'true') {
+    const socket = io(String(process.env.SOCKET_URL), {
+      query: {
+        subscriptions: Array.from(
+          new Set([`address-transaction:${getOracleContractPrincipal(ChainID.Testnet)}`])
+        ).join(','),
+      },
+    });
+    socket.on('address-transaction', (address, data) => {
+      const { tx_status, tx_type, contract_call } = data.tx;
+      if (
+        tx_status == 'success' &&
+        tx_type == 'contract_call' &&
+        contract_call.function_name == 'create-request'
+      ) {
+        executeChainlinkInitiatorFromObserver(data.tx.tx_id);
+      }
+    });
+  }
+}
+oracleContractListner();
 configureChainlink();
 export const App = startApiServer();
 console.log('Server initiated!');
+
+console.log(`address-transaction:${getOracleContractPrincipal(ChainID.Testnet)}`);

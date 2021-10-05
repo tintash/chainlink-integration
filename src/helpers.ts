@@ -190,7 +190,9 @@ export function getStacksNetwork(): StacksNetwork {
   const chainID = String(process.env.STACKS_NETWORK);
   switch (chainID) {
     case '0':
-      return new StacksMocknet();
+      const network = new StacksMocknet();
+      network.coreApiUrl = String(process.env.STACKS_CORE_API_URL);
+      return network;
     case '1':
       return new StacksTestnet();
     case '2':

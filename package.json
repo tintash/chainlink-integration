@@ -7,6 +7,7 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node -r dotenv/config .",
+    "docker:build": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml build",
     "docker:start": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml up",
     "docker:stop": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml stop",
     "docker:clean": "docker-compose -f configurations/docker-compose.stacks-blockchain-api.yml -f configurations/docker-compose.chainlink.yml -f configurations/docker-compose.event-observer.yml down -v -t 0",
@@ -59,3 +60,4 @@
     "ts-jest": "^27.0.3"
   }
 }
+ 

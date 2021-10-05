@@ -6,7 +6,7 @@ import {
   parseOracleRequestValue,
 } from '../adapter-helpers';
 
-export function createAdapterRouter() {
+export function createAdapterRouter(stacksApiUrl: string) {
   const router = express.Router();
   router.use(express.json());
 
@@ -18,7 +18,11 @@ export function createAdapterRouter() {
         result: result,
         fulfillment: fulfillment,
       };
-      const response = await createOracleFulfillmentTx(linkFulfillment, ChainID.Testnet);
+      const response = await createOracleFulfillmentTx(
+        linkFulfillment,
+        ChainID.Testnet,
+        stacksApiUrl
+      );
       const txid = response.txid();
       res.status(200).json({
         value: result,

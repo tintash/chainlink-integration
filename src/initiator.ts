@@ -4,7 +4,11 @@ import { CoreNodeBlockMessage, CoreNodeEventType } from './event-stream/core-nod
 import { parseMessageTransactions } from './event-stream/reader';
 import { printTopic } from './helpers';
 
-export async function processNewBlock(chainId: ChainID, msg: CoreNodeBlockMessage): Promise<void> {
+export async function processNewBlock(
+  chainId: ChainID,
+  msg: CoreNodeBlockMessage,
+  chainlinkHost: string
+): Promise<void> {
   const parsedMsg = parseMessageTransactions(chainId, msg);
   for (const event of parsedMsg.events) {
     if (event.type === CoreNodeEventType.ContractEvent) {
@@ -12,7 +16,7 @@ export async function processNewBlock(chainId: ChainID, msg: CoreNodeBlockMessag
         isOracleContract(event.contract_event.contract_identifier) &&
         event.contract_event.topic === printTopic
       ) {
-        return await executeChainlinkInitiator(event.contract_event.raw_value);
+        return await executeChainlinkInitiator(event.contract_event.raw_value, chainlinkHost);
       }
     }
   }

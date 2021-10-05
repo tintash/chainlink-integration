@@ -17,11 +17,8 @@ services:
     image: "smartcontract/chainlink:0.10.11"
     restart: on-failure
     env_file: ./chainlink/.env
-    # environment:
-    #   STACKS_NODE_URL: http://stacks-blockchain-api:3999
     depends_on:
       - pg_chainlink
-      # - stacks-blockchain-api
     ports:
       - '6688:6688'
     volumes:

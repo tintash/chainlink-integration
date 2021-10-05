@@ -5,6 +5,12 @@ const { Response } = jest.requireActual('node-fetch');
 import { mockFunction } from '../jestHelpers';
 const mockfetch = mockFunction(fetch);
 
+const eiName = 'stx-cl-ei';
+const eiUrl = 'http://localhost:3501';
+const bridgeName = 'stx-cl-bridge';
+const bridgeUrl = 'http://localhost:3501/adapter';
+const chainlinkHost = 'localhost';
+
 describe('Tests implementation for createExternalInitiator', () => {
   beforeEach(() => {
     mockfetch.mockReset();
@@ -31,7 +37,9 @@ describe('Tests implementation for createExternalInitiator', () => {
       ],
     };
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected)));
-    await expect(createExternalInitiator(cookie)).resolves.toBe('stx-cl-ei');
+    await expect(createExternalInitiator(eiName, eiUrl, cookie, chainlinkHost)).resolves.toBe(
+      'stx-cl-ei'
+    );
     expect(mockfetch).toHaveBeenCalledTimes(1);
     expect(mockfetch).toHaveBeenCalledWith('http://localhost:6688/v2/external_initiators', {
       method: 'GET',
@@ -72,8 +80,9 @@ describe('Tests implementation for createExternalInitiator', () => {
     });
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected)));
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected2)));
-
-    await expect(createExternalInitiator(cookie)).resolves.toBe('stx-cl-ei');
+    await expect(createExternalInitiator(eiName, eiUrl, cookie, chainlinkHost)).resolves.toBe(
+      'stx-cl-ei'
+    );
     expect(mockfetch).toHaveBeenCalledTimes(2);
     expect(mockfetch).toHaveBeenNthCalledWith(1, 'http://localhost:6688/v2/external_initiators', {
       method: 'GET',
@@ -91,10 +100,16 @@ describe('Tests implementation for createExternalInitiator', () => {
       },
       body: body2,
     });
-    expect(process.env.EI_IC_ACCESSKEY).toBe('cf1de741a8094538a18c1700e9b6430a')
-    expect(process.env.EI_IC_SECRET).toBe('dU9ICdhLFnI2dru905zZv6MbsXwwI6qIP5pQRYmECZsI5bZTM1hXIEMCveVOoCHS')
-    expect(process.env.EI_CI_ACCESSKEY).toBe('D9ZWnEiRMWydufOk/VSPNeV3rRePviPmnyMpVj4dVmAJMdX1U5u/eF0tE+tIiysX')
-    expect(process.env.EI_CI_SECRET).toBe('B22mRjfC2lUX84p6wK3tITA2IZL30Ck3WOqET1D5Z3vU34cb9YOzAmajL6NEK6Cx')
+    expect(process.env.EI_IC_ACCESSKEY).toBe('cf1de741a8094538a18c1700e9b6430a');
+    expect(process.env.EI_IC_SECRET).toBe(
+      'dU9ICdhLFnI2dru905zZv6MbsXwwI6qIP5pQRYmECZsI5bZTM1hXIEMCveVOoCHS'
+    );
+    expect(process.env.EI_CI_ACCESSKEY).toBe(
+      'D9ZWnEiRMWydufOk/VSPNeV3rRePviPmnyMpVj4dVmAJMdX1U5u/eF0tE+tIiysX'
+    );
+    expect(process.env.EI_CI_SECRET).toBe(
+      'B22mRjfC2lUX84p6wK3tITA2IZL30Ck3WOqET1D5Z3vU34cb9YOzAmajL6NEK6Cx'
+    );
   });
 
   test('Throws exception when cookie is invalid or session is expired', async () => {
@@ -111,7 +126,7 @@ describe('Tests implementation for createExternalInitiator', () => {
 
     mockfetch.mockRejectedValueOnce(JSON.stringify(expected));
     try {
-      await createExternalInitiator(cookie);
+      await createExternalInitiator(eiName, eiUrl, cookie, chainlinkHost);
     } catch (err) {
       expect(err).toEqual(
         new Error('Error: {"ok":false,"status":401,"errors":[{"detail":"Session has expired"}]}')
@@ -154,7 +169,9 @@ describe('Tests implementation for createBridge', () => {
       },
     };
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected)));
-    await expect(createBridge(cookie)).resolves.toBe('stx-cl-bridge');
+    await expect(createBridge(bridgeName, bridgeUrl, cookie, chainlinkHost)).resolves.toBe(
+      'stx-cl-bridge'
+    );
     expect(mockfetch).toHaveBeenCalledTimes(1);
     expect(mockfetch).toHaveBeenCalledWith(`http://localhost:6688/v2/bridge_types/${bridge}`, {
       method: 'GET',
@@ -181,7 +198,7 @@ describe('Tests implementation for createBridge', () => {
 
     mockfetch.mockRejectedValueOnce(JSON.stringify(expected));
     try {
-      await createBridge(cookie);
+      await createBridge(bridgeName, bridgeUrl, cookie, chainlinkHost);
     } catch (err) {
       expect(err).toEqual(
         new Error('Error: {"ok":false,"status":401,"errors":[{"detail":"Session has expired"}]}')

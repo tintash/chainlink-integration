@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-export async function getChainlinkClientSessionCookie(): Promise<string> {
+export async function getChainlinkClientSessionCookie(chainlinkHost: string): Promise<string> {
   try {
     let cookie_array = String(process.env.CHAINLINK_COOKIE).split(';');
     const cookie_expires_at = new Date(
@@ -12,7 +12,7 @@ export async function getChainlinkClientSessionCookie(): Promise<string> {
       process.env.CHAINLINK_COOKIE === '' ||
       cookie_expires_at.getTime() < Date.now()
     ) {
-      return fetch(`http://${String(process.env.CHAINLINK_HOST)}:6688/sessions`, {
+      return fetch(`http://${chainlinkHost}:6688/sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -29,9 +29,13 @@ export async function getChainlinkClientSessionCookie(): Promise<string> {
   return String(process.env.CHAINLINK_COOKIE);
 }
 
-export async function getJobSpecMinPayment(jobId: string, cookie: string): Promise<bigint> {
+export async function getJobSpecMinPayment(
+  jobId: string,
+  cookie: string,
+  chainlinkHost: string
+): Promise<bigint> {
   try {
-    return fetch(`http://${String(process.env.CHAINLINK_HOST)}:6688/v2/specs/${jobId}`, {
+    return fetch(`http://${chainlinkHost}:6688/v2/specs/${jobId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

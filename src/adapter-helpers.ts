@@ -72,12 +72,13 @@ export function parseOracleRequestValue(encodedData: string): OracleFulfillment 
 
 export async function createOracleFulfillmentTx(
   linkFulfillment: ChainlinkFulfillmentResponse,
-  chainId: ChainID
+  chainId: ChainID,
+  stacksApiUrl: string
 ): Promise<StacksTransaction> {
   const oracle = getOracleContract(chainId);
   const oracleFulfillmentFunction = 'fullfill-oracle-request';
   const oraclePaymentKey = String(process.env.STX_ADDR_PRIVATE_KEY);
-  const network = getStacksNetwork();
+  const network = getStacksNetwork(stacksApiUrl);
   const fulfillment = linkFulfillment.fulfillment;
   const txOptions: SignedContractCallOptions = {
     contractAddress: oracle.address,

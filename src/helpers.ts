@@ -186,12 +186,12 @@ export function createDirectRequestTxOptions(network: StacksNetwork, mockRequest
   return txOptions;
 }
 
-export function getStacksNetwork(): StacksNetwork {
+export function getStacksNetwork(stacksApiUrl: string): StacksNetwork {
   const chainID = String(process.env.STACKS_NETWORK);
   switch (chainID) {
     case '0':
       const network = new StacksMocknet();
-      network.coreApiUrl = String(process.env.STACKS_CORE_API_URL);
+      network.coreApiUrl = stacksApiUrl;
       return network;
     case '1':
       return new StacksTestnet();
@@ -201,8 +201,8 @@ export function getStacksNetwork(): StacksNetwork {
   throw new Error('STACKS_CHAIN_ID not set in environment variables');
 }
 
-export async function getTxParamsAndEvents(txId: string): Promise<any> {
-  return fetch(`https://stacks-node-api.testnet.stacks.co/extended/v1/tx/${txId}`, {
+export async function getTxParamsAndEvents(txId: string, stacksApiUrl: string): Promise<any> {
+  return fetch(`${stacksApiUrl}/extended/v1/tx/${txId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ export async function getTxParamsAndEvents(txId: string): Promise<any> {
       return { txParams, txEvents };
     });
 }
-//
+
 export async function formatParams(paramArray: any) {
   const paramNames: any[] = [];
   const paramValues: any[] = [];

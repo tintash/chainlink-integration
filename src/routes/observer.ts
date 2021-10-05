@@ -16,15 +16,19 @@ import {
 } from '../helpers';
 import { MockRequests } from '../mock/direct-requests';
 
-export function createObserverRouter() {
+export function createObserverRouter(
+  enableOracleListner: string,
+  stacksApiUrl: string,
+  chainlinkHost: string
+) {
   const router = express.Router();
   router.use(express.json());
 
   router.post('/new_block', (req, res) => {
     const core_message: CoreNodeBlockMessage = req.body;
-    if (String(process.env.ENABLE_ORACLE_LISTENER) !== 'true') {
+    if (enableOracleListner === 'false') {
       // only run if oracle listener is not enabled
-      processNewBlock(ChainID.Testnet, core_message);
+      processNewBlock(ChainID.Testnet, core_message, chainlinkHost);
     }
     res.sendStatus(200).end();
   });
@@ -51,7 +55,7 @@ export function createObserverRouter() {
 
   // For testing purposes only, to be removed
   router.get('/consumer-test', async (req, res) => {
-    const network = getStacksNetwork();
+    const network = getStacksNetwork(stacksApiUrl);
     const id = req.query.id === undefined ? 0 : parseInt(String(req.query.id));
     const txOptions = createDirectRequestTxOptions(network, MockRequests[id]);
     try {

@@ -9,6 +9,7 @@ import fetch from 'node-fetch';
 const { Response, Headers } = jest.requireActual('node-fetch');
 const mockfetch = mockFunction(fetch);
 const chainlinkHost = 'localhost';
+const chainlinkPort = '6688';
 
 describe('Tests for validating payment and jobcost comparison', () => {
   test('Returns True on payment > jobcost', () => {
@@ -46,7 +47,7 @@ describe('Tests for fetching session cookie', () => {
     mockfetch.mockResolvedValueOnce(response);
 
     expect.assertions(3);
-    await expect(getChainlinkClientSessionCookie(chainlinkHost)).resolves.toBe(
+    await expect(getChainlinkClientSessionCookie(chainlinkHost, chainlinkPort)).resolves.toBe(
       'explorer=%7B%22status%22%3A%22disconnected%22%2C%22url%22%3A%22%22%7D; Path=/; SameSite=Strict; clsession=MTYzMDg3MDMxN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJ2LUNBQUVHYzNSeWFXNW5EQTRBREdOc2MyVnpjMmx2Ymw5cFpBWnpkSEpwYm1jTUlnQWdZVFZqTXpjM1kyTTJOamRqTkRJNU9UZzJabVV3TURWaVl6Smlaamt5WWpNPXxtVt1qY7sE0BIbuS8rX6x9eDjdY1VjIYfSR1bSb7Hv9A==; Expires=Tue, 05 Oct 2021 19:31:57 GMT; Max-Age=2592000; HttpOnly'
     );
     expect(mockfetch).toHaveBeenCalledTimes(1);
@@ -66,7 +67,7 @@ describe('Tests for fetching session cookie', () => {
     mockfetch.mockRejectedValueOnce(new Error('Error Fetching Cookie'));
     expect.assertions(3);
     try {
-      await getChainlinkClientSessionCookie(chainlinkHost);
+      await getChainlinkClientSessionCookie(chainlinkHost, chainlinkPort);
     } catch (err) {
       expect(err).toEqual(new Error('Error Fetching Cookie'));
     }
@@ -85,11 +86,11 @@ describe('Tests for fetching session cookie', () => {
 
   test('Returns cookie from env variables if it is already defined', async () => {
     process.env.CHAINLINK_COOKIE =
-      'explorer=%7B%22status%22%3A%22disconnected%22%2C%22url%22%3A%22%22%7D; Path=/; SameSite=Strict; clsession=MTYzMDg3MDMxN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJ2LUNBQUVHYzNSeWFXNW5EQTRBREdOc2MyVnpjMmx2Ymw5cFpBWnpkSEpwYm1jTUlnQWdZVFZqTXpjM1kyTTJOamRqTkRJNU9UZzJabVV3TURWaVl6Smlaamt5WWpNPXxtVt1qY7sE0BIbuS8rX6x9eDjdY1VjIYfSR1bSb7Hv9A==; Expires=Tue, 05 Oct 2021 19:31:57 GMT; Max-Age=2592000; HttpOnly';
+      'explorer=%7B%22status%22%3A%22disconnected%22%2C%22url%22%3A%22%22%7D; Path=/; SameSite=Strict; clsession=MTYzMDg3MDMxN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJ2LUNBQUVHYzNSeWFXNW5EQTRBREdOc2MyVnpjMmx2Ymw5cFpBWnpkSEpwYm1jTUlnQWdZVFZqTXpjM1kyTTJOamRqTkRJNU9UZzJabVV3TURWaVl6Smlaamt5WWpNPXxtVt1qY7sE0BIbuS8rX6x9eDjdY1VjIYfSR1bSb7Hv9A==; Expires=Tue, 05 Oct 2025 19:31:57 GMT; Max-Age=2592000; HttpOnly';
 
     expect.assertions(1);
-    await expect(getChainlinkClientSessionCookie(chainlinkHost)).resolves.toBe(
-      'explorer=%7B%22status%22%3A%22disconnected%22%2C%22url%22%3A%22%22%7D; Path=/; SameSite=Strict; clsession=MTYzMDg3MDMxN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJ2LUNBQUVHYzNSeWFXNW5EQTRBREdOc2MyVnpjMmx2Ymw5cFpBWnpkSEpwYm1jTUlnQWdZVFZqTXpjM1kyTTJOamRqTkRJNU9UZzJabVV3TURWaVl6Smlaamt5WWpNPXxtVt1qY7sE0BIbuS8rX6x9eDjdY1VjIYfSR1bSb7Hv9A==; Expires=Tue, 05 Oct 2021 19:31:57 GMT; Max-Age=2592000; HttpOnly'
+    await expect(getChainlinkClientSessionCookie(chainlinkHost, chainlinkPort)).resolves.toBe(
+      'explorer=%7B%22status%22%3A%22disconnected%22%2C%22url%22%3A%22%22%7D; Path=/; SameSite=Strict; clsession=MTYzMDg3MDMxN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJ2LUNBQUVHYzNSeWFXNW5EQTRBREdOc2MyVnpjMmx2Ymw5cFpBWnpkSEpwYm1jTUlnQWdZVFZqTXpjM1kyTTJOamRqTkRJNU9UZzJabVV3TURWaVl6Smlaamt5WWpNPXxtVt1qY7sE0BIbuS8rX6x9eDjdY1VjIYfSR1bSb7Hv9A==; Expires=Tue, 05 Oct 2025 19:31:57 GMT; Max-Age=2592000; HttpOnly'
     );
   });
 });
@@ -107,7 +108,7 @@ describe('Tests for min job spec payment', () => {
     const cookie = 'validTestCookie';
     expect.assertions(4);
 
-    const result = await getJobSpecMinPayment(jobID, cookie, chainlinkHost);
+    const result = await getJobSpecMinPayment(jobID, cookie, chainlinkHost, chainlinkPort);
     expect(result).toBe(2);
     expect(mockfetch).toHaveBeenCalledTimes(1);
     expect(mockfetch).toHaveBeenCalledWith(`http://localhost:6688/v2/specs/${jobID}`, {
@@ -130,7 +131,7 @@ describe('Tests for min job spec payment', () => {
     const cookie = 'validTestCookie';
     // expect.assertions(4);
 
-    const result = await getJobSpecMinPayment(jobID, cookie, chainlinkHost);
+    const result = await getJobSpecMinPayment(jobID, cookie, chainlinkHost, chainlinkPort);
     expect(result).toBe(1);
     expect(mockfetch).toHaveBeenCalledTimes(1);
     expect(mockfetch).toHaveBeenCalledWith(`http://localhost:6688/v2/specs/${jobID}`, {
@@ -150,7 +151,7 @@ describe('Tests for min job spec payment', () => {
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify({})));
     expect.assertions(3);
     try {
-      await getJobSpecMinPayment(jobID, cookie, chainlinkHost);
+      await getJobSpecMinPayment(jobID, cookie, chainlinkHost, chainlinkPort);
     } catch (err) {
       expect(err).toEqual(new Error('Invalid Job ID or Cookie While Fetching JobSpec MinPayment'));
     }
@@ -171,7 +172,7 @@ describe('Tests for min job spec payment', () => {
     mockfetch.mockRejectedValueOnce(new Error('{ error: Failed Fetching JobSpec MinPayment }'));
     // expect.assertions(3);
     try {
-      await getJobSpecMinPayment(jobID, cookie, chainlinkHost);
+      await getJobSpecMinPayment(jobID, cookie, chainlinkHost, chainlinkPort);
     } catch (err) {
       expect(err).toEqual(new Error('{ error: Failed Fetching JobSpec MinPayment }'));
     }

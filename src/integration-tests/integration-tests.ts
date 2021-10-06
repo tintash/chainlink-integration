@@ -41,7 +41,10 @@ describe('Integration testing', () => {
     try {
       await pingStacksBlockchainApi();
       client = await connectWebSocketClient(STACKS_CORE_API_WS_URL);
-      chainlinkCookie = await getChainlinkClientSessionCookie(String(process.env.CHAINLINK_HOST));
+      chainlinkCookie = await getChainlinkClientSessionCookie(
+        String(process.env.CHAINLINK_HOST),
+        String(process.env.CHAINLINK_PORT)
+      );
       const deployTxs = await deployContracts(CONTRACT_NAMES, CLARITY_CONTRACTS_PATH);
       await Promise.all(deployTxs.map(async txId => subscribeTxStatusChange(txId, client)));
 

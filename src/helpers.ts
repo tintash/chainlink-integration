@@ -23,6 +23,24 @@ export interface PriceFeedRequest {
   payload: string;
 }
 
+export interface ChainlinkNodeConfig {
+  eiName: string;
+  eiUrl: string;
+  bridgeName: string;
+  bridgeUrl: string;
+  chainlinkHost: string;
+  chainlinkPort: string;
+  configureChainlink: string;
+  createSampleJobs: string;
+}
+
+export interface ServerConfig {
+  stacksApiUrl: string;
+  chainlinkHost: string;
+  chainlinkPort: string;
+  enableOracleListner: string;
+}
+
 export async function executeChainlinkRequest(jobId: string, data: DirectRequestParams) {
   const chainlinkNodeURL =
     String(process.env.EI_CHAINLINKURL) + String(process.env.EI_LINK_JOB_PATH) + jobId + '/runs';

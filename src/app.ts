@@ -12,22 +12,27 @@ import { createExternalInitiator, createBridge, createJobs } from './configure-c
 import { getChainlinkClientSessionCookie } from './initiator-helpers';
 import { executeChainlinkInitiatorFromObserver, getOracleContractPrincipal } from './event-helpers';
 import { io } from 'socket.io-client';
+import { ChainlinkNodeConfig, ServerConfig } from './helpers';
 
-const STACKS_API_URL = String(process.env.STACKS_CORE_API_URL);
-const CHAINLINK_HOST = String(process.env.CHAINLINK_HOST);
-const ENABLE_ORACLE_LISTENER = String(process.env.ENABLE_ORACLE_LISTENER);
-const CHAINLINK_EI_NAME = String(process.env.CHAINLINK_EI_NAME);
-const CHAINLINK_EI_URL = String(process.env.CHAINLINK_EI_URL);
-const CHAINLINK_BRIDGE_NAME = String(process.env.CHAINLINK_BRIDGE_NAME);
-const CHAINLINK_BRIDGE_URL = String(process.env.CHAINLINK_BRIDGE_URL);
-const CONFIGURE_CHAINLINK = String(process.env.CONFIGURE_CHAINLINK);
-const CREATE_SAMPLE_JOBS = String(process.env.CREATE_SAMPLE_JOBS);
+const serverConfig: ServerConfig = {
+  stacksApiUrl: String(process.env.STACKS_CORE_API_URL),
+  chainlinkHost: String(process.env.CHAINLINK_HOST),
+  chainlinkPort: String(process.env.CHAINLINK_PORT),
+  enableOracleListner: String(process.env.ENABLE_ORACLE_LISTENER),
+};
 
-export function startApiServer(
-  stacksApiUrl: string,
-  chainlinkHost: string,
-  enableOracleListner: string
-): Server {
+const chainlinkConfig: ChainlinkNodeConfig = {
+  eiName: String(process.env.CHAINLINK_EI_NAME),
+  eiUrl: String(process.env.CHAINLINK_EI_URL),
+  bridgeName: String(process.env.CHAINLINK_BRIDGE_NAME),
+  bridgeUrl: String(process.env.CHAINLINK_BRIDGE_URL),
+  chainlinkHost: String(process.env.CHAINLINK_HOST),
+  chainlinkPort: String(process.env.CHAINLINK_PORT),
+  configureChainlink: String(process.env.CONFIGURE_CHAINLINK),
+  createSampleJobs: String(process.env.CREATE_SAMPLE_JOBS),
+};
+
+export function startApiServer(serverConfig: ServerConfig): Server {
   const app = addAsync(express());
   const logger = morgan('dev');
   app.use(bodyParser.json({ type: 'application/json', limit: '500MB' }));
@@ -35,8 +40,8 @@ export function startApiServer(
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(logger);
 
-  app.use('/adapter', createAdapterRouter(stacksApiUrl));
-  app.use('/', createObserverRouter(enableOracleListner, stacksApiUrl, chainlinkHost));
+  app.use('/adapter', createAdapterRouter(serverConfig.stacksApiUrl));
+  app.use('/', createObserverRouter(serverConfig));
 
   const port = parseInt(String(process.env.PORT)) || 3501;
   app.set('port', port);
@@ -53,34 +58,24 @@ export function startApiServer(
   return server;
 }
 
-async function configureChainlink(
-  eiName: string,
-  eiUrl: string,
-  bridgeName: string,
-  bridgeUrl: string,
-  chainlinkHost: string,
-  configureChainlink: string,
-  createSampleJobs: string
-): Promise<void> {
+async function configureChainlink(chainlinkConfig: ChainlinkNodeConfig): Promise<void> {
+  const { configureChainlink, chainlinkHost, chainlinkPort } = chainlinkConfig;
   if (configureChainlink === 'false') {
     return;
   }
-  const cookie = await getChainlinkClientSessionCookie(chainlinkHost);
+  const cookie = await getChainlinkClientSessionCookie(chainlinkHost, chainlinkPort);
   Promise.all([
-    createExternalInitiator(eiName, eiUrl, cookie, chainlinkHost),
-    createBridge(bridgeName, bridgeUrl, cookie, chainlinkHost),
+    createExternalInitiator(cookie, chainlinkConfig),
+    createBridge(cookie, chainlinkConfig),
   ]).then(([eiName, bridgeName]) => {
     if (eiName !== '' && bridgeName !== '') {
-      createJobs(cookie, chainlinkHost, createSampleJobs);
+      createJobs(cookie, chainlinkConfig);
     }
   });
 }
 
-async function oracleContractListner(
-  stacksApiUrl: string,
-  chainlinkHost: string,
-  enableOracleListner: string
-) {
+async function oracleContractListner(serverConfig: ServerConfig) {
+  const { enableOracleListner, stacksApiUrl, chainlinkHost, chainlinkPort } = serverConfig;
   if (enableOracleListner === 'true') {
     var socket = io(stacksApiUrl, {
       query: {
@@ -96,21 +91,18 @@ async function oracleContractListner(
         tx_type == 'contract_call' &&
         contract_call.function_name == 'create-request'
       ) {
-        executeChainlinkInitiatorFromObserver(data.tx.tx_id, stacksApiUrl, chainlinkHost);
+        executeChainlinkInitiatorFromObserver(
+          data.tx.tx_id,
+          stacksApiUrl,
+          chainlinkHost,
+          chainlinkPort
+        );
       }
     });
   }
 }
 
-configureChainlink(
-  CHAINLINK_EI_NAME,
-  CHAINLINK_EI_URL,
-  CHAINLINK_BRIDGE_NAME,
-  CHAINLINK_BRIDGE_URL,
-  CHAINLINK_HOST,
-  CONFIGURE_CHAINLINK,
-  CREATE_SAMPLE_JOBS
-);
-oracleContractListner(STACKS_API_URL, CHAINLINK_HOST, ENABLE_ORACLE_LISTENER);
-export const App = startApiServer(STACKS_API_URL, CHAINLINK_HOST, ENABLE_ORACLE_LISTENER);
+configureChainlink(chainlinkConfig);
+oracleContractListner(serverConfig);
+export const App = startApiServer(serverConfig);
 console.log('Server initiated!');

@@ -7,7 +7,8 @@ import { printTopic } from './helpers';
 export async function processNewBlock(
   chainId: ChainID,
   msg: CoreNodeBlockMessage,
-  chainlinkHost: string
+  chainlinkHost: string,
+  chainlinkPort: string
 ): Promise<void> {
   const parsedMsg = parseMessageTransactions(chainId, msg);
   for (const event of parsedMsg.events) {
@@ -16,7 +17,11 @@ export async function processNewBlock(
         isOracleContract(event.contract_event.contract_identifier) &&
         event.contract_event.topic === printTopic
       ) {
-        return await executeChainlinkInitiator(event.contract_event.raw_value, chainlinkHost);
+        return await executeChainlinkInitiator(
+          event.contract_event.raw_value,
+          chainlinkHost,
+          chainlinkPort
+        );
       }
     }
   }

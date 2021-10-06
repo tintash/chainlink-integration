@@ -62,7 +62,11 @@ export function isOracleContract(principal: string): boolean {
   );
 }
 
-export async function executeChainlinkInitiator(encoded_data: string, chainlinkHost: string) {
+export async function executeChainlinkInitiator(
+  encoded_data: string,
+  chainlinkHost: string,
+  chainlinkPort: string
+) {
   try {
     const oracleTopicData = parseOracleRequestValue(encoded_data);
     const jobSpecId = bufferCVToASCIIString(oracleTopicData.specId);
@@ -70,9 +74,14 @@ export async function executeChainlinkInitiator(encoded_data: string, chainlinkH
 
     console.log(`Chainlink JOB_SPEC_ID:< ${jobSpecId} >`);
     console.log(`Transferred Amount:< ${transferedAmount} >`);
-    const cookie: string = await getChainlinkClientSessionCookie(chainlinkHost);
+    const cookie: string = await getChainlinkClientSessionCookie(chainlinkHost, chainlinkPort);
     if (!cookie) throw new Error('Unauthorized: Please use valid api credentials');
-    const jobCost: bigint = await getJobSpecMinPayment(jobSpecId, cookie, chainlinkHost);
+    const jobCost: bigint = await getJobSpecMinPayment(
+      jobSpecId,
+      cookie,
+      chainlinkHost,
+      chainlinkPort
+    );
     const validation: boolean = await validatePayment(transferedAmount, jobCost);
     if (!validation) {
       throw `rejecting job ${jobSpecId} with payment ${jobCost} below minimum threshold ${transferedAmount.toString()}`;
@@ -90,7 +99,8 @@ export async function executeChainlinkInitiator(encoded_data: string, chainlinkH
 export async function executeChainlinkInitiatorFromObserver(
   txId: string,
   stacksApiUrl: string,
-  chainlinkHost: string
+  chainlinkHost: string,
+  chainlinkPort: string
 ) {
   try {
     const { txParams, txEvents } = await getTxParamsAndEvents(txId, stacksApiUrl);
@@ -100,9 +110,14 @@ export async function executeChainlinkInitiatorFromObserver(
 
     console.log(`Chainlink JOB_SPEC_ID:< ${jobSpecId} >`);
     console.log(`Transferred Amount:< ${transferedAmount} >`);
-    const cookie: string = await getChainlinkClientSessionCookie(chainlinkHost);
+    const cookie: string = await getChainlinkClientSessionCookie(chainlinkHost, chainlinkPort);
     if (!cookie) throw new Error('Unauthorized: Please use valid api credentials');
-    const jobCost: bigint = await getJobSpecMinPayment(jobSpecId, cookie, chainlinkHost);
+    const jobCost: bigint = await getJobSpecMinPayment(
+      jobSpecId,
+      cookie,
+      chainlinkHost,
+      chainlinkPort
+    );
     const validation: boolean = await validatePayment(transferedAmount, jobCost);
     if (!validation) {
       throw `rejecting job ${jobSpecId} with payment ${jobCost} below minimum threshold ${transferedAmount.toString()}`;

@@ -1,10 +1,10 @@
-import { response } from 'express';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import fetch from 'node-fetch';
 import { getRequestJob } from './chainlink-jobs/get-request';
 import { postRequestJob } from './chainlink-jobs/post-request';
+import { ChainlinkNodeConfig } from './helpers';
 // ----------------------------------------------------------------
 export interface ExternalInitiators {
   data: ExternalInitiator[];
@@ -99,11 +99,12 @@ export interface Attributes {
 async function hasExternalInitiator(
   name: string,
   cookie: string,
-  chainlinkHost: string
+  chainlinkHost: string,
+  chainlinkPort: string
 ): Promise<boolean> {
   try {
     const EIs = await chainlinkfetch<ExternalInitiators>(
-      `http://${chainlinkHost}:6688/v2/external_initiators`,
+      `http://${chainlinkHost}:${chainlinkPort}/v2/external_initiators`,
       'GET',
       cookie,
       undefined
@@ -114,10 +115,15 @@ async function hasExternalInitiator(
   }
 }
 
-async function hasBridge(name: string, cookie: string, chainlinkHost: string): Promise<boolean> {
+async function hasBridge(
+  name: string,
+  cookie: string,
+  chainlinkHost: string,
+  chainlinkPort: string
+): Promise<boolean> {
   try {
     const bridge = await chainlinkfetch<Bridge>(
-      `http://${chainlinkHost}:6688/v2/bridge_types/${name}`,
+      `http://${chainlinkHost}:${chainlinkPort}/v2/bridge_types/${name}`,
       'GET',
       cookie,
       undefined
@@ -130,23 +136,22 @@ async function hasBridge(name: string, cookie: string, chainlinkHost: string): P
 }
 
 export async function createExternalInitiator(
-  eiName: string,
-  eiUrl: string,
   cookie: string,
-  chainlinkHost: string
+  chainlinkConfig: ChainlinkNodeConfig
 ): Promise<string> {
   try {
+    const { chainlinkHost, chainlinkPort, eiName, eiUrl } = chainlinkConfig;
     const body = JSON.stringify({
       name: eiName,
       url: eiUrl,
     });
 
-    if (await hasExternalInitiator(eiName, cookie, chainlinkHost)) {
+    if (await hasExternalInitiator(eiName, cookie, chainlinkHost, chainlinkPort)) {
       console.log(`External initiator with name ${eiName} already exists`);
       return eiName;
     } else {
       const ei = await chainlinkfetch<NewExternalInitiator>(
-        `http://${chainlinkHost}:6688/v2/external_initiators`,
+        `http://${chainlinkHost}:${chainlinkPort}/v2/external_initiators`,
         'POST',
         cookie,
         body
@@ -170,23 +175,22 @@ export async function createExternalInitiator(
 }
 
 export async function createBridge(
-  bridgeName: string,
-  bridgeUrl: string,
   cookie: string,
-  chainlinkHost: string
+  chainlinkConfig: ChainlinkNodeConfig
 ): Promise<string> {
   try {
+    const { chainlinkHost, chainlinkPort, bridgeName, bridgeUrl } = chainlinkConfig;
     const body = JSON.stringify({
       name: bridgeName,
       url: bridgeUrl,
     });
 
-    if (await hasBridge(bridgeName, cookie, chainlinkHost)) {
+    if (await hasBridge(bridgeName, cookie, chainlinkHost, chainlinkPort)) {
       console.log(`Bridge with name ${bridgeName} already exists`);
       return bridgeName;
     } else {
       const bridge = await chainlinkfetch<NewBridge>(
-        `http://${chainlinkHost}:6688/v2/bridge_types`,
+        `http://${chainlinkHost}:${chainlinkPort}/v2/bridge_types`,
         'POST',
         cookie,
         body
@@ -202,13 +206,25 @@ export async function createBridge(
 
 export async function createJobs(
   cookie: string,
-  chainlinkHost: string,
-  createSampleJobs: string
+  chainlinkConfig: ChainlinkNodeConfig
 ): Promise<void> {
+  const { chainlinkHost, chainlinkPort, createSampleJobs } = chainlinkConfig;
   if (createSampleJobs === 'true')
     Promise.all([
-      createJob(JSON.stringify(getRequestJob), cookie, 'CHAINLINK_GET_JOB_ID', chainlinkHost),
-      createJob(JSON.stringify(postRequestJob), cookie, 'CHAINLINK_POST_JOB_ID', chainlinkHost),
+      createJob(
+        JSON.stringify(getRequestJob),
+        cookie,
+        'CHAINLINK_GET_JOB_ID',
+        chainlinkHost,
+        chainlinkPort
+      ),
+      createJob(
+        JSON.stringify(postRequestJob),
+        cookie,
+        'CHAINLINK_POST_JOB_ID',
+        chainlinkHost,
+        chainlinkPort
+      ),
     ]).then(([getJobId, postJobId]) => {
       if (getJobId !== '' && postJobId !== '') setEnvValue('CREATE_SAMPLE_JOBS', 'false');
     });
@@ -219,11 +235,12 @@ async function createJob(
   jobPayload: string,
   cookie: string,
   envVar: string,
-  chainlinkHost: string
+  chainlinkHost: string,
+  chainlinkPort: string
 ): Promise<string> {
   try {
     const job = await chainlinkfetch<NewJob>(
-      `http://${chainlinkHost}:6688/v2/specs`,
+      `http://${chainlinkHost}:${chainlinkPort}/v2/specs`,
       'POST',
       cookie,
       jobPayload

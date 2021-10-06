@@ -13,22 +13,20 @@ import {
   getStacksNetwork,
   hexToDirectRequestParams,
   paramsToHexPrefixString,
+  ServerConfig,
 } from '../helpers';
 import { MockRequests } from '../mock/direct-requests';
 
-export function createObserverRouter(
-  enableOracleListner: string,
-  stacksApiUrl: string,
-  chainlinkHost: string
-) {
+export function createObserverRouter(serverConfig: ServerConfig) {
   const router = express.Router();
   router.use(express.json());
 
+  const { enableOracleListner, stacksApiUrl, chainlinkHost, chainlinkPort } = serverConfig;
   router.post('/new_block', (req, res) => {
     const core_message: CoreNodeBlockMessage = req.body;
     if (enableOracleListner === 'false') {
       // only run if oracle listener is not enabled
-      processNewBlock(ChainID.Testnet, core_message, chainlinkHost);
+      processNewBlock(ChainID.Testnet, core_message, chainlinkHost, chainlinkPort);
     }
     res.sendStatus(200).end();
   });

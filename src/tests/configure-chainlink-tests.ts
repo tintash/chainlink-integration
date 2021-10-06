@@ -3,13 +3,19 @@ jest.mock('node-fetch');
 import fetch from 'node-fetch';
 const { Response } = jest.requireActual('node-fetch');
 import { mockFunction } from '../jestHelpers';
+import { ChainlinkNodeConfig } from '../helpers';
 const mockfetch = mockFunction(fetch);
 
-const eiName = 'stx-cl-ei';
-const eiUrl = 'http://localhost:3501';
-const bridgeName = 'stx-cl-bridge';
-const bridgeUrl = 'http://localhost:3501/adapter';
-const chainlinkHost = 'localhost';
+const chainlinkConfig: ChainlinkNodeConfig = {
+  eiName: 'stx-cl-ei',
+  eiUrl: 'http://localhost:3501',
+  bridgeName: 'stx-cl-bridge',
+  bridgeUrl: 'http://localhost:3501/adapter',
+  chainlinkHost: 'localhost',
+  chainlinkPort: '6688',
+  configureChainlink: 'false',
+  createSampleJobs: 'false',
+};
 
 describe('Tests implementation for createExternalInitiator', () => {
   beforeEach(() => {
@@ -37,9 +43,7 @@ describe('Tests implementation for createExternalInitiator', () => {
       ],
     };
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected)));
-    await expect(createExternalInitiator(eiName, eiUrl, cookie, chainlinkHost)).resolves.toBe(
-      'stx-cl-ei'
-    );
+    await expect(createExternalInitiator(cookie, chainlinkConfig)).resolves.toBe('stx-cl-ei');
     expect(mockfetch).toHaveBeenCalledTimes(1);
     expect(mockfetch).toHaveBeenCalledWith('http://localhost:6688/v2/external_initiators', {
       method: 'GET',
@@ -80,9 +84,7 @@ describe('Tests implementation for createExternalInitiator', () => {
     });
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected)));
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected2)));
-    await expect(createExternalInitiator(eiName, eiUrl, cookie, chainlinkHost)).resolves.toBe(
-      'stx-cl-ei'
-    );
+    await expect(createExternalInitiator(cookie, chainlinkConfig)).resolves.toBe('stx-cl-ei');
     expect(mockfetch).toHaveBeenCalledTimes(2);
     expect(mockfetch).toHaveBeenNthCalledWith(1, 'http://localhost:6688/v2/external_initiators', {
       method: 'GET',
@@ -126,7 +128,7 @@ describe('Tests implementation for createExternalInitiator', () => {
 
     mockfetch.mockRejectedValueOnce(JSON.stringify(expected));
     try {
-      await createExternalInitiator(eiName, eiUrl, cookie, chainlinkHost);
+      await createExternalInitiator(cookie, chainlinkConfig);
     } catch (err) {
       expect(err).toEqual(
         new Error('Error: {"ok":false,"status":401,"errors":[{"detail":"Session has expired"}]}')
@@ -169,9 +171,7 @@ describe('Tests implementation for createBridge', () => {
       },
     };
     mockfetch.mockResolvedValueOnce(new Response(JSON.stringify(expected)));
-    await expect(createBridge(bridgeName, bridgeUrl, cookie, chainlinkHost)).resolves.toBe(
-      'stx-cl-bridge'
-    );
+    await expect(createBridge(cookie, chainlinkConfig)).resolves.toBe('stx-cl-bridge');
     expect(mockfetch).toHaveBeenCalledTimes(1);
     expect(mockfetch).toHaveBeenCalledWith(`http://localhost:6688/v2/bridge_types/${bridge}`, {
       method: 'GET',
@@ -198,7 +198,7 @@ describe('Tests implementation for createBridge', () => {
 
     mockfetch.mockRejectedValueOnce(JSON.stringify(expected));
     try {
-      await createBridge(bridgeName, bridgeUrl, cookie, chainlinkHost);
+      await createBridge(cookie, chainlinkConfig);
     } catch (err) {
       expect(err).toEqual(
         new Error('Error: {"ok":false,"status":401,"errors":[{"detail":"Session has expired"}]}')

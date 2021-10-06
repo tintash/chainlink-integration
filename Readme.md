@@ -28,7 +28,7 @@ Use `--enable_oracle_listener` flag with start command to enable this mode.
 
 Ensure you have docker installed or you can get it from [here](https://docs.docker.com/engine/install/)
 
-Clone this [repo](https://bitbucket.org/tintash/chainlink-integration/src/master/) and install dependencies with `npm install` 
+Clone this [repo](https://bitbucket.org/tintash/chainlink-integration/src/master/) and install dependencies with `npm install`  
 Run `npm run docker:start --enable_oracle_listener` (this will execute oracle listener mode)
 
 Oracle listener mode will require only three containers, which has the following services:
@@ -53,7 +53,7 @@ You need to pass the `jod-spec-id buffer` , and `data-buffer` in `create-request
 
 The `direct-request` contract will make a `transfer-and-call` call to the oracle contract using the `stxlink-token`. The event emitted by the oracle contract is captured by our Event Observer Server, which will initiate our chainlink-job. On successful run of the job, `request fulfillment` is created and the expected data is received back in the `direct-request` contract.
 
-To create a request with test data for getting ether price use following command<br>
+To create a request with test data for getting ether price use following command  
 `curl -X GET 'http://localhost:3501/consumer-test/?id=0'`
 
 This will return the transaction id which you can track on [stacks explorer](https://explorer.stacks.co/?chain=testnet).To check the direct request result you should wait for transaction confirmation.
@@ -73,7 +73,7 @@ This will give the response in the form of hex. You can decode it in the `string
 
 ### **Testing DRM On Mocknet**
 In order to run the system on mocknet, you have to set the following variables in `.env` of our cloned repo:
-`STACKS_NETWORK=0` <br>
+`STACKS_NETWORK=0`  
 `STACKS_CORE_API_URL=http://localhost:3999`
 
 For mocknet run command `npm run docker:start --stacks_network=mocknet`. To enable the oracle listener mode you need to pass this flag as well `--enable_oracle_listener`.
@@ -81,7 +81,7 @@ For mocknet run command `npm run docker:start --stacks_network=mocknet`. To enab
 ##### **Deploying the smart contracts**
 
 Once you&#39;ve followed the above steps, we need to deploy the smart contracts.
-In the cloned repo navigate to `contracts/clarity` folder and deploy the contracts by running: <br>
+In the cloned repo navigate to `contracts/clarity` folder and deploy the contracts by running:  
 `clarinet publish --devnet`
 
 ##### **Making a contract-call to `create-request` function of  `direct-request.clar` contract**
@@ -97,8 +97,6 @@ To create a request with test data for getting ether price use following command
 This will return the transaction id which you can track on http://localhost:3999/extended/v1/tx/{txid}
 
 ##### **Check the response of our request**
-
-Once the create-request transaction you are tracking is confirmed.
 
 You can call the `read-data-value` function to get the response that is stored in the `data-value` variable in the `direct-request` contract.
 

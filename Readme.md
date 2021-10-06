@@ -60,11 +60,13 @@ This will return the transaction id which you can track on [stacks explorer](htt
 ##### **Check the response of our request**
 You can call the `read-data-value` function to get the response that is stored in the `data-value` variable in the `direct-request` contract. 
 
-`curl -X POST https://stacks-node-api.testnet.stacks.co/v2/contracts/call-read/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM/direct-request/read-data-value \`
-`--header 'Content-Type: application/json' \`
-`--data-raw '{
+```
+curl -X POST https://stacks-node-api.testnet.stacks.co/v2/contracts/call-read/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM/direct-request/read-data-value \
+--header 'Content-Type: application/json' \
+--data-raw '{
 "sender": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
-"arguments":[] }'`
+"arguments":[] }'
+```
 
 This will give the response in the form of hex.
 
@@ -99,11 +101,13 @@ Once the create-request transaction you are tracking is confirmed.
 
 You can call the `read-data-value` function to get the response that is stored in the `data-value` variable in the `direct-request` contract.
 
-`curl -X POST http://localhost:3999/v2/contracts/call-read/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM/direct-request/read-data-value \`
-`--header 'Content-Type: application/json' \`
-`--data-raw '{
+```
+curl -X POST http://localhost:3999/v2/contracts/call-read/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM/direct-request/read-data-value \
+--header 'Content-Type: application/json' \
+--data-raw '{
 "sender": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
-"arguments":[] }'`
+"arguments":[] }'
+```
 
 This command will give the response in the form of `hex`. You can decode it in the `string`
 
@@ -173,7 +177,8 @@ and build the application.
 
 In the `stacks-blockchain-api` directory add the following lines in the `Stacks-dev.toml` file.
 
-``` [[mstx_balance]]
+``` 
+[[mstx_balance]]
 address = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
 amount = 10000000000000000
 # secret_key: 753b7cc01a1a2e86221266a154af739463fce51219d97e4f856cd7200c3bd2a601
@@ -221,16 +226,18 @@ Add following configuration flags in `.env` file.
 Set `CONFIGURE\_CHAINLINK` to `true` to automate the process of creating External Initiator(EI), and External Adapter(EA) of provided names if they don&#39;t exist already. Otherwise manually create them.
 
 Set `CREATE\_SAMPLE\_JOBS` to true to create sample Get and Post jobs
-
-`CONFIGURE_CHAINLINK = false`
-`CREATE_SAMPLE_JOBS = false`
+```
+CONFIGURE_CHAINLINK = false
+CREATE_SAMPLE_JOBS = false
+```
 
 Then add following credential env vars, these will be automatically replaced by the credentials of newly created EI.
-
-`EI_IC_ACCESSKEY=""`
-`EI_IC_SECRET=""`
-`EI_CI_ACCESSKEY=""`
-`EI_CI_SECRET=""`
+```
+EI_IC_ACCESSKEY=""
+EI_IC_SECRET=""
+EI_CI_ACCESSKEY=""
+EI_CI_SECRET=""
+```
 
 #### **3.2 Running the server**
 
@@ -270,10 +277,12 @@ Once the create-request transaction you are tracking is confirmed.
 
 You can call the `read-data-value` function to get the response that is stored in the `data-value` variable in the `direct-request` contract.
 
-`curl -X POST http://localhost:3999/v2/contracts/call-read/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM/direct-request/read-data-value \`
-`--header 'Content-Type: application/json' \`
-`--data-raw '{
+```
+curl -X POST http://localhost:3999/v2/contracts/call-read/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM/direct-request/read-data-value \
+--header 'Content-Type: application/json' \
+--data-raw '{
 "sender": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
-"arguments":[] }'`
+"arguments":[] }'
+```
 
 This command will give the response in the form of `hex`. You can decode it in the `string`

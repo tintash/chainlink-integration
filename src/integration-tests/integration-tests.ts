@@ -32,7 +32,7 @@ const CONTRACT_NAMES = [
   'direct-request',
 ];
 const STACKS_CORE_API_WS_URL = 'ws://localhost:3999';
-const ENV_FILE_PATH = '../../.env';
+const ENV_FILE_PATH = '../tests/.env.test';
 
 describe('Integration testing', () => {
   let chainlinkCookie: string = '';

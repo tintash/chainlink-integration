@@ -14,7 +14,7 @@ services:
   stacks-blockchain:
     build:
       context: stacks-blockchain
-    command: stacks-node start --config=/app/config/Stacks-mocknet.toml
+    command: "stacks-node start --config=/app/config/Stacks-${STACKS_CONFIG:-testnet}.toml"
     restart: on-failure
     environment:
       STACKS_EVENT_OBSERVER: stacks-blockchain-api:3700

@@ -7,20 +7,20 @@ services:
     restart: on-failure
     depends_on:
       - chainlink
-      - stacks-blockchain
-      # - stacks-blockchain-api
     ports:
       - '3501:3501'
     environment:
       CHAINLINK_HOST: chainlink
       CHAINLINK_PORT: 6688
-      STACKS_BLOCKCHAIN_HOST: stacks-blockchain
-      # STACKS_BLOCKCHAIN_API_HOST: stacks-blockchain-api
-      STACKS_CORE_API_URL: http://host.docker.internal:3999
+      STACKS_CORE_API_URL:  "${STACKS_CORE_API_URL:-https://stacks-node-api.testnet.stacks.co}"
       CHAINLINK_EI_URL: http://host.docker.internal:3501
       CHAINLINK_BRIDGE_URL: http://host.docker.internal:3501/adapter
       EI_CHAINLINKURL: http://host.docker.internal:6688
     volumes:
-      - ../.env:/event-obserber/.env
+      - "../${DOTENV_CONFIG_PATH:-.env}:/event-obserber/.env"
+    command: npm run start --enable_oracle_listner="${ENABLE_ORACLE_LISTENER}"
     networks:
       - backend
+
+networks:
+  backend:

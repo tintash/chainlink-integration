@@ -18,7 +18,9 @@ const serverConfig: ServerConfig = {
   stacksApiUrl: String(process.env.STACKS_CORE_API_URL),
   chainlinkHost: String(process.env.CHAINLINK_HOST),
   chainlinkPort: String(process.env.CHAINLINK_PORT),
-  enableOracleListner: String(process.env.ENABLE_ORACLE_LISTENER),
+  enableOracleListner: process.env.ENABLE_ORACLE_LISTENER
+    ? process.env.ENABLE_ORACLE_LISTENER
+    : 'false',
 };
 
 const chainlinkConfig: ChainlinkNodeConfig = {

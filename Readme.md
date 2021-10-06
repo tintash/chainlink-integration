@@ -32,15 +32,16 @@ Clone this [repo](https://bitbucket.org/tintash/chainlink-integration/src/master
 Run `npm run docker:start --enable_oracle_listener` (this will execute oracle listener mode)
 
 Oracle listener mode will require only three containers, which has the following services:
-- Chainlink node
-- Event observer server
-- Postgres for chainlink node
+
+* Chainlink node
+* Event observer server
+* Postgres for chainlink node
 
 ##### Note
-Incase you don't pass `--enable_oracle_listener` flag, Stacks node and stacks-blockchain-api containers will also bootstrap and our integration server will wait for the `\new_block` call to initiate the job. This can take some time as stacks'node  will sync itself with the testnet first.
-If you are sure about using this mode then we also have to set `STACKS_CORE_API_URL=http://localhost:3999` in the `.env`
+Incase you don't pass `--enable_oracle_listener` flag, Stacks node and stacks-blockchain-api containers will also bootstrap and our integration server will wait for the `\new_block` call to initiate the job. This can take some time as stacks' node  will sync itself with the testnet first.
+If you are sure about using this mode then you also have to set `STACKS_CORE_API_URL=http://localhost:3999` in the `.env`
 
-##### Our contracts on testnet are following: 
+##### Contracts deployed on testnet 
 The contracts are deployed on following addresses on stacks testnet
 ```
 stxlink-token:  ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stxlink-token 
@@ -52,10 +53,10 @@ You need to pass the `jod-spec-id buffer` , and `data-buffer` in `create-request
 
 The `direct-request` contract will make a `transfer-and-call` call to the oracle contract using the `stxlink-token`. The event emitted by the oracle contract is captured by our Event Observer Server, which will initiate our chainlink-job. On successful run of the job, `request fulfillment` is created and the expected data is received back in the `direct-request` contract.
 
-To create a request with test data for getting ether price use following command
+To create a request with test data for getting ether price use following command<br>
 `curl -X GET 'http://localhost:3501/consumer-test/?id=0'`
 
-This will return the transaction id which you can track on [stacks explorer](https://explorer.stacks.co/?chain=testnet). In order to check the direct request result you should wait for the confirmation of this transaction.
+This will return the transaction id which you can track on [stacks explorer](https://explorer.stacks.co/?chain=testnet).To check the direct request result you should wait for transaction confirmation.
 
 ##### **Check the response of our request**
 You can call the `read-data-value` function to get the response that is stored in the `data-value` variable in the `direct-request` contract. 
@@ -68,11 +69,11 @@ curl -X POST https://stacks-node-api.testnet.stacks.co/v2/contracts/call-read/ST
 "arguments":[] }'
 ```
 
-This will give the response in the form of hex.
+This will give the response in the form of hex. You can decode it in the `string`
 
 ### **Testing DRM On Mocknet**
 In order to run the system on mocknet, you have to set the following variables in `.env` of our cloned repo:
-`STACKS_NETWORK=0`
+`STACKS_NETWORK=0` <br>
 `STACKS_CORE_API_URL=http://localhost:3999`
 
 For mocknet run command `npm run docker:start --stacks_network=mocknet`. To enable the oracle listener mode you need to pass this flag as well `--enable_oracle_listener`.
@@ -80,7 +81,7 @@ For mocknet run command `npm run docker:start --stacks_network=mocknet`. To enab
 ##### **Deploying the smart contracts**
 
 Once you&#39;ve followed the above steps, we need to deploy the smart contracts.
-In the cloned repo navigate to `contracts/clarity` folder and deploy the contracts by running:
+In the cloned repo navigate to `contracts/clarity` folder and deploy the contracts by running: <br>
 `clarinet publish --devnet`
 
 ##### **Making a contract-call to `create-request` function of  `direct-request.clar` contract**

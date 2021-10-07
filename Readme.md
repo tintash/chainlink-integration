@@ -29,6 +29,14 @@ Use `--enable_oracle_listener` flag with start command to enable this mode.
 Ensure you have docker installed or you can get it from [here](https://docs.docker.com/engine/install/)
 
 Clone this [repo](https://bitbucket.org/tintash/chainlink-integration/src/master/) and install dependencies with `npm install`  
+
+##### Creating Jobs for DRM 
+There are two ways to create jobs you can either go to `.env` file and set env variable `CREATE_SAMPLE_JOBS=true` to create sample jobs and skip rest of this section. If you want to create your custom job you can start the chainlink node using the run command and go to `localhost:6688`. 
+Login credentials. 
+`email: test@tintash.com`
+`CHAINLINK_PASSWORD = 12345678`
+When you create your job, you'll get the job id. You have to paste the job id in `.env` as `CHAINLINK_GET_JOB_ID` or `CHAINLINK_POST_JOB_ID`
+
 Run `npm run docker:start --enable_oracle_listener` (this will execute oracle listener mode)
 
 Oracle listener mode will require only three containers, which has the following services:

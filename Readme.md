@@ -74,9 +74,10 @@ This will give the response in the form of hex. You can decode it in the `string
 ### **Testing DRM On Mocknet**
 In order to run the system on mocknet, you have to set the following variables in `.env` of our cloned repo:
 `STACKS_NETWORK=0`  
-`STACKS_CORE_API_URL=http://localhost:3999`
 
-For mocknet run command `npm run docker:start --stacks_network=mocknet`. To enable the oracle listener mode you need to pass this flag as well `--enable_oracle_listener`.
+
+For mocknet run command `npm run docker:start --stacks_network=mocknet`.  
+To enable the oracle listener mode you need to pass this flag as well `--enable_oracle_listener`.
 
 ##### **Deploying the smart contracts**
 

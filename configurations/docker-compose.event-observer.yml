@@ -18,7 +18,7 @@ services:
       EI_CHAINLINKURL: http://host.docker.internal:6688
     volumes:
       - "../${DOTENV_CONFIG_PATH:-.env}:/event-obserber/.env"
-    command: npm run start --enable_oracle_listner="${ENABLE_ORACLE_LISTENER}"
+    command: "npm run start --enable_oracle_listener=${npm_config_enable_oracle_listener}"
     networks:
       - backend
 

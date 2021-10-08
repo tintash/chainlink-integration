@@ -2,11 +2,11 @@
 
 This document outlines the components required and contains all the instructions needed for running the direct request model on your system.
 
-### Components for running the DRM(Direct Request Model)
+## **Components for running the DRM(Direct Request Model)**
 1. Chainlink node
 2. Stacks node
 3. Stacks blockchain api
-4. Clarinet
+4. Clarinet (version: v 0.15.1)
 5. Event observer server (external initiator &amp; external adapter)
 
 
@@ -30,14 +30,16 @@ Ensure you have docker installed or you can get it from [here](https://docs.dock
 
 Clone this [repo](https://bitbucket.org/tintash/chainlink-integration/src/master/) and install dependencies with `npm install`  
 
-##### Creating Jobs for DRM 
-There are two ways to create jobs you can either go to `.env` file and set env variable `CREATE_SAMPLE_JOBS=true` to create sample jobs and skip rest of this section. If you want to create your custom job you can start the chainlink node using the run command and go to `localhost:6688`. 
+##### Creating Chainlink Jobs for DRM 
+There are two ways to create Chainlink jobs, you can use any of the following:
+- Go to `.env` file and set env variable `CREATE_SAMPLE_JOBS=true` to create sample `get` and `post` jobs.
+- If you want to create your custom job you can start the chainlink node using the `(a)` command and go to `localhost:6688/signin`. 
 Login credentials. 
 `email: test@tintash.com`
-`CHAINLINK_PASSWORD = 12345678`
-When you create your job, you'll get the job id. You have to paste the job id in `.env` as `CHAINLINK_GET_JOB_ID` or `CHAINLINK_POST_JOB_ID`
+`password = 12345678`
+Click on the `Jobs` tab and then hit `New Job` button to create the job. When you create your job, you'll get the job id. You have to paste the job id in `.env` as `CHAINLINK_GET_JOB_ID` or `CHAINLINK_POST_JOB_ID` depending on whether you create job with `get` or `post` task.
 
-Run `npm run docker:start --enable_oracle_listener` (this will execute oracle listener mode)
+(a) `npm run docker:start --enable_oracle_listener` (this will execute oracle listener mode)
 
 Oracle listener mode will require only three containers, which has the following services:
 
@@ -294,3 +296,8 @@ curl -X POST http://localhost:3999/v2/contracts/call-read/ST1PQHQKV0RJXZFY1DGX8M
 ```
 
 This command will give the response in the form of `hex`. You can decode it in the `string`
+
+
+## Visual representation of complete DRM workflow
+
+![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgYXV0b251bWJlclxuICAgIHBhcnRpY2lwYW50IEMgYXMgRGlyZWN0IFJlcXVlc3QgQ29udHJhY3RcbiAgICBwYXJ0aWNpcGFudCBMIGFzIFNUWC1MSU5LIFRva2VuIENvbnRyYWN0XG4gICAgcGFydGljaXBhbnQgTyBhcyBPcmFjbGUgQ29udHJhY3RcbiAgICBwYXJ0aWNpcGFudCBFSSBhcyBFeHRlcm5hbCBJbml0aWF0b3IoRUkpXG4gICAgcGFydGljaXBhbnQgRUEgYXMgRXh0ZXJuYWwgQWRhcHRlcihFQSlcbiAgICBwYXJ0aWNpcGFudCBOIGFzIENoYWlubGluayBOb2RlXG4gICAgTm90ZSBvdmVyIEVJLCBFQTogIzgxOTU7IzgxOTU7IzgxOTU7IzgxOTU7IEV2ZW50IE9ic2VydmVyIFNlcnZlciAjODE5NTsjODE5NTsjODE5NTsjODE5NTtcbiAgICBDLT4-QzogY3JlYXRlLXJlcXVlc3QgKGpvYi1zcGVjLWlkLCBzZW5kZXItaWQtYnVmZiwgZGF0YSwgY2FsbGJhY2spXG4gICAgTm90ZSBvdmVyIEM6IFwiY3JlYXRlLXJlcXVlc3RcIiBpbnRlcm5hbGx5IG1ha2VzIGNvbnRyYWN0IDxicj4gY2FsbCB0byBzdHgtbGluayAodHJhbnNmZXItYW5kLWNhbGwpIFxuICAgIHJlY3QgcmdiYSgyMjUsIDAsIDI1NSwgLjEpXG4gICAgTm90ZSBvdmVyIEMsTzogSU5URVJOQUwgVFJBTlNBQ1RJT05TXG4gICAgQy0-Pkw6IHRyYW5zZmVyLWFuZC1jYWxsIChqb2Itc3BlYy1pZCwgc2VuZGVyLWlkLWJ1ZmYsIGRhdGEsIGNhbGxiYWNrKVxuICAgIE5vdGUgb3ZlciBMOiBvbiBzdWNjZXNzZnVsIHRyYW5zZmVyIG1ha2VzIGNvbnRyYWN0IDxicj4gY2FsbCB0byBvcmFjbGUncyAob3JhY2xlLXJlcXVlc3QpXG4gICAgTC0-Pk86IG9yYWNsZS1yZXF1ZXN0IChzZW5kZXIsIHNwZWMtaWQsIHNlbmRlci1pZC1idWZmLCBjYWxsYmFjaywgcGF5bWVudCAuLi4pO1xuICAgIE5vdGUgb3ZlciBPOiBvcmFjbGUgcmVxdWVzdCBlbWl0cyBldmVudHMgdGhhdCBpcyBwaWNrZWQgPGJyPiB1cCBieSBleHRlcm5hbCBpbml0aWF0b3Igb2YgY2hhaW5saW5rIG5vZGVcbiAgICBlbmRcbiAgICBPLT4-RUk6ICM4MTk1OyM4MTk1OyBFbWl0cyBldmVudCAjODE5NTsjODE5NTtcbiAgICBFSS0-Pk46ICM4MTk1OyB2ZXJpZmllcyBzdHgtbGluayBwYXltZW50IGFnYWluc3Qgam9iIGNvc3QgYW5kIHBhc3NlcyByZXF1ZXN0IHRvIGNoYWlubGluay1ub2RlXG4gICAgTi0-PkVBOiAjODE5NTsgUnVucyBjb3JlIHRhc2tzIGFuZCBwYXNzIHRvIEVBXG4gICAgRUEtPj5POiAgZnVsbGZpbGwtb3JhY2xlLXJlcXVlc3QocmVxdWVzdC1pZCwgY2FsbGJhY2ssIGV4cGlyYXRpb24scmVxLWNvdW50IC4uLilcbiAgICByZWN0IHJnYmEoMCwgMjI1LCAyNTUsIC4xKVxuICAgIE5vdGUgb3ZlciBMOiBJTlRFUk5BTCBUUkFOU0FDVElPTlxuICAgIE8tPj5DOiBvcmFjbGUtY2FsbGJhY2staGFuZGxlcih2YWx1ZSlcbiAgICBlbmRcbiIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6dHJ1ZSwiYXV0b1N5bmMiOnRydWUsInVwZGF0ZURpYWdyYW0iOnRydWV9)

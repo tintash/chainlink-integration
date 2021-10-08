@@ -6,7 +6,7 @@
 # Node artifact files
 node_modules/
 dist/
-
+configurations/stacks-blockchain/.chaindata
 # Compiled Java class files
 *.class
 
@@ -166,3 +166,5 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+configurations/chainlink/chainlink-volume/log.jsonl
+configurations/chainlink/chainlink-volume/secret

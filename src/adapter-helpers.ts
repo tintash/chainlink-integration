@@ -1,4 +1,3 @@
-import { StacksMocknet } from '@stacks/network';
 import {
   UIntCV,
   StandardPrincipalCV,
@@ -17,19 +16,19 @@ import {
 } from '@stacks/transactions';
 import { optionalCVOf } from '@stacks/transactions/dist/clarity/types/optionalCV';
 import { getOracleContract } from './event-helpers';
-import { hexToBuffer } from './helpers';
+import { getStacksNetwork, hexToBuffer } from './helpers';
 
 export interface OracleFulfillment {
-  request_id: BufferCV;
+  requestId: BufferCV;
   expiration: UIntCV;
   sender: StandardPrincipalCV;
-  payment: UIntCV;
-  spec_id: BufferCV;
+  specId: BufferCV;
   callback: ContractPrincipalCV;
   nonce: UIntCV;
-  data_version: UIntCV;
-  request_count: UIntCV;
-  sender_buff: BufferCV;
+  dataVersion: UIntCV;
+  requestCount: UIntCV;
+  senderBuff: BufferCV;
+  payment: UIntCV;
   data: BufferCV;
 }
 
@@ -38,32 +37,32 @@ export interface ChainlinkFulfillmentResponse {
   fulfillment: OracleFulfillment;
 }
 
-export function parseOracleRequestValue(encoded_data: string): OracleFulfillment {
-  const cl_val: ClarityValue = deserializeCV(hexToBuffer(encoded_data));
-  if (cl_val.type == ClarityType.Tuple) {
-    const cl_val_data = cl_val.data;
-    const request_id = cl_val_data['request_id'] as BufferCV;
-    const sender: StandardPrincipalCV = cl_val_data['sender'] as StandardPrincipalCV;
-    const expiration = cl_val_data['expiration'] as UIntCV;
-    const payment = cl_val_data['payment'] as UIntCV;
-    const spec_id: BufferCV = cl_val_data['spec_id'] as BufferCV;
-    const callback = cl_val_data['callback'] as ContractPrincipalCV;
-    const nonce = cl_val_data['nonce'] as UIntCV;
-    const data_version = cl_val_data['data_version'] as UIntCV;
-    const request_count = cl_val_data['request_count'] as UIntCV;
-    const sender_buff: BufferCV = cl_val_data['sender_id_buff'] as BufferCV;
-    const data: BufferCV = cl_val_data['data'] as BufferCV;
+export function parseOracleRequestValue(encodedData: string): OracleFulfillment {
+  const dsClarityValue: ClarityValue = deserializeCV(hexToBuffer(encodedData));
+  if (dsClarityValue.type == ClarityType.Tuple) {
+    const cvData = dsClarityValue.data;
+    const requestId = cvData['request_id'] as BufferCV;
+    const sender: StandardPrincipalCV = cvData['sender'] as StandardPrincipalCV;
+    const expiration = cvData['expiration'] as UIntCV;
+    const specId: BufferCV = cvData['spec_id'] as BufferCV;
+    const callback = cvData['callback'] as ContractPrincipalCV;
+    const nonce = cvData['nonce'] as UIntCV;
+    const dataVersion = cvData['data_version'] as UIntCV;
+    const requestCount = cvData['request_count'] as UIntCV;
+    const senderBuff: BufferCV = cvData['sender_id_buff'] as BufferCV;
+    const payment = cvData['payment'] as UIntCV;
+    const data: BufferCV = cvData['data'] as BufferCV;
     const result: OracleFulfillment = {
-      request_id: request_id,
+      requestId: requestId,
       expiration: expiration,
       sender: sender,
-      payment: payment,
-      spec_id: spec_id,
+      specId: specId,
       callback: callback,
+      payment: payment,
       nonce: nonce,
-      data_version: data_version,
-      request_count: request_count,
-      sender_buff: sender_buff,
+      dataVersion: dataVersion,
+      requestCount: requestCount,
+      senderBuff: senderBuff,
       data: data,
     };
     return result;
@@ -73,24 +72,24 @@ export function parseOracleRequestValue(encoded_data: string): OracleFulfillment
 
 export async function createOracleFulfillmentTx(
   linkFulfillment: ChainlinkFulfillmentResponse,
-  chainId: ChainID
+  chainId: ChainID,
+  stacksApiUrl: string
 ): Promise<StacksTransaction> {
   const oracle = getOracleContract(chainId);
   const oracleFulfillmentFunction = 'fullfill-oracle-request';
   const oraclePaymentKey = String(process.env.STX_ADDR_PRIVATE_KEY);
-  const network = new StacksMocknet();
+  const network = getStacksNetwork(stacksApiUrl);
   const fulfillment = linkFulfillment.fulfillment;
   const txOptions: SignedContractCallOptions = {
     contractAddress: oracle.address,
     contractName: oracle.name,
     functionName: oracleFulfillmentFunction,
     functionArgs: [
-      fulfillment.request_id,
-      fulfillment.payment,
+      fulfillment.requestId,
       fulfillment.callback,
       fulfillment.expiration,
-      fulfillment.request_count,
-      fulfillment.sender_buff,
+      fulfillment.requestCount,
+      fulfillment.senderBuff,
       optionalCVOf(bufferCVFromString(linkFulfillment.result)),
     ],
     senderKey: oraclePaymentKey,
@@ -104,7 +103,7 @@ export async function createOracleFulfillmentTx(
   const txRejected = broadcastResult as TxBroadcastResultRejected;
   const error = txRejected.error;
   if (error) {
-    throw new Error(error + ' with reason: ' + txRejected.reason);
+    throw new Error(`${error} with reason: ${txRejected.reason}`);
   }
   return transaction;
 }

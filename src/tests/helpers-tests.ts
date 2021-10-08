@@ -6,9 +6,9 @@ test('error: parse oracle request value', () => {
   expect(() => parseOracleRequestValue(param)).toThrowError();
 });
 
-test('error: request params to hex prefix string', async () => {
+test('error: request params to hex prefix string', () => {
   const param = {};
-  await expect(paramsToHexPrefixString(param)).rejects.toThrowError('No body param provided.');
+  expect(() => paramsToHexPrefixString(param)).toThrowError('No body param provided.');
 });
 
 test('request params to hex prefix string', () => {
@@ -26,7 +26,7 @@ test('request params to hex prefix string', () => {
 
 test('error: hex to direct request params', async () => {
   const param = '';
-  await expect(hexToDirectRequestParams(param)).rejects.toThrowError('Empty hex buffer provided.');
+  expect(() => hexToDirectRequestParams(param)).toThrowError('Empty hex buffer provided.');
 });
 
 test('hex to direct request params', () => {

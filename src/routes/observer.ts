@@ -7,22 +7,27 @@ import {
   makeContractCall,
   TxBroadcastResultRejected,
 } from '@stacks/transactions';
-import { StacksMocknet } from '@stacks/network';
 import {
   bufferToHexPrefixString,
   createDirectRequestTxOptions,
-  hexToBuffer,
+  getStacksNetwork,
   hexToDirectRequestParams,
   paramsToHexPrefixString,
+  ServerConfig,
 } from '../helpers';
+import { MockRequests } from '../mock/direct-requests';
 
-export function createObserverRouter() {
+export function createObserverRouter(serverConfig: ServerConfig) {
   const router = express.Router();
   router.use(express.json());
 
+  const { enableOracleListner, stacksApiUrl, chainlinkHost, chainlinkPort } = serverConfig;
   router.post('/new_block', (req, res) => {
     const core_message: CoreNodeBlockMessage = req.body;
-    const _ = processNewBlock(ChainID.Testnet, core_message);
+    if (enableOracleListner === 'false') {
+      // only run if oracle listener is not enabled
+      processNewBlock(ChainID.Testnet, core_message, chainlinkHost, chainlinkPort);
+    }
     res.sendStatus(200).end();
   });
 
@@ -38,11 +43,19 @@ export function createObserverRouter() {
     res.sendStatus(200);
   });
 
+  router.post('/new_microblocks', (req, res) => {
+    res.sendStatus(200);
+  });
+
+  router.post('/attachments/new', (req, res) => {
+    res.sendStatus(200);
+  });
+
   // For testing purposes only, to be removed
   router.get('/consumer-test', async (req, res) => {
-    const network = new StacksMocknet();
+    const network = getStacksNetwork(stacksApiUrl);
     const id = req.query.id === undefined ? 0 : parseInt(String(req.query.id));
-    const txOptions = createDirectRequestTxOptions(network, id);
+    const txOptions = createDirectRequestTxOptions(network, MockRequests[id]);
     try {
       const transaction = await makeContractCall(txOptions);
       const broadcastResult = await broadcastTransaction(transaction, network);
@@ -68,9 +81,9 @@ export function createObserverRouter() {
       const value = req.body[key].toString();
       if (value && value !== 'undefined') elements[key] = value;
     });
-
-    if (Object.keys(elements).length === 0) res.status(400).json({ msg: 'bad request body' });
-
+    if (Object.keys(elements).length === 0) {
+      res.status(400).json({ msg: 'bad request body' });
+    }
     try {
       const result = paramsToHexPrefixString(elements);
       res.status(200).json(result);
@@ -109,22 +122,28 @@ export function createObserverRouter() {
   router.use((req, res, next) => {
     const ei_ci_acckey = req.headers['x-chainlink-ea-accesskey'];
     const ei_ci_secret = req.headers['x-chainlink-ea-secret'];
-    if (typeof ei_ci_acckey !== 'undefined' && typeof ei_ci_secret !== 'undefined') {
+    if (typeof ei_ci_acckey !== undefined && typeof ei_ci_secret !== undefined) {
       if (
         ei_ci_acckey === String(process.env.EI_CI_ACCESSKEY) &&
         ei_ci_secret === String(process.env.EI_CI_SECRET)
       ) {
-        res.status(200).json({
-          status: 200,
-          message: 'Success',
-        });
+        res
+          .status(200)
+          .json({
+            status: 200,
+            message: 'Success',
+          })
+          .end();
         return;
       }
     }
-    res.status(404).json({
-      status: 404,
-      message: 'Not Found',
-    });
+    res
+      .status(404)
+      .json({
+        status: 404,
+        message: 'Not Found',
+      })
+      .end();
   });
 
   return router;

@@ -1,0 +1,26 @@
+version: '3'
+services:
+  event_observer:
+    build:
+      context: ../
+      dockerfile: configurations/event-observer/Dockerfile
+    restart: on-failure
+    depends_on:
+      - chainlink
+    ports:
+      - '3501:3501'
+    environment:
+      CHAINLINK_HOST: chainlink
+      CHAINLINK_PORT: 6688
+      STACKS_CORE_API_URL:  "${STACKS_CORE_API_URL:-https://stacks-node-api.testnet.stacks.co}"
+      CHAINLINK_EI_URL: http://host.docker.internal:3501
+      CHAINLINK_BRIDGE_URL: http://host.docker.internal:3501/adapter
+      EI_CHAINLINKURL: http://host.docker.internal:6688
+    volumes:
+      - "../${DOTENV_CONFIG_PATH:-.env}:/event-obserber/.env"
+    command: "npm run start --enable_oracle_listener=${npm_config_enable_oracle_listener}"
+    networks:
+      - backend
+
+networks:
+  backend:
